@@ -60,10 +60,10 @@
                       VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="You passed:" />
-                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.Value, Mode=OneWay, FallbackValue=DesigntimeValue}" />
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}"
+                           Text="{x:Bind ViewModel.Value, Mode=OneWay, FallbackValue=DesigntimeValue}" />
             </StackPanel>
         </ScrollViewer>
 
     </RelativePanel>
 </Page>
-

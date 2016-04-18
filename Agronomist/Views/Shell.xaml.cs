@@ -1,19 +1,11 @@
-using System.ComponentModel;
-using System.Linq;
-using Template10.Common;
-using Template10.Controls;
-using Template10.Services.NavigationService;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-
 namespace Agronomist.Views
 {
+    using Windows.UI.Xaml.Controls;
+    using Template10.Controls;
+    using Template10.Services.NavigationService;
+
     public sealed partial class Shell : Page
     {
-        public static Shell Instance { get; set; }
-        public static HamburgerMenu HamburgerMenu => Instance.MyHamburgerMenu;
-
         public Shell()
         {
             Instance = this;
@@ -25,10 +17,12 @@ namespace Agronomist.Views
             SetNavigationService(navigationService);
         }
 
+        public static Shell Instance { get; set; }
+        public static HamburgerMenu HamburgerMenu => Instance.MyHamburgerMenu;
+
         public void SetNavigationService(INavigationService navigationService)
         {
             MyHamburgerMenu.NavigationService = navigationService;
         }
     }
 }
-

@@ -1,28 +1,32 @@
-using System;
-using Template10.Common;
-using Template10.Utils;
-using Windows.UI.Xaml;
-
 namespace Agronomist.Services.SettingsServices
 {
+    using System;
+    using Windows.UI.Xaml;
+    using Template10.Common;
+    using Template10.Services.SettingsService;
+    using Template10.Utils;
+    using Views;
+
     public class SettingsService
     {
-        public static SettingsService Instance { get; }
+        private readonly ISettingsHelper _helper;
+
         static SettingsService()
         {
             // implement singleton pattern
             Instance = Instance ?? new SettingsService();
         }
 
-        Template10.Services.SettingsService.ISettingsHelper _helper;
         private SettingsService()
         {
-            _helper = new Template10.Services.SettingsService.SettingsHelper();
+            _helper = new SettingsHelper();
         }
+
+        public static SettingsService Instance { get; }
 
         public bool UseShellBackButton
         {
-            get { return _helper.Read<bool>(nameof(UseShellBackButton), true); }
+            get { return _helper.Read(nameof(UseShellBackButton), true); }
             set
             {
                 _helper.Write(nameof(UseShellBackButton), value);
@@ -40,20 +44,20 @@ namespace Agronomist.Services.SettingsServices
             get
             {
                 var theme = ApplicationTheme.Light;
-                var value = _helper.Read<string>(nameof(AppTheme), theme.ToString());
-                return Enum.TryParse<ApplicationTheme>(value, out theme) ? theme : ApplicationTheme.Dark;
+                var value = _helper.Read(nameof(AppTheme), theme.ToString());
+                return Enum.TryParse(value, out theme) ? theme : ApplicationTheme.Dark;
             }
             set
             {
                 _helper.Write(nameof(AppTheme), value.ToString());
-                (Window.Current.Content as FrameworkElement).RequestedTheme = value.ToElementTheme();
-                Views.Shell.HamburgerMenu.RefreshStyles(value);
+                ((FrameworkElement) Window.Current.Content).RequestedTheme = value.ToElementTheme();
+                Shell.HamburgerMenu.RefreshStyles(value);
             }
         }
 
         public TimeSpan CacheMaxDuration
         {
-            get { return _helper.Read<TimeSpan>(nameof(CacheMaxDuration), TimeSpan.FromDays(2)); }
+            get { return _helper.Read(nameof(CacheMaxDuration), TimeSpan.FromDays(2)); }
             set
             {
                 _helper.Write(nameof(CacheMaxDuration), value);
@@ -62,4 +66,3 @@ namespace Agronomist.Services.SettingsServices
         }
     }
 }
-

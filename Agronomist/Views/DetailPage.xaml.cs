@@ -1,9 +1,8 @@
-using Agronomist.ViewModels;
-using Windows.UI.Xaml.Navigation;
-using Windows.UI.Xaml.Controls;
-
 namespace Agronomist.Views
 {
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Navigation;
+
     public sealed partial class DetailPage : Page
     {
         public DetailPage()
@@ -13,4 +12,3 @@ namespace Agronomist.Views
         }
     }
 }
-

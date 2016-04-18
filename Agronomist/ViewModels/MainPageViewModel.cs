@@ -1,27 +1,34 @@
-using Template10.Mvvm;
-using System.Collections.Generic;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Template10.Services.NavigationService;
-using Windows.UI.Xaml.Navigation;
-
 namespace Agronomist.ViewModels
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Windows.ApplicationModel;
+    using Windows.UI.Xaml.Navigation;
+    using Template10.Mvvm;
+    using Template10.Services.NavigationService;
+    using Views;
+
     public class MainPageViewModel : ViewModelBase
     {
+        private string _Value = "Gas";
+
         public MainPageViewModel()
         {
-            if (Windows.ApplicationModel.DesignMode.DesignModeEnabled)
+            if (DesignMode.DesignModeEnabled)
             {
                 Value = "Designtime value";
             }
         }
 
-        string _Value = "Gas";
-        public string Value { get { return _Value; } set { Set(ref _Value, value); } }
+        public string Value
+        {
+            get { return _Value; }
+            set { Set(ref _Value, value); }
+        }
 
-        public override async Task OnNavigatedToAsync(object parameter, NavigationMode mode, IDictionary<string, object> suspensionState)
+        public override async Task OnNavigatedToAsync(object parameter, NavigationMode mode,
+            IDictionary<string, object> suspensionState)
         {
             if (suspensionState.Any())
             {
@@ -46,17 +53,15 @@ namespace Agronomist.ViewModels
         }
 
         public void GotoDetailsPage() =>
-            NavigationService.Navigate(typeof(Views.DetailPage), Value);
+            NavigationService.Navigate(typeof(DetailPage), Value);
 
         public void GotoSettings() =>
-            NavigationService.Navigate(typeof(Views.SettingsPage), 0);
+            NavigationService.Navigate(typeof(SettingsPage), 0);
 
         public void GotoPrivacy() =>
-            NavigationService.Navigate(typeof(Views.SettingsPage), 1);
+            NavigationService.Navigate(typeof(SettingsPage), 1);
 
         public void GotoAbout() =>
-            NavigationService.Navigate(typeof(Views.SettingsPage), 2);
-
+            NavigationService.Navigate(typeof(SettingsPage), 2);
     }
 }
-
