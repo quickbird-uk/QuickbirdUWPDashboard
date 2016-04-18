@@ -6,17 +6,17 @@ namespace Agronomist.Views
 
     public sealed partial class SettingsPage : Page
     {
-        private readonly ISerializationService _SerializationService;
+        private readonly ISerializationService _serializationService;
 
         public SettingsPage()
         {
             InitializeComponent();
-            _SerializationService = SerializationService.Json;
+            _serializationService = SerializationService.Json;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            var index = int.Parse(_SerializationService.Deserialize(e.Parameter?.ToString()).ToString());
+            var index = int.Parse(_serializationService.Deserialize(e.Parameter?.ToString()).ToString());
             MyPivot.SelectedIndex = index;
         }
     }

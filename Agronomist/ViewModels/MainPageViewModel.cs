@@ -11,7 +11,7 @@ namespace Agronomist.ViewModels
 
     public class MainPageViewModel : ViewModelBase
     {
-        private string _Value = "Gas";
+        private string _value = "Gas";
 
         public MainPageViewModel()
         {
@@ -23,8 +23,8 @@ namespace Agronomist.ViewModels
 
         public string Value
         {
-            get { return _Value; }
-            set { Set(ref _Value, value); }
+            get { return _value; }
+            set { Set(ref _value, value); }
         }
 
         public override async Task OnNavigatedToAsync(object parameter, NavigationMode mode,

@@ -9,7 +9,7 @@ namespace Agronomist.ViewModels
 
     public class DetailPageViewModel : ViewModelBase
     {
-        private string _Value = "Default";
+        private string _value = "Default";
 
         public DetailPageViewModel()
         {
@@ -21,8 +21,8 @@ namespace Agronomist.ViewModels
 
         public string Value
         {
-            get { return _Value; }
-            set { Set(ref _Value, value); }
+            get { return _value; }
+            set { Set(ref _value, value); }
         }
 
         public override async Task OnNavigatedToAsync(object parameter, NavigationMode mode,

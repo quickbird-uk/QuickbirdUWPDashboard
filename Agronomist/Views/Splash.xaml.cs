@@ -15,6 +15,7 @@ namespace Agronomist.Views
 
         private void Resize(SplashScreen splashScreen)
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (splashScreen.ImageLocation.Top == 0)
             {
                 splashImage.Visibility = Visibility.Collapsed;

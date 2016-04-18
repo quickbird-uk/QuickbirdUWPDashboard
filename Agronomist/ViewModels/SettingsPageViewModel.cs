@@ -16,10 +16,10 @@ namespace Agronomist.ViewModels
 
     public class SettingsPartViewModel : ViewModelBase
     {
-        private string _BusyText = "Please wait...";
         private readonly SettingsService _settings;
+        private string _busyText = "Please wait...";
 
-        private DelegateCommand _ShowBusyCommand;
+        private DelegateCommand _showBusyCommand;
 
         public SettingsPartViewModel()
         {
@@ -55,18 +55,18 @@ namespace Agronomist.ViewModels
 
         public string BusyText
         {
-            get { return _BusyText; }
+            get { return _busyText; }
             set
             {
-                Set(ref _BusyText, value);
-                _ShowBusyCommand.RaiseCanExecuteChanged();
+                Set(ref _busyText, value);
+                _showBusyCommand.RaiseCanExecuteChanged();
             }
         }
 
         public DelegateCommand ShowBusyCommand
-            => _ShowBusyCommand ?? (_ShowBusyCommand = new DelegateCommand(async () =>
+            => _showBusyCommand ?? (_showBusyCommand = new DelegateCommand(async () =>
             {
-                Busy.SetBusy(true, _BusyText);
+                Busy.SetBusy(true, _busyText);
                 await Task.Delay(5000);
                 Busy.SetBusy(false);
             }, () => !string.IsNullOrEmpty(BusyText)));

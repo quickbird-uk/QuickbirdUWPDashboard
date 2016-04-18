@@ -37,6 +37,7 @@ namespace Agronomist.Views
             WindowWrapper.Current().Dispatcher.Dispatch(() =>
             {
                 var modal = Window.Current.Content as ModalDialog;
+                if (modal == null) return;
                 var view = modal.ModalContent as Busy;
                 if (view == null)
                     modal.ModalContent = view = new Busy();
