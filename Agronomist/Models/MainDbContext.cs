@@ -16,7 +16,6 @@
         public DbSet<Device> Devices { get; set; }
         public DbSet<Relay> Relays { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
-        public DbSet<BaseEntity> BaseEntities { get; set; }
         public DbSet<ControlHistory> ControlHistories { get; set; }
         public DbSet<Controllable> Controllables { get; set; }
         public DbSet<CropCycle> CropCycles { get; set; }
@@ -31,7 +30,8 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ControlHistory>().HasKey(ct => new {ct.ControllableID, ct.DateTime});
+            modelBuilder.Entity<ControlHistory>()
+                .HasKey(ct => new {ct.ControllableID, ct.DateTime});
 
             modelBuilder.Entity<Greenhouse>()
                 .HasOne(gh => gh.Person)

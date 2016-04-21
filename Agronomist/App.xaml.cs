@@ -3,6 +3,7 @@ namespace Agronomist
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Activation;
     using Windows.UI.Xaml;
+    using Microsoft.Data.Entity;
     using Models;
     using Services.SettingsServices;
     using Template10.Common;
@@ -44,17 +45,15 @@ namespace Agronomist
         public override async Task OnStartAsync(StartKind startKind, IActivatedEventArgs args)
         {
             // long-running startup tasks go here
-
             InitialiseDatabase();
-
             NavigationService.Navigate(typeof(MainPage));
             await Task.CompletedTask;
         }
 
         private void InitialiseDatabase()
         {
-            MainDbContext x = new MainDbContext();
-            var y = x.CropCycles;
+            using (var x = new MainDbContext())
+                x.Database.Migrate();
         }
     }
 }

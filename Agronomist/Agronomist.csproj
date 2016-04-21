@@ -98,6 +98,11 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20160421194553_160421-FirstMigration.cs" />
+    <Compile Include="Migrations\20160421194553_160421-FirstMigration.designer.cs">
+      <DependentUpon>20160421194553_160421-FirstMigration.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\SettingsServices\SettingsService.cs" />
