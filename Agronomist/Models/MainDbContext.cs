@@ -1,10 +1,10 @@
 ﻿namespace Agronomist.Models
 {
-    using System.ComponentModel.DataAnnotations.Schema;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
     using Microsoft.Data.Entity;
+    using Microsoft.Data.Entity.Metadata;
 
     public class MainDbContext : DbContext
     {
@@ -23,7 +23,7 @@
         public DbSet<CropType> CropTypes { get; set; }
         public DbSet<Greenhouse> Greenhouses { get; set; }
         public DbSet<SensorData> SensorDatas { get; set; }
-        
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Filename=maindb.db");
@@ -33,24 +33,27 @@
         {
             modelBuilder.Entity<ControlHistory>().HasKey(ct => new {ct.ControllableID, ct.DateTime});
 
-            modelBuilder.Entity<Greenhouse>().HasRequired(gh => gh.Person)
-                .WithMany(p => p.Greenhouses).HasForeignKey(gh => gh.PersonId).WillCascadeOnDelete(false);
+            modelBuilder.Entity<Greenhouse>()
+                .HasOne(gh => gh.Person)
+                .WithMany(p => p.Greenhouses)
+                .HasForeignKey(gh => gh.PersonId)
+                .IsRequired(true)
+                .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Controllable>()
+                .HasOne(ct => ct.Relay)
+                .WithOne(r => r.Controlable)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Controllable>().HasOptional(ct => ct.Relay)
-                .WithOptionalDependent(r => r.Controlable)
-                .WillCascadeOnDelete(false);
+            modelBuilder.Entity<SensorData>()
+                .HasKey(sd => new {sd.SensorID, sd.DateTime});
 
-            modelBuilder.Entity<Person>()
-                .HasKey(p => p.ID)
-                .Property(p => p.ID)
-                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
-
-            modelBuilder.Entity<SensorData>().HasKey(sd => new {sd.SensorID, sd.DateTime})
-                .Property(sd => sd.GreenhouseID).IsOptional();
-            modelBuilder.Entity<Greenhouse>().HasMany(gh => gh.SensorData)
-                .WithOptional(sd => sd.Greenhouse)
-                .WillCascadeOnDelete(false);
+            modelBuilder.Entity<Greenhouse>()
+                .HasMany(gh => gh.SensorData)
+                .WithOne(sd => sd.Greenhouse)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

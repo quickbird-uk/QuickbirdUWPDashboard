@@ -3,6 +3,7 @@ namespace Agronomist
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Activation;
     using Windows.UI.Xaml;
+    using Models;
     using Services.SettingsServices;
     using Template10.Common;
     using Template10.Controls;
@@ -52,7 +53,8 @@ namespace Agronomist
 
         private void InitialiseDatabase()
         {
-            
+            MainDbContext x = new MainDbContext();
+            var y = x.CropCycles;
         }
     }
 }
