@@ -44,8 +44,15 @@ namespace Agronomist
         {
             // long-running startup tasks go here
 
+            InitialiseDatabase();
+
             NavigationService.Navigate(typeof(MainPage));
             await Task.CompletedTask;
+        }
+
+        private void InitialiseDatabase()
+        {
+            
         }
     }
 }
