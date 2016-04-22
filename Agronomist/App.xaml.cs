@@ -10,8 +10,6 @@ namespace Agronomist
     using Template10.Controls;
     using Views;
 
-    /// Documentation on APIs used in this page:
-    /// https://github.com/Windows-XAML/Template10/wiki
     sealed partial class App : BootStrapper
     {
         public App()
@@ -22,11 +20,14 @@ namespace Agronomist
             var settings = SettingsService.Instance;
             RequestedTheme = settings.AppTheme;
             CacheMaxDuration = settings.CacheMaxDuration;
-            ShowShellBackButton = settings.UseShellBackButton;
+            // Shell back button is a bad idea in an app that likes to hife the window chrtom altogether.
+            ShowShellBackButton = false;
         }
+
 
         public override async Task OnInitializeAsync(IActivatedEventArgs args)
         {
+            // Code here is sued to replace the default root-frame of the Nav service with a shell including the hamburger menu.
             if (!(Window.Current.Content is ModalDialog))
             {
                 // create a new frame 
@@ -42,18 +43,33 @@ namespace Agronomist
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        ///     Used to execute long running startup things.
+        ///     Is only run when starting up the app fresh, not when restoring.
+        /// </summary>
+        /// <param name="startKind"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public override async Task OnStartAsync(StartKind startKind, IActivatedEventArgs args)
         {
-            // long-running startup tasks go here
-            InitialiseDatabase();
+            // Long-running startup tasks go here.
+            await InitialiseDatabase();
             NavigationService.Navigate(typeof(MainPage));
             await Task.CompletedTask;
         }
 
-        private void InitialiseDatabase()
+        /// <summary>
+        ///     Runs any database initialisation and maintenance tasks that must be completed before the app starts.
+        /// </summary>
+        /// <returns>Awaitable task.</returns>
+        private async Task InitialiseDatabase()
         {
-            using (var x = new MainDbContext())
-                x.Database.Migrate();
+            // Make sure the database is created and migrated up-to-date.
+            await Task.Run(() =>
+            {
+                using (var x = new MainDbContext())
+                    x.Database.Migrate();
+            });
         }
     }
 }

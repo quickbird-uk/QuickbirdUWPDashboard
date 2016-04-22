@@ -32,7 +32,7 @@ namespace Agronomist.Services.SettingsServices
                 _helper.Write(nameof(UseShellBackButton), value);
                 BootStrapper.Current.NavigationService.Dispatcher.Dispatch(() =>
                 {
-                    BootStrapper.Current.ShowShellBackButton = value;
+                    BootStrapper.Current.ShowShellBackButton = false;
                     BootStrapper.Current.UpdateShellBackButton();
                     BootStrapper.Current.NavigationService.Refresh();
                 });
