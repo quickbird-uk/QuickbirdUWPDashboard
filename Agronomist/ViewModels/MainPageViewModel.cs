@@ -1,6 +1,7 @@
 namespace Agronomist.ViewModels
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
@@ -63,5 +64,16 @@ namespace Agronomist.ViewModels
 
         public void GotoAbout() =>
             NavigationService.Navigate(typeof(SettingsPage), 2);
+
+        public async void AuthReqTest()
+        {
+            string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
+            string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
+            var cred = await NetLib.Creds.FromBroker(entryUrl, resultUrl);
+            string baseUrl = "https://ghapi46azure.azurewebsites.net/api";
+            string tableName = "People";
+            var response = await NetLib.Request.RequestTable(baseUrl, tableName, cred);
+            Debug.WriteLine(response);
+        }
     }
 }

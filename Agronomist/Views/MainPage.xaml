@@ -93,5 +93,7 @@
                    RelativePanel.Below="parameterResizer"
                    Text="Current Visual State" />
 
+        <Button x:Name="AuthThenRequestButton" RelativePanel.Below="stateTextBox" Content="Do HTTP" Click="{x:Bind ViewModel.AuthReqTest}"/>
+
     </RelativePanel>
 </Page>

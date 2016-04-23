@@ -21,19 +21,19 @@
             //var header = PadAndParseBase64String(parts[0]); Happens to be useless too.
             var body = PadAndParseBase64String(parts[1]);
             //var signature = parts[2]; This is of no use but its nice to know its there.
-            var json = JsonObject.Parse(body).GetObject();
+            var json = JsonObject.Parse(body);
 
-            string expUnix;
+            double expUnix;
             try
             {
-                expUnix = json.GetNamedString("exp");
+                expUnix = json.GetNamedNumber("exp");
             }
             catch (Exception ex)
             {
                 throw new Exception("Token has no expiry date.", ex);
             }
 
-            Expiry = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expUnix));
+            Expiry = DateTimeOffset.FromUnixTimeSeconds((long)expUnix);
 
             StableSid = JsonOptional(json, "stable_sid");
             Subject = JsonOptional(json, "sub");
@@ -114,7 +114,7 @@
         /// <param name="entryUrl"></param>
         /// <param name="resultUrl"></param>
         /// <returns></returns>
-        public async Task<Creds> FromBroker(string entryUrl, string resultUrl)
+        public static async Task<Creds> FromBroker(string entryUrl, string resultUrl)
         {
             var res =
                 await
