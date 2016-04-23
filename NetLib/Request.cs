@@ -1,61 +1,47 @@
-﻿namespace AuthLib
+﻿namespace NetLib
 {
     using System;
-    using System.Linq;
+    using System.Diagnostics;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Windows.Web.Http;
+    using JetBrains.Annotations;
 
-    public class Request
+    public static class Request
     {
-        private string RequestTable(Creds cred, string baseUrl, string tableName)
+        private const int DefaultTimeout = 10;
+
+        public static async Task<string> RequestTable([NotNull] string baseUrl, [NotNull] string tableName,
+            [CanBeNull] Creds cred = null, [CanBeNull] CancellationToken? canceller = null)
         {
             var client = new HttpClient();
             var tokenHeader = "X-ZUMO-AUTH";
             var headers = client.DefaultRequestHeaders;
-            headers.Add(tokenHeader, cred.Token);
+            if (cred != null) headers.Add(tokenHeader, cred.Token);
 
             var url = UrlCombiner.CombineAsSeparateElements(baseUrl, tableName);
-        }
-    }
 
-    public static class UrlCombiner
-    {
-        /// <summary>
-        ///     Each item provided is treated as a separate element in the path.
-        ///     Existing slashes are changed to forward slashes and double slashes not in the protocol are reduced to single.
-        /// </summary>
-        /// <param name="parts"></param>
-        /// <returns></returns>
-        public static Uri CombineAsSeparateElements(params string[] parts)
-        {
-            var trimmed =
-                parts.Select(
-                    p =>
-                        p.EndsWith("://") || p.EndsWith(@":\\")
-                            ? p.TrimStart('/').TrimStart('\\')
-                            : p.Trim('/').Trim('\\'));
-
-            var joined = string.Join("/", trimmed);
-            var onlyForwardSlashes = joined.Replace('\\', '/');
-
-            var scan = onlyForwardSlashes;
-            var start = 0;
-            int index;
-            while ((index = scan.IndexOf("//", start, StringComparison.Ordinal)) > -1)
+            if (canceller == null)
             {
-                // Reduces double slashes with single slashes, unless they are prefixed with a colon.
-                // That is so it does not the protocol, for example  http://
-                if (index > 1 && scan[index - 1] != ':')
-                {
-                    scan = scan.Remove(index, 1);
-                    start = index;
-                }
-                else
-                {
-                    //Valid double slash, skip over it.
-                    start = index + 1;
-                }
+                var cs = new CancellationTokenSource(TimeSpan.FromSeconds(DefaultTimeout));
+                canceller = cs.Token;
             }
-            return new Uri(scan);
+
+            try
+            {
+                var response = await client.GetStringAsync(url).AsTask((CancellationToken) canceller);
+                return response;
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.WriteLine($"Req '{tableName}' cancelled ot timedout.");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Req '{tableName}' error: {ex.ToString()}");
+                return null;
+            }
         }
     }
 }

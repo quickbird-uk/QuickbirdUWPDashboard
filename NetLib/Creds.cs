@@ -1,4 +1,4 @@
-﻿namespace AuthLib
+﻿namespace NetLib
 {
     using System;
     using System.Diagnostics;
