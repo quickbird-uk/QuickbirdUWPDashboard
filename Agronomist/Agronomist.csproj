@@ -182,13 +182,13 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\AuthLib\AuthLib.csproj">
-      <Project>{ba28c443-0ff2-492f-9351-f1cf4f76bb93}</Project>
-      <Name>AuthLib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DbStructure\DatabasePOCOs.csproj">
       <Project>{27ff170a-961d-4372-a340-818dc56c53d0}</Project>
       <Name>DatabasePOCOs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NetLib\NetLib.csproj">
+      <Project>{ba28c443-0ff2-492f-9351-f1cf4f76bb93}</Project>
+      <Name>NetLib</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
