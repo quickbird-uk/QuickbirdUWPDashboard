@@ -39,6 +39,15 @@ namespace Agronomist.Services.SettingsServices
             }
         }
 
+        /// <summary>
+        /// Auth token in roaming settings.
+        /// </summary>
+        public string AuthToken
+        {
+            get { return _helper.Read<string>(nameof(AuthToken), null, SettingsStrategies.Roam); }
+            set { _helper.Write<string>(nameof(AuthToken), value, SettingsStrategies.Roam); }
+        }
+
         public ApplicationTheme AppTheme
         {
             get
