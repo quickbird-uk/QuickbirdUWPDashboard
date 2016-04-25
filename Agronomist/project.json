@@ -4,10 +4,10 @@
     "EntityFramework.Sqlite": "7.0.0-rc1-final",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
     "Microsoft.NETNative.Analyzer": "1.0.0",
-    "Microsoft.Xaml.Behaviors.Uwp.Managed": "1.0.3",
+    "Microsoft.Xaml.Behaviors.Uwp.Managed": "1.1.0",
     "Newtonsoft.Json": "8.0.3",
     "System.Runtime.WindowsRuntime": "4.0.11-beta-23516",
-    "Template10": "1.1.8"
+    "Template10": "1.1.10"
   },
   "frameworks": {
     "uap10.0": {}
