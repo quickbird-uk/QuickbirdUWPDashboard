@@ -23,17 +23,25 @@
             //var signature = parts[2]; This is of no use but its nice to know its there.
             var json = JsonObject.Parse(body);
 
-            double expUnix;
             try
             {
-                expUnix = json.GetNamedNumber("exp");
+                var expUnix = json.GetNamedNumber("exp");
+                Expiry = DateTimeOffset.FromUnixTimeSeconds((long) expUnix);
             }
             catch (Exception ex)
             {
                 throw new Exception("Token has no expiry date.", ex);
             }
 
-            Expiry = DateTimeOffset.FromUnixTimeSeconds((long)expUnix);
+            try
+            {
+                var issuedUnix = json.GetNamedNumber("nbf");
+                Start = DateTimeOffset.FromUnixTimeSeconds((long) issuedUnix);
+            }
+            catch (Exception)
+            {
+                Start = null;
+            }
 
             StableSid = JsonOptional(json, "stable_sid");
             Subject = JsonOptional(json, "sub");
@@ -42,6 +50,11 @@
             Issuer = JsonOptional(json, "iss");
             Audience = JsonOptional(json, "aud");
         }
+
+        /// <summary>
+        ///     The not before date for the token. Taken is meant to be valid starting from this date.
+        /// </summary>
+        public DateTimeOffset? Start { get; set; }
 
         /// <summary>
         ///     The entire raw token to be used for authentication.
@@ -136,6 +149,28 @@
                 throw new Exception("HTTP error from authenticator: " + res.ResponseErrorDetail);
             }
             throw new Exception("Error from authenticator: " + res.ResponseStatus);
+        }
+
+        /// <summary>
+        ///     Instant, catches exeptions and returns null on failure.
+        /// </summary>
+        /// <param name="userId">The SID, (should be same as token subject.</param>
+        /// <param name="token">The three part token (header, body, signature).</param>
+        /// <returns>A Creds object, or null.</returns>
+        public static Creds FromUserIdAndToken(string userId, string token)
+        {
+            try
+            {
+                return new Creds(userId, token);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to make creds...");
+                Debug.WriteLine(userId);
+                Debug.WriteLine(token);
+                Debug.WriteLine(ex);
+                return null;
+            }
         }
 
         /// <summary>

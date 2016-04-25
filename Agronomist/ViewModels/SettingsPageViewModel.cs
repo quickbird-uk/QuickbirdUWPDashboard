@@ -4,6 +4,7 @@ namespace Agronomist.ViewModels
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.UI.Xaml;
+    using NetLib;
     using Services.SettingsServices;
     using Template10.Mvvm;
     using Views;
@@ -18,8 +19,9 @@ namespace Agronomist.ViewModels
     {
         private readonly SettingsService _settings;
         private string _busyText = "Please wait...";
-
+        private string _renewBefore;
         private DelegateCommand _showBusyCommand;
+        private bool _authButtonEnabled = true;
 
         public SettingsPartViewModel()
         {
@@ -30,6 +32,25 @@ namespace Agronomist.ViewModels
             else
             {
                 _settings = SettingsService.Instance;
+                CalcRenewDate();
+            }
+        }
+
+        public string AuthExpiry
+        {
+            get
+            {
+                var date = _settings.AuthExpiry;
+                return date == null ? "--" : date.Value.LocalDateTime.ToString("R");
+            }
+        }
+
+        public string LastAuth
+        {
+            get
+            {
+                var date = _settings.LastAuth;
+                return date == null ? "--" : date.Value.LocalDateTime.ToString("R");
             }
         }
 
@@ -70,6 +91,63 @@ namespace Agronomist.ViewModels
                 await Task.Delay(5000);
                 Busy.SetBusy(false);
             }, () => !string.IsNullOrEmpty(BusyText)));
+
+        public string RenewBefore => _renewBefore;
+
+        public bool AuthButtonEnabled
+        {
+            get { return _authButtonEnabled; }
+            set
+            {
+                _authButtonEnabled = value;
+                RaisePropertyChanged();
+            }
+
+        }
+
+        public async void Authenticate()
+        {
+            if (!AuthButtonEnabled) return;
+            AuthButtonEnabled = false;
+            const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
+            const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
+            var cred = await Creds.FromBroker(entryUrl, resultUrl);
+            SaveNewToken(cred);
+            AuthButtonEnabled = true;
+        }
+
+        /// <summary>
+        /// Saves a new token, sets and notifies all relevant properties for the UI.
+        /// </summary>
+        /// <param name="cred"></param>
+        public void SaveNewToken(Creds cred)
+        {
+            _settings.AuthToken = cred.Token;
+            _settings.AuthExpiry = cred.Expiry;
+            _settings.LastAuth = cred.Start;
+            CalcRenewDate();
+            // ReSharper disable once ExplicitCallerInfoArgument
+            RaisePropertyChanged(nameof(AuthExpiry));
+            // ReSharper disable once ExplicitCallerInfoArgument
+            RaisePropertyChanged(nameof(LastAuth));
+        }
+
+        private void CalcRenewDate()
+        {
+            var expiriy = _settings.AuthExpiry;
+            if (expiriy == null)
+                _renewBefore = "--";
+            else
+            {
+                var now = DateTimeOffset.Now;
+                var timeleft = now - expiriy.Value;
+                _renewBefore = timeleft < TimeSpan.Zero
+                    ? "expired"
+                    : $"{timeleft.Days} days, {timeleft.Hours} hours and {timeleft.Minutes} left.";
+            }
+            // ReSharper disable once ExplicitCallerInfoArgument
+            RaisePropertyChanged(nameof(RenewBefore));
+        }
     }
 
     public class AboutPartViewModel : ViewModelBase

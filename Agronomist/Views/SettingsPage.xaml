@@ -4,7 +4,6 @@
       xmlns:Behaviors="using:Template10.Behaviors"
       xmlns:Core="using:Microsoft.Xaml.Interactions.Core"
       xmlns:Interactivity="using:Microsoft.Xaml.Interactivity"
-      xmlns:c="using:Agronomist.Converters"
       xmlns:controls="using:Template10.Controls"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="using:Agronomist.Views"
@@ -66,13 +65,41 @@
                 <ScrollViewer Margin="0,12,-12,0" HorizontalContentAlignment="Left"
                               VerticalScrollBarVisibility="Auto">
                     <RelativePanel HorizontalAlignment="Left">
+                        <TextBlock x:Name="AuthTitle" Text="Authentication"
+                                   Style="{StaticResource TitleTextBlockStyle}" />
+                        <Grid x:Name="AuthGrid" RelativePanel.Below="AuthTitle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="15"/>
+                                <RowDefinition />
+                                <RowDefinition Height="15"/>
+                                <RowDefinition />
+                                <RowDefinition Height="15"/>
+                                <RowDefinition />
+                                <RowDefinition Height="15"/>
+                                <RowDefinition />
+                                <RowDefinition Height="15"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Updated:" />
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="{x:Bind ViewModel.SettingsPartViewModel.LastAuth}" />
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Expiriy:" />
+                            <TextBlock Grid.Row="3" Grid.Column="2" Text="{x:Bind ViewModel.SettingsPartViewModel.AuthExpiry}" />
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Renew before:" />
+                            <TextBlock Grid.Row="5" Grid.Column="2" Text="{x:Bind ViewModel.SettingsPartViewModel.RenewBefore}" />
+                            <Button x:Name="AuthButton" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Content="Authenticate" Click="{x:Bind ViewModel.SettingsPartViewModel.Authenticate}" />
+                        </Grid>
+                        <TextBlock x:Name="UiTitle" RelativePanel.Below="AuthGrid" Text="Appearance"
+                                   Style="{StaticResource TitleTextBlockStyle}" />
                         <ToggleSwitch x:Name="UseShellDrawnBackButtonToggleSwtich"
                                       Header="Use shell-drawn back button"
                                       IsOn="{Binding UseShellBackButton, Mode=TwoWay}"
                                       OffContent="Back button in page header"
                                       OnContent="Back button in titlebar or taskbar"
-                                      RelativePanel.AlignLeftWithPanel="True"
-                                      RelativePanel.AlignTopWithPanel="True" />
+                                      RelativePanel.Below="UiTitle" />
 
                         <ToggleSwitch x:Name="UseLightThemeToggleSwitch" Header="Use Light Theme"
                                       IsOn="{Binding UseLightThemeButton, Mode=TwoWay}"

@@ -7,6 +7,9 @@ namespace Agronomist.Services.SettingsServices
     using Template10.Utils;
     using Views;
 
+    /// <summary>
+    ///     Wraps access to local and romaing winsows 10 settings.
+    /// </summary>
     public class SettingsService
     {
         private readonly ISettingsHelper _helper;
@@ -40,12 +43,24 @@ namespace Agronomist.Services.SettingsServices
         }
 
         /// <summary>
-        /// Auth token in roaming settings.
+        ///     Auth token in roaming settings.
         /// </summary>
         public string AuthToken
         {
             get { return _helper.Read<string>(nameof(AuthToken), null, SettingsStrategies.Roam); }
-            set { _helper.Write<string>(nameof(AuthToken), value, SettingsStrategies.Roam); }
+            set { _helper.Write(nameof(AuthToken), value, SettingsStrategies.Roam); }
+        }
+
+        public DateTimeOffset? AuthExpiry
+        {
+            get { return _helper.Read<DateTimeOffset?>(nameof(AuthExpiry), null, SettingsStrategies.Roam); }
+            set { _helper.Write(nameof(AuthExpiry), value, SettingsStrategies.Roam); }
+        }
+
+        public DateTimeOffset? LastAuth
+        {
+            get { return _helper.Read<DateTimeOffset?>(nameof(LastAuth), null, SettingsStrategies.Roam); }
+            set { _helper.Write(nameof(LastAuth), value, SettingsStrategies.Roam); }
         }
 
         public ApplicationTheme AppTheme
