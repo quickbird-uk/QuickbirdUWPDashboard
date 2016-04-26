@@ -1,6 +1,7 @@
 namespace Agronomist.ViewModels
 {
     using System;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.UI.Xaml;
@@ -111,8 +112,16 @@ namespace Agronomist.ViewModels
             AuthButtonEnabled = false;
             const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
             const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
-            var cred = await Creds.FromBroker(entryUrl, resultUrl);
-            SaveNewToken(cred);
+            try
+            {
+                var cred = await Creds.FromBroker(entryUrl, resultUrl);
+                SaveNewToken(cred);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Getting new authenication creds failed.");
+                Debug.WriteLine(ex);
+            }
             AuthButtonEnabled = true;
         }
 
@@ -140,10 +149,10 @@ namespace Agronomist.ViewModels
             else
             {
                 var now = DateTimeOffset.Now;
-                var timeleft = now - expiriy.Value;
+                var timeleft = expiriy.Value - now;
                 _renewBefore = timeleft < TimeSpan.Zero
                     ? "expired"
-                    : $"{timeleft.Days} days, {timeleft.Hours} hours and {timeleft.Minutes} left.";
+                    : $"{timeleft.Days} days, {timeleft.Hours} hours and {timeleft.Minutes} minutes left.";
             }
             // ReSharper disable once ExplicitCallerInfoArgument
             RaisePropertyChanged(nameof(RenewBefore));
