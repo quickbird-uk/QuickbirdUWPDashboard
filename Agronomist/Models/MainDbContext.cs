@@ -1,10 +1,12 @@
 ﻿namespace Agronomist.Models
 {
+    using System.Threading.Tasks;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
     using Microsoft.Data.Entity;
     using Microsoft.Data.Entity.Metadata;
+    using NetLib;
 
     public class MainDbContext : DbContext
     {
@@ -54,6 +56,38 @@
                 .WithOne(sd => sd.Greenhouse)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+        }
+
+        public async Task<string> FetchTable(string tableName, Creds cred = null)
+        {
+            const string baseUrl = "https://ghapi46azure.azurewebsites.net/api";
+            string response;
+            if(cred == null)
+                response = await NetLib.Request.RequestTable(baseUrl, tableName);
+            else
+                response = await NetLib.Request.RequestTable(baseUrl, tableName, cred);
+            return response;
+        }
+
+        public void PulAndPopulate()
+        {
+            //Reds first since they are an independent set, and they do not require authentication.
+            // 1.PlacementType
+            // 2.Parameter
+            // 3.Subsystem
+            // 4.Placement_has_Parameter
+            // 5.ControlTypes
+            //Now for the big part
+            // 1.Greenhouse
+            // 2.CropType
+            // 3.Devices
+            // 4.Cycle
+            // 5.Sensors
+            // 6.Relay
+            // 7.Controllable
+            // 8.ControlHistory
+            // 9.SensorData
+
         }
     }
 }
