@@ -16,15 +16,15 @@ using DatabasePOCOs.Global;
 namespace GhAPIAzure.Controllers
 {
     [AllowAnonymous]
-    public class SubsystemsController : ApiController
+    public class ParamsAtPlacesController : ApiController
     {
-        private Models.DbContext db = new Models.DbContext();
+        private Models.DataContext db = new Models.DataContext();
 
-        // GET: api/Subsystems
+        // GET: api/ParamsAtPlaces
         [SwaggerOperation("GetAll")]
-        public IQueryable<Subsystem> GetSubsystems()
+        public IQueryable<ParamAtPlace> GetParamsAtPlaces()
         {
-            return db.Subsystems;
+            return db.ParamsAtPlaces;
         }
     }
 }

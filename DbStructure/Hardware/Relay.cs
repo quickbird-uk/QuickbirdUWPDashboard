@@ -16,11 +16,7 @@ namespace DatabasePOCOs
 
         public bool Enabled { get; set; } = false; 
 
-        public Controllable Controlable { get; set; }
-
-        public Guid ControllableID { get; set; }
-
-        public Device Device { get; set; }
+        public virtual Device Device { get; set; }
         public Guid DeviceID { get; set; }
     }
 }

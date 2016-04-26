@@ -8,6 +8,6 @@ namespace DatabasePOCOs.Global
 
         public string Name { get; set; }
 
-        public List<Sensor> Sensors { get; set; }
+        public virtual List<Sensor> Sensors { get; set; }
     }
 }

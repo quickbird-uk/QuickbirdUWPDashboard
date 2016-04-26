@@ -8,7 +8,7 @@
 
         public bool Additive { get; set; }
 
-        public Subsystem Subsystem { get; set; }
+        public virtual Subsystem Subsystem { get; set; }
 
         public long SubsystemID { get; set; }
     }

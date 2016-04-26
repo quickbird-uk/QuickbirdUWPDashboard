@@ -6,14 +6,14 @@
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<GhAPIAzure.Models.DbContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<GhAPIAzure.Models.DataContext>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = true;
         }
 
-        protected override void Seed(GhAPIAzure.Models.DbContext context)
+        protected override void Seed(GhAPIAzure.Models.DataContext context)
         {
             //  This method will be called after migrating to the latest version.
             Parameter[] parameters =

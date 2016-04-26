@@ -15,6 +15,7 @@ namespace GhAPIAzure.Migrations
                         Name = c.String(),
                         GreenhouseID = c.Guid(nullable: false),
                         ControlTypeID = c.Guid(nullable: false),
+                        RelayID = c.Guid(),
                         CreatedAt = c.DateTimeOffset(nullable: false, precision: 7),
                         UpdatedAt = c.DateTimeOffset(nullable: false, precision: 7),
                         Deleted = c.Boolean(nullable: false),
@@ -150,7 +151,7 @@ namespace GhAPIAzure.Migrations
                     {
                         ID = c.Guid(nullable: false),
                         Name = c.String(),
-                        PersonId = c.Long(nullable: false),
+                        PersonId = c.Guid(nullable: false),
                         CreatedAt = c.DateTimeOffset(nullable: false, precision: 7),
                         UpdatedAt = c.DateTimeOffset(nullable: false, precision: 7),
                         Deleted = c.Boolean(nullable: false),
@@ -165,7 +166,7 @@ namespace GhAPIAzure.Migrations
                 c => new
                     {
                         ID = c.Guid(nullable: false),
-                        Name = c.String(),
+                        Name = c.String(maxLength: 245),
                         StartDate = c.DateTimeOffset(nullable: false, precision: 7),
                         EndDate = c.DateTimeOffset(precision: 7),
                         CropTypeID = c.Guid(nullable: false),
@@ -176,29 +177,27 @@ namespace GhAPIAzure.Migrations
                         Version = c.Binary(),
                     })
                 .PrimaryKey(t => t.ID)
-                .ForeignKey("dbo.CropTypes", t => t.CropTypeID, cascadeDelete: true)
+                .ForeignKey("dbo.CropTypes", t => t.Name)
                 .ForeignKey("dbo.Greenhouses", t => t.GreenhouseID, cascadeDelete: true)
-                .Index(t => t.CropTypeID)
+                .Index(t => t.Name)
                 .Index(t => t.GreenhouseID);
             
             CreateTable(
                 "dbo.CropTypes",
                 c => new
                     {
-                        ID = c.Guid(nullable: false),
-                        Name = c.String(),
+                        Name = c.String(nullable: false, maxLength: 245),
                         CreatedAt = c.DateTimeOffset(nullable: false, precision: 7),
-                        UpdatedAt = c.DateTimeOffset(nullable: false, precision: 7),
-                        Deleted = c.Boolean(nullable: false),
-                        Version = c.Binary(),
+                        Approved = c.Boolean(nullable: false),
+                        CreatedBy = c.Guid(),
                     })
-                .PrimaryKey(t => t.ID);
+                .PrimaryKey(t => t.Name);
             
             CreateTable(
                 "dbo.People",
                 c => new
                     {
-                        ID = c.Long(nullable: false),
+                        ID = c.Guid(nullable: false),
                         TwitterHandle = c.String(),
                         UserName = c.String(),
                         CreatedAt = c.DateTimeOffset(nullable: false, precision: 7),
@@ -256,7 +255,7 @@ namespace GhAPIAzure.Migrations
             DropForeignKey("dbo.Greenhouses", "PersonId", "dbo.People");
             DropForeignKey("dbo.Devices", "GreenhouseID", "dbo.Greenhouses");
             DropForeignKey("dbo.CropCycles", "GreenhouseID", "dbo.Greenhouses");
-            DropForeignKey("dbo.CropCycles", "CropTypeID", "dbo.CropTypes");
+            DropForeignKey("dbo.CropCycles", "Name", "dbo.CropTypes");
             DropForeignKey("dbo.Controllables", "GreenhouseID", "dbo.Greenhouses");
             DropForeignKey("dbo.ParamAtPlaces", "ParamID", "dbo.Parameters");
             DropForeignKey("dbo.ControlTypes", "SubsystemID", "dbo.Subsystems");
@@ -265,7 +264,7 @@ namespace GhAPIAzure.Migrations
             DropIndex("dbo.SensorDatas", new[] { "GreenhouseID" });
             DropIndex("dbo.SensorDatas", new[] { "SensorID" });
             DropIndex("dbo.CropCycles", new[] { "GreenhouseID" });
-            DropIndex("dbo.CropCycles", new[] { "CropTypeID" });
+            DropIndex("dbo.CropCycles", new[] { "Name" });
             DropIndex("dbo.Greenhouses", new[] { "PersonId" });
             DropIndex("dbo.Devices", new[] { "GreenhouseID" });
             DropIndex("dbo.Sensors", new[] { "PlacementType_ID" });

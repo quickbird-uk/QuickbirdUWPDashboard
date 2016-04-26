@@ -42,11 +42,11 @@
                 .IsRequired(true)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Controllable>()
-                .HasOne(ct => ct.Relay)
-                .WithOne(r => r.Controlable)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
+            //modelBuilder.Entity<Controllable>()
+            //    .HasOne(ct => ct.Relay)
+            //    .WithOne(r => r.)
+            //    .IsRequired(false)
+            //    .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<SensorData>()
                 .HasKey(sd => new {sd.SensorID, sd.DateTime});

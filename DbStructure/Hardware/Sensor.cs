@@ -19,13 +19,13 @@ namespace DatabasePOCOs
         public double? AlertLow { get; set; } = null; 
 
         //This field should never be edited! 
-        public ParamAtPlace ParamAtPlace { get; set; }
+        public virtual ParamAtPlace ParamAtPlace { get; set; }
 
         public long ParamAtPLaceID { get; set; }
 
-        public List<SensorData> SensorData { get; set; }
+        public virtual List<SensorData> SensorData { get; set; }
 
-        public Device Device { get; set; }
+        public virtual Device Device { get; set; }
         public Guid DeviceID { get; set; }
 
     }

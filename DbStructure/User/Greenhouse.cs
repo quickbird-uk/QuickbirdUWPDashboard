@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 namespace DatabasePOCOs.User
@@ -11,12 +12,12 @@ namespace DatabasePOCOs.User
 
         public List<Controllable> Controllables { get; set; } 
 
-        public Person Person { get; set; }
+        public virtual Person Person { get; set; }
 
-        public long PersonId { get; set; }
+        public Guid PersonId { get; set; }
 
-        public List<Device> Devices { get; set; }
+        public virtual List<Device> Devices { get; set; }
 
-        public List<SensorData> SensorData { get; set; }
+        public virtual List<SensorData> SensorData { get; set; }
     }
 }

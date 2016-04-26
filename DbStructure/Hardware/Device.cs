@@ -15,13 +15,13 @@ namespace DatabasePOCOs
 
         public string Location { get; set; }
 
-        public Greenhouse Greenhouse { get; set; }
+        public virtual Greenhouse Greenhouse { get; set; }
 
         public Guid GreenhouseID { get; set; }
 
-        public List<Sensor> Sensors { get; set; }
+        public virtual List<Sensor> Sensors { get; set; }
 
-        public List<Relay> Relays { get; set; }
+        public virtual List<Relay> Relays { get; set; }
     }
 }
  

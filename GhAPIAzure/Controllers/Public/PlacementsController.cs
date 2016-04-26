@@ -16,15 +16,15 @@ using DatabasePOCOs.Global;
 namespace GhAPIAzure.Controllers
 {
     [AllowAnonymous]
-    public class ParamsAtPlacesController : ApiController
+    public class PlacementTypesController : ApiController
     {
-        private Models.DbContext db = new Models.DbContext();
+        private Models.DataContext db = new Models.DataContext();
 
-        // GET: api/ParamsAtPlaces
+        // GET: api/PlacementTypes
         [SwaggerOperation("GetAll")]
-        public IQueryable<ParamAtPlace> GetParamsAtPlaces()
+        public IQueryable<PlacementType> GetPlacementsTypes()
         {
-            return db.ParamsAtPlaces;
+            return db.PlacementTypes;
         }
     }
 }

@@ -8,8 +8,8 @@ namespace DatabasePOCOs.Global
 
         public string Name { get; set; }
 
-        public List<ControlType> ControlTypes { get; set;}
+        public virtual List<ControlType> ControlTypes { get; set;}
         
-        public List<ParamAtPlace> ParamsAtPlaces { get; set; }      
+        public virtual List<ParamAtPlace> ParamsAtPlaces { get; set; }      
     }
 }

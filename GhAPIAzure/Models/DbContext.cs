@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace GhAPIAzure.Models
 {
-    class DbContext : System.Data.Entity.DbContext
+    public class DataContext : System.Data.Entity.DbContext
     {
         public System.Data.Entity.DbSet<ControlType> ControlTypes { get; set; }
         public System.Data.Entity.DbSet<Parameter> Parameters { get; set; }
@@ -38,7 +38,7 @@ namespace GhAPIAzure.Models
         public System.Data.Entity.DbSet<Sensor> Sensors { get; set; }
 
 
-        public DbContext() : base("GhAPIAzureContext")
+        public DataContext() : base("GhAPIAzureContext")
         {
         }
 
@@ -54,17 +54,26 @@ namespace GhAPIAzure.Models
                 .Property(p => p.ID)
                  .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
 
-            modelBuilder.Entity<Controllable>().HasOptional(ct => ct.Relay)
-                .WithOptionalDependent(r => r.Controlable)
-                .WillCascadeOnDelete(false);
+            //modelBuilder.Entity<Controllable>().HasOptional(ct => ct.Relay)
+            //    .WithOptionalDependent(sd => sd.Controlable)
+            //    .Map(cr => cr.MapKey("RelayID"))
+            //    .WillCascadeOnDelete(false); 
 
-            // modelBuilder.Entity<SensorData>().HasKey(sd => new { sd.DateTime});
+
 
             modelBuilder.Entity<SensorData>().HasKey(sd => new { sd.SensorID, sd.DateTime })
                 .Property(sd => sd.GreenhouseID).IsOptional();                
             modelBuilder.Entity<Greenhouse>().HasMany(gh => gh.SensorData)
                 .WithOptional(sd => sd.Greenhouse)
                 .WillCascadeOnDelete(false);
+
+            //Add index on cropType Name and make it non Db generated
+            modelBuilder.Entity<CropType>().HasKey(Ct => Ct.Name)
+                .Property(ct => ct.Name)
+                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
+
+            modelBuilder.Entity<CropType>().HasMany(Ct => Ct.CropCycles)
+                .WithRequired(cc => cc.CropType).HasForeignKey(cc => cc.CropTypeName);
 
             // modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
         }

@@ -9,7 +9,7 @@ namespace DatabasePOCOs.User
 {
     public class Person
     {
-        public long ID { get; set; }
+        public Guid ID { get; set; }
 
         public ulong twitterID { get; set; }
 
@@ -17,9 +17,9 @@ namespace DatabasePOCOs.User
 
         public string UserName { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now; 
 
-        public DateTimeOffset UpdatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
         public List<Greenhouse> Greenhouses { get; set; }
     }

@@ -1,6 +1,7 @@
 ﻿using DatabasePOCOs.Global;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DatabasePOCOs.User
 {
@@ -8,16 +9,19 @@ namespace DatabasePOCOs.User
     {
         public string Name { get; set; }
 
-        public List<ControlHistory> ControlHistory {get; set;} 
+        public virtual List<ControlHistory> ControlHistory { get; set; }
 
-        public Greenhouse Greenhouse { get; set; }
+        public virtual Greenhouse Greenhouse { get; set; }
 
         public Guid GreenhouseID { get; set; }
 
-        public ControlType ControlType { get; set; }
+        public virtual ControlType ControlType { get; set; }
 
-        public Guid ControlTypeID { get; set; }
+        public long ControlTypeID { get; set; }
 
-        public Relay Relay { get; set; }
+        public virtual Relay Relay { get; set; }
+
+        public Guid? RelayID {get; set;} 
+        //ADD relay ID !@ 
     }
 }

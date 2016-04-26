@@ -16,15 +16,15 @@ using DatabasePOCOs.Global;
 namespace GhAPIAzure.Controllers
 {
     [AllowAnonymous]
-    public class ControlTypesController : ApiController
+    public class ParametersController : ApiController
     {
-        private Models.DbContext db = new Models.DbContext();
+        private Models.DataContext db = new Models.DataContext();
 
-        // GET: api/ControlTypes
+        // GET: api/Parameters
         [SwaggerOperation("GetAll")]
-        public IQueryable<ControlType> GetControlTypes()
+        public IQueryable<Parameter> GetParameters()
         {
-            return db.ControlTypes;
+            return db.Parameters;
         }
     }
 }

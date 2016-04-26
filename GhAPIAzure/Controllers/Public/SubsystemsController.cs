@@ -16,15 +16,15 @@ using DatabasePOCOs.Global;
 namespace GhAPIAzure.Controllers
 {
     [AllowAnonymous]
-    public class PlacementTypesController : ApiController
+    public class SubsystemsController : ApiController
     {
-        private Models.DbContext db = new Models.DbContext();
+        private Models.DataContext db = new Models.DataContext();
 
-        // GET: api/PlacementTypes
+        // GET: api/Subsystems
         [SwaggerOperation("GetAll")]
-        public IQueryable<PlacementType> GetPlacementsTypes()
+        public IQueryable<Subsystem> GetSubsystems()
         {
-            return db.PlacementTypes;
+            return db.Subsystems;
         }
     }
 }
