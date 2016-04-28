@@ -32,6 +32,9 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<CropType>()
+                .HasKey(c => c.Name);
+
             modelBuilder.Entity<ControlHistory>()
                 .HasKey(ct => new {ct.ControllableID, ct.DateTime});
 
