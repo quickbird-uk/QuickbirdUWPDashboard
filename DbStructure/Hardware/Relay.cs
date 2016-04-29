@@ -1,12 +1,8 @@
-﻿using DatabasePOCOs.User;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DatabasePOCOs
+﻿namespace DatabasePOCOs
 {
+    using System;
+    using User;
+
     public class Relay : BaseEntity
     {
         public uint OnTime { get; set; }
@@ -14,7 +10,7 @@ namespace DatabasePOCOs
 
         public DateTimeOffset StartDate { get; set; }
 
-        public bool Enabled { get; set; } = false; 
+        public bool Enabled { get; set; } = false;
 
         public virtual Device Device { get; set; }
         public Guid DeviceID { get; set; }

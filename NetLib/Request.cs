@@ -11,6 +11,14 @@
     {
         private const int DefaultTimeout = 10;
 
+        /// <summary>
+        ///     Fetches a table, catches errors and returns null.
+        /// </summary>
+        /// <param name="baseUrl">Base url of the request API.</param>
+        /// <param name="tableName">The name of the table to put on the end of the baseUrl.</param>
+        /// <param name="cred">A credentials object used to authenticate the request, optional.</param>
+        /// <param name="canceller">A token that can be used to cancell the request.</param>
+        /// <returns></returns>
         public static async Task<string> RequestTable([NotNull] string baseUrl, [NotNull] string tableName,
             [CanBeNull] Creds cred = null, [CanBeNull] CancellationToken? canceller = null)
         {
@@ -39,7 +47,7 @@
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Req '{tableName}' error: {ex.ToString()}");
+                Debug.WriteLine($"Req '{tableName}' error: {ex}");
                 return null;
             }
         }

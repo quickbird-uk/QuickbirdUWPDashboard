@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace DatabasePOCOs.User
+﻿namespace DatabasePOCOs.User
 {
+    using System;
+
     public class ControlHistory
     {
         public Guid Controllable { get; set; }
@@ -11,11 +10,11 @@ namespace DatabasePOCOs.User
         public DateTimeOffset DateTime { get; set; }
 
         public byte[] DataDay { get; set; }
+        //    item.TimeStamp.T
+        //    ControlDataItem item;
+        //{ 
 
         //public List<ControlDataItem> OpenDataDay()
-        //{ 
-        //    ControlDataItem item;
-        //    item.TimeStamp.T
         //    int length = sizeof(bool) + sizeof(long) + sizeof(long); 
         //}
     }
@@ -24,6 +23,6 @@ namespace DatabasePOCOs.User
     {
         public bool state;
         public DateTime TimeStamp;
-        public TimeSpan Duration; 
+        public TimeSpan Duration;
     }
 }

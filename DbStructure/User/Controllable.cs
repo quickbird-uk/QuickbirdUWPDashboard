@@ -1,10 +1,9 @@
-﻿using DatabasePOCOs.Global;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace DatabasePOCOs.User
+﻿namespace DatabasePOCOs.User
 {
+    using System;
+    using System.Collections.Generic;
+    using Global;
+
     public class Controllable : BaseEntity
     {
         public string Name { get; set; }
@@ -21,7 +20,7 @@ namespace DatabasePOCOs.User
 
         public virtual Relay Relay { get; set; }
 
-        public Guid? RelayID {get; set;} 
+        public Guid? RelayID { get; set; }
         //ADD relay ID !@ 
     }
 }

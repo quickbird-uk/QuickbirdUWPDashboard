@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace DatabasePOCOs.Global
+﻿namespace DatabasePOCOs.Global
 {
-    public class PlacementType
-    {
-        public long ID { get; set; }
+    using System.Collections.Generic;
 
+    public class PlacementType : IHasId
+    {
         public string Name { get; set; }
 
         public virtual List<Sensor> Sensors { get; set; }
+        public long ID { get; set; }
     }
 }

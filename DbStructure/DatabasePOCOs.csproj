@@ -42,6 +42,8 @@
     <Compile Include="Hardware\Device.cs" />
     <Compile Include="Hardware\Relay.cs" />
     <Compile Include="Hardware\Sensor.cs" />
+    <Compile Include="IHasGuid.cs" />
+    <Compile Include="IHasId.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="User\BaseEntity.cs" />
     <Compile Include="Global\ControlType.cs" />

@@ -1,9 +1,9 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace DatabasePOCOs.User
+﻿namespace DatabasePOCOs.User
 {
-    public class CropCycle: BaseEntity
+    using System;
+    using System.ComponentModel.DataAnnotations;
+
+    public class CropCycle : BaseEntity
     {
         [Required]
         public string Name { get; set; }
@@ -22,6 +22,5 @@ namespace DatabasePOCOs.User
 
         [Required]
         public Guid GreenhouseID { get; set; }
-
     }
 }

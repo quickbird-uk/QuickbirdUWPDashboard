@@ -1,10 +1,10 @@
-﻿using DatabasePOCOs.User;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-
-namespace DatabasePOCOs
+﻿namespace DatabasePOCOs
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using User;
+
     public class CropType
     {
         [MaxLength(245)]

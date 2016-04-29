@@ -1,16 +1,15 @@
-﻿
-using System;
-using System.Collections.Generic;
-
-namespace DatabasePOCOs.User
+﻿namespace DatabasePOCOs.User
 {
-    public class Greenhouse: BaseEntity
+    using System;
+    using System.Collections.Generic;
+
+    public class Greenhouse : BaseEntity
     {
         public string Name { get; set; }
 
-        public List<CropCycle> CropCycles { get; set; } 
+        public List<CropCycle> CropCycles { get; set; }
 
-        public List<Controllable> Controllables { get; set; } 
+        public List<Controllable> Controllables { get; set; }
 
         public virtual Person Person { get; set; }
 

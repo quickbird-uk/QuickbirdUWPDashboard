@@ -1,5 +1,10 @@
 ﻿namespace Agronomist.Models
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
     using System.Threading.Tasks;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
@@ -7,9 +12,11 @@
     using Microsoft.Data.Entity;
     using Microsoft.Data.Entity.Metadata;
     using NetLib;
+    using Newtonsoft.Json;
 
     public class MainDbContext : DbContext
     {
+        private List<object> _dbos;
         public DbSet<ControlType> ControlTypes { get; set; }
         public DbSet<ParamAtPlace> ParamAtPlaces { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
@@ -32,6 +39,24 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            _dbos = new List<object>
+            {
+                ControlTypes,
+                ParamAtPlaces,
+                Parameters,
+                PlacementTypes,
+                Subsystems,
+                Devices,
+                Relays,
+                Sensors,
+                ControlHistories,
+                Controllables,
+                CropCycles,
+                CropTypes,
+                Greenhouses,
+                SensorDatas
+            };
+
             modelBuilder.Entity<CropType>()
                 .HasKey(c => c.Name);
 
@@ -61,18 +86,52 @@
                 .OnDelete(DeleteBehavior.SetNull);
         }
 
-        public async Task<string> FetchTable(string tableName, Creds cred = null)
+        public async Task<string> FetchTableAndDeserialise<T>(string tableName, Creds cred = null) where T : class
         {
             const string baseUrl = "https://ghapi46azure.azurewebsites.net/api";
             string response;
-            if(cred == null)
-                response = await NetLib.Request.RequestTable(baseUrl, tableName);
+            if (cred == null)
+                response = await Request.RequestTable(baseUrl, tableName);
             else
-                response = await NetLib.Request.RequestTable(baseUrl, tableName, cred);
-            return response;
+                response = await Request.RequestTable(baseUrl, tableName, cred);
+
+            if (null == response)
+            {
+                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}.");
+            }
+
+            List<T> dbo;
+            try
+            {
+                dbo = JsonConvert.DeserializeObject<List<T>>(response);
+            }
+            catch (JsonSerializationException e)
+            {
+                Debug.WriteLine($"Desserialise falied on response for {tableName}, creds {null == cred}.");
+                Debug.WriteLine(e);
+                return "Unable to deserialise.";
+            }
+
+            var dbset = (DbSet<T>)_dbos.First(d => d is DbSet<T>);
+            //if (entity != null)
+            //{
+            //    var id = entity.ID;
+            //}
+
+            foreach (var entry in dbo)
+            {
+                var entity = entry as BaseEntity;
+                
+                if (dbset.Contains(entry))
+                {
+                    dbset.Update(entry);
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
-        public void PulAndPopulate()
+        public async Task PullAndPopulate()
         {
             //Reds first since they are an independent set, and they do not require authentication.
             // 1.PlacementType
@@ -91,6 +150,29 @@
             // 8.ControlHistory
             // 9.SensorData
 
+            // Names on the API
+            //Controllables
+            //ControlTypes
+            //CropTypes
+            //Cycles
+            //Greenhouses
+            //Parameters
+            //ParamsAtPlaces
+            //People
+            //PlacementTypes
+            //Subsystems
+            //Values
+
+            var nonAuth = new IEnumerable[]
+            {
+                PlacementTypes, Parameters, Subsystems, ParamAtPlaces, ControlTypes
+            };
+
+            var placementType = await FetchTableAndDeserialise<List<PlacementType>>(nameof(PlacementTypes));
+            var parameters = FetchTableAndDeserialise<List<Parameter>>(nameof(Parameters));
+            var subsystems = FetchTableAndDeserialise<List<Subsystem>>(nameof(Subsystems));
+            var paramsAtPlaces = FetchTableAndDeserialise<List<ParamAtPlace>>("ParamsAtPlaces");
+            var controlTypes = FetchTableAndDeserialise<List<ControlType>>(nameof(ControlTypes));
         }
     }
 }

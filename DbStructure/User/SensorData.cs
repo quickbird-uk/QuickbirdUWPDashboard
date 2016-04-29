@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DatabasePOCOs.User
+﻿namespace DatabasePOCOs.User
 {
+    using System;
+
     public class SensorData
     {
         public DateTimeOffset DateTime { get; set; }
