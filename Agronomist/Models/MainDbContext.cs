@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
     using System.Threading.Tasks;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
@@ -86,8 +87,9 @@
                 .OnDelete(DeleteBehavior.SetNull);
         }
 
-        public async Task<string> FetchTableAndDeserialise<T>(string tableName, Creds cred = null) where T : class
+        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, Creds cred = null) where TPoco : class
         {
+            // Step 1: Request
             const string baseUrl = "https://ghapi46azure.azurewebsites.net/api";
             string response;
             if (cred == null)
@@ -100,10 +102,11 @@
                 Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}.");
             }
 
-            List<T> dbo;
+            // Step 2: Deserialise
+            List<TPoco> updatesFromServer;
             try
             {
-                dbo = JsonConvert.DeserializeObject<List<T>>(response);
+                updatesFromServer = JsonConvert.DeserializeObject<List<TPoco>>(response);
             }
             catch (JsonSerializationException e)
             {
@@ -112,21 +115,30 @@
                 return "Unable to deserialise.";
             }
 
-            var dbset = (DbSet<T>)_dbos.First(d => d is DbSet<T>);
-            //if (entity != null)
-            //{
-            //    var id = entity.ID;
-            //}
+            // Step 3: Merge
 
-            foreach (var entry in dbo)
+            // Geth the DbSet that this request should be inserted into.
+            var dbSet = (DbSet<TPoco>)_dbos.First(d => d is DbSet<TPoco>);
+            if (typeof(TPoco).GetInterfaces().Contains(typeof(IHasId)))
             {
-                var entity = entry as BaseEntity;
-                
-                if (dbset.Contains(entry))
+                var dbSetAsId = dbSet.Select(d => (IHasId) d);
+                foreach (var entry in updatesFromServer)
                 {
-                    dbset.Update(entry);
+                    var existing = dbSetAsId.FirstOrDefault(d => d.ID == ((IHasId)entry).ID);
+                    if (existing == null)
+                    {
+                        var x = dbSet.Add(entry, GraphBehavior.SingleObject);
+                        x.State.
+                    }
+                    else
+                    {
+                        dbSet.Update(entry, GraphBehavior.SingleObject);
+                    }
                 }
+
             }
+
+
 
             throw new NotImplementedException();
         }
