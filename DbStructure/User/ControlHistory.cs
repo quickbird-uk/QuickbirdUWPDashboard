@@ -10,11 +10,11 @@
         public DateTimeOffset DateTime { get; set; }
 
         public byte[] DataDay { get; set; }
-        //    item.TimeStamp.T
-        //    ControlDataItem item;
-        //{ 
 
         //public List<ControlDataItem> OpenDataDay()
+        //{ 
+        //    ControlDataItem item;
+        //    item.TimeStamp.T
         //    int length = sizeof(bool) + sizeof(long) + sizeof(long); 
         //}
     }

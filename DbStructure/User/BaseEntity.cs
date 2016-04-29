@@ -4,6 +4,8 @@
 
     public class BaseEntity : IHasGuid
     {
+        public Guid ID { get; set; }
+
         /// <summary>
         ///     Don't change this after the object's creation
         /// </summary>
@@ -23,7 +25,5 @@
         ///     used to detect conflicts. To be implemented
         /// </summary>
         public byte[] Version { get; set; }
-
-        public Guid ID { get; set; }
     }
 }

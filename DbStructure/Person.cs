@@ -5,6 +5,8 @@
 
     public class Person : IHasGuid
     {
+        public Guid ID { get; set; }
+
         public ulong twitterID { get; set; }
 
         public string TwitterHandle { get; set; }
@@ -16,6 +18,5 @@
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
         public List<Greenhouse> Greenhouses { get; set; }
-        public Guid ID { get; set; }
     }
 }

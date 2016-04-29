@@ -4,9 +4,10 @@
 
     public class PlacementType : IHasId
     {
+        public long ID { get; set; }
+
         public string Name { get; set; }
 
         public virtual List<Sensor> Sensors { get; set; }
-        public long ID { get; set; }
     }
 }
