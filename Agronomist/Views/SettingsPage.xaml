@@ -100,20 +100,45 @@
                                     Content="Authenticate"
                                     Click="{x:Bind ViewModel.SettingsPartViewModel.Authenticate}" />
                         </Grid>
-                        <TextBlock x:Name="UiTitle" RelativePanel.Below="AuthGrid" Text="Appearance"
+                        <TextBlock x:Name="UiTitle" RelativePanel.Below="AuthGrid" Text="Data Synchronisation"
                                    Style="{StaticResource SubtitleTextBlockStyle}" />
-                        <ToggleSwitch x:Name="UseShellDrawnBackButtonToggleSwtich"
-                                      Header="Use shell-drawn back button"
-                                      IsOn="{Binding UseShellBackButton, Mode=TwoWay}"
-                                      OffContent="Back button in page header"
-                                      OnContent="Back button in titlebar or taskbar"
-                                      RelativePanel.Below="UiTitle" />
+                        
+                            <Grid x:Name="SyncGrid" RelativePanel.Below="UiTitle">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition />
+                                    <RowDefinition Height="10" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Last updated:" Style="{StaticResource BaseTextBlockStyle}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2"
+                        			Text="{x:Bind ViewModel.SettingsPartViewModel.LastUpdate, Mode=OneWay}" Style="{StaticResource BaseTextBlockStyle}" />
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" Style="{StaticResource BaseTextBlockStyle}" />
+                                <TextBlock Grid.Row="3" Grid.Column="2"
+                        			Text="{x:Bind ViewModel.SettingsPartViewModel.UpdateStatus, Mode=OneWay}" Style="{StaticResource BaseTextBlockStyle}" />
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Next Update:" Style="{StaticResource BaseTextBlockStyle}" />
+                                <TextBlock Grid.Row="5" Grid.Column="2"
+                        			Text="{x:Bind ViewModel.SettingsPartViewModel.NextUpdate, Mode=OneWay}" Style="{StaticResource BaseTextBlockStyle}" />
+                                <Button x:Name="AuthButton1" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"
+                        			Content="Update"
+                        			Click="{x:Bind ViewModel.SettingsPartViewModel.Update}" />
+                            </Grid>
 
-                        <ToggleSwitch x:Name="UseLightThemeToggleSwitch" Header="Use Light Theme"
+                            <ToggleSwitch x:Name="UseLightThemeToggleSwitch" Header="Use Light Theme"
                                       IsOn="{Binding UseLightThemeButton, Mode=TwoWay}"
                                       OffContent="Dark theme" OnContent="Light theme"
                                       RelativePanel.AlignLeftWithPanel="True"
-                                      RelativePanel.Below="UseShellDrawnBackButtonToggleSwtich" />
+                                      RelativePanel.Below="SyncGrid" />
 
                         <TextBox x:Name="BusyTextTextBox" Width="200"
                                  Margin="0,12,0,0" HorizontalAlignment="Left"

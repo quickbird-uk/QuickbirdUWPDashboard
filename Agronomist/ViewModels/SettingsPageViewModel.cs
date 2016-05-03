@@ -5,6 +5,7 @@ namespace Agronomist.ViewModels
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.UI.Xaml;
+    using Models;
     using NetLib;
     using Services.SettingsServices;
     using Template10.Mvvm;
@@ -19,10 +20,13 @@ namespace Agronomist.ViewModels
     public class SettingsPartViewModel : ViewModelBase
     {
         private readonly SettingsService _settings;
-        private string _busyText = "Please wait...";
-        private string _renewBefore;
-        private DelegateCommand _showBusyCommand;
         private bool _authButtonEnabled = true;
+        private string _busyText = "Please wait...";
+        private string _lastUpdate = "-";
+        private string _nextUpdate = "-";
+        private DelegateCommand _showBusyCommand;
+        private bool _updateButtonEnabled = true;
+        private string _updateStatus = "-";
 
         public SettingsPartViewModel()
         {
@@ -93,7 +97,7 @@ namespace Agronomist.ViewModels
                 Busy.SetBusy(false);
             }, () => !string.IsNullOrEmpty(BusyText)));
 
-        public string RenewBefore => _renewBefore;
+        public string RenewBefore { get; private set; }
 
         public bool AuthButtonEnabled
         {
@@ -103,7 +107,70 @@ namespace Agronomist.ViewModels
                 _authButtonEnabled = value;
                 RaisePropertyChanged();
             }
+        }
 
+        public bool UpdateButtonEnabled
+        {
+            get { return _updateButtonEnabled; }
+            set
+            {
+                _updateButtonEnabled = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public string LastUpdate
+        {
+            get { return _lastUpdate; }
+
+            set
+            {
+                _lastUpdate = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
+        public string UpdateStatus
+        {
+            get { return _updateStatus; }
+
+            set
+            {
+                _updateStatus = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
+        public string NextUpdate
+        {
+            get { return _nextUpdate; }
+
+            set
+            {
+                _nextUpdate = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public async void Update()
+        {
+            UpdateStatus = "Synchronisation in progress...";
+            using (var db = new MainDbContext())
+            {
+                var result = await db.PullAndPopulate();
+                var now = DateTimeOffset.Now;
+                if (null == result)
+                {
+                    UpdateStatus = $"Successfuly updated.";
+                    LastUpdate = now.LocalDateTime.ToString("R");
+                }
+                else
+                {
+                    UpdateStatus = $"{result} ({now.LocalDateTime.ToString("R")}).";
+                }
+            }
         }
 
         public async void Authenticate()
@@ -126,7 +193,7 @@ namespace Agronomist.ViewModels
         }
 
         /// <summary>
-        /// Saves a new token, sets and notifies all relevant properties for the UI.
+        ///     Saves a new token, sets and notifies all relevant properties for the UI.
         /// </summary>
         /// <param name="cred"></param>
         public void SaveNewToken(Creds cred)
@@ -145,12 +212,12 @@ namespace Agronomist.ViewModels
         {
             var expiriy = _settings.AuthExpiry;
             if (expiriy == null)
-                _renewBefore = "--";
+                RenewBefore = "--";
             else
             {
                 var now = DateTimeOffset.Now;
                 var timeleft = expiriy.Value - now;
-                _renewBefore = timeleft < TimeSpan.Zero
+                RenewBefore = timeleft < TimeSpan.Zero
                     ? "expired"
                     : $"{timeleft.Days} days, {timeleft.Hours} hours and {timeleft.Minutes} minutes left.";
             }
