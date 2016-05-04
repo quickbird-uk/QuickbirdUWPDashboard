@@ -18,7 +18,7 @@
     {
         private List<object> _dbos;
         public DbSet<ControlType> ControlTypes { get; set; }
-        public DbSet<ParamAtPlace> ParamAtPlaces { get; set; }
+        public DbSet<ParamAtPlace> ParamsAtPlaces { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<PlacementType> PlacementTypes { get; set; }
         public DbSet<Subsystem> Subsystems { get; set; }
@@ -27,7 +27,7 @@
         public DbSet<Sensor> Sensors { get; set; }
         public DbSet<ControlHistory> ControlHistories { get; set; }
         public DbSet<Controllable> Controllables { get; set; }
-        public DbSet<CropCycle> CropCycles { get; set; }
+        public DbSet<CropCycle> Cycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
         public DbSet<Greenhouse> Greenhouses { get; set; }
         public DbSet<SensorData> SensorDatas { get; set; }
@@ -71,12 +71,11 @@
         /// <summary>
         ///     Returns null on sucessful merge.
         /// </summary>
-        /// <typeparam name="TPoco"></typeparam>
-        /// <param name="tableName"></param>
-        /// <param name="lastUpdate"></param>
-        /// <param name="cred"></param>
+        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
+        /// <param name="tableName">Name of the table to request.</param>
+        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some types.</param>
         /// <returns></returns>
-        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, DateTimeOffset lastUpdate, Creds cred = null)
+        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, Creds cred = null)
             where TPoco : class
         {
             // Step 1: Request
@@ -90,13 +89,16 @@
             if (null == response)
             {
                 Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}.");
+
+                return $"Request failed: {tableName}.";
             }
+
 
             // Step 2: Deserialise
             List<TPoco> updatesFromServer;
             try
             {
-                updatesFromServer = await Task.Run(()=>JsonConvert.DeserializeObject<List<TPoco>>(response));
+                updatesFromServer = await Task.Run(() => JsonConvert.DeserializeObject<List<TPoco>>(response));
             }
             catch (JsonSerializationException e)
             {
@@ -107,15 +109,20 @@
 
             // Step 3: Merge
             // Get the DbSet that this request should be inserted into.
-            await AddOrModify(updatesFromServer, lastUpdate);
+            await AddOrModify(updatesFromServer);
 
             SaveChanges();
 
             return null;
         }
 
-
-        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, DateTimeOffset lastUpdate)
+        /// <summary>
+        /// Figures out the real type of the table entitiy, performs checks for existing items and merges data where required.
+        /// </summary>
+        /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
+        /// <param name="updatesFromServer">The data recieved from the server.</param>
+        /// <returns>Awaitable, the local database queries are done async.</returns>
+        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer)
             where TPoco : class
         {
             var dbSet = (DbSet<TPoco>) _dbos.First(d => d is DbSet<TPoco>);
@@ -162,10 +169,6 @@
                             // Overwrite local changes, with the server's changes.
                             dbSet.Update(entry, GraphBehavior.SingleObject);
                         }
-                        else
-                        {
-                            // Do nothing, a push will happen whenever the user wants.
-                        }
                     }
                     else
                     {
@@ -180,7 +183,7 @@
         ///     Responds with a status message.
         /// </summary>
         /// <returns></returns>
-        public async Task<string> PullAndPopulate(DateTimeOffset lastUpdate)
+        public async Task<string> PullAndPopulate(DateTimeOffset lastUpdate, Creds creds)
         {
             //Reds first since they are an independent set, and they do not require authentication.
             // 1.PlacementType
@@ -188,16 +191,6 @@
             // 3.Subsystem
             // 4.Placement_has_Parameter
             // 5.ControlTypes
-            //Now for the big part
-            // 1.Greenhouse
-            // 2.CropType
-            // 3.Devices
-            // 4.Cycle
-            // 5.Sensors
-            // 6.Relay
-            // 7.Controllable
-            // 8.ControlHistory
-            // 9.SensorData
 
             // Names on the API
             //Controllables
@@ -214,7 +207,7 @@
             _dbos = new List<object>
             {
                 ControlTypes,
-                ParamAtPlaces,
+                ParamsAtPlaces,
                 Parameters,
                 PlacementTypes,
                 Subsystems,
@@ -223,21 +216,48 @@
                 Sensors,
                 ControlHistories,
                 Controllables,
-                CropCycles,
+                Cycles,
                 CropTypes,
                 Greenhouses,
                 SensorDatas
             };
 
-            var placementType = await FetchTableAndDeserialise<PlacementType>(nameof(PlacementTypes), lastUpdate);
-            var parameters = await FetchTableAndDeserialise<Parameter>(nameof(Parameters), lastUpdate);
-            var subsystems = await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems), lastUpdate);
-            var paramsAtPlaces = await FetchTableAndDeserialise<ParamAtPlace>("ParamsAtPlaces", lastUpdate);
-            var controlTypes = await FetchTableAndDeserialise<ControlType>(nameof(ControlTypes), lastUpdate);
+            var placementType = await FetchTableAndDeserialise<PlacementType>(nameof(PlacementTypes));
+            var parameters = await FetchTableAndDeserialise<Parameter>(nameof(Parameters));
+            var subsystems = await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems));
+            var paramsAtPlaces = await FetchTableAndDeserialise<ParamAtPlace>(nameof(ParamsAtPlaces));
+            var controlTypes = await FetchTableAndDeserialise<ControlType>(nameof(ControlTypes));
+
+
+            //The user editable merging items. These also requres authentication.
+            // 1.Greenhouse
+            // 2.CropType
+            // 3.Devices
+            // 4.Cycle
+            // 5.Sensors
+            // 6.Relay
+            // 7.
+
+            var greenhouse = await FetchTableAndDeserialise<Greenhouse>(nameof(Greenhouses), creds);
+            var cropTypes = await FetchTableAndDeserialise<CropType>(nameof(CropTypes), creds);
+            var cycles = await FetchTableAndDeserialise<CropCycle>(nameof(Cycles), creds);
+            var controllables = await FetchTableAndDeserialise<Controllable>(nameof(Controllables), creds);
+
+            //TODO: waiting for API
+            //var devices = await FetchTableAndDeserialise<Device>(nameof(Devices), creds);
+            //var sensors = await FetchTableAndDeserialise<Sensor>(nameof(Sensors), creds);
+            //var relay = await FetchTableAndDeserialise<Relay>(nameof(Relays), creds);
+
+            // Finall the sliced items.
+            // 1.ControlHistory
+            // 2.SensorData
+
+            //TODO: waiting for api and need to write requests.
 
             var responses = new[]
             {
-                placementType, parameters, subsystems, paramsAtPlaces, controlTypes
+                placementType, parameters, subsystems, paramsAtPlaces, controlTypes, greenhouse, cropTypes, cycles,
+                controllables
             };
 
             var fails = responses.Where(r => r != null).ToList();

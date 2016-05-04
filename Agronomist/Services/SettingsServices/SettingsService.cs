@@ -88,5 +88,14 @@ namespace Agronomist.Services.SettingsServices
                 BootStrapper.Current.CacheMaxDuration = value;
             }
         }
+
+        /// <summary>
+        ///     The UserId linked to the authentication token.
+        /// </summary>
+        public string UserId
+        {
+            get { return _helper.Read<string>(nameof(UserId), null, SettingsStrategies.Roam); }
+            set { _helper.Write(nameof(UserId), value, SettingsStrategies.Roam); }
+        }
     }
 }

@@ -23,11 +23,11 @@ namespace Agronomist.ViewModels
         private bool _authButtonEnabled = true;
         private string _busyText = "Please wait...";
         private string _lastUpdate = "-";
+        private DateTimeOffset _lastUpdateTime;
         private string _nextUpdate = "-";
         private DelegateCommand _showBusyCommand;
         private bool _updateButtonEnabled = true;
         private string _updateStatus = "-";
-        private DateTimeOffset _lastUpdateTime;
 
         public SettingsPartViewModel()
         {
@@ -121,7 +121,7 @@ namespace Agronomist.ViewModels
         }
 
         /// <summary>
-        /// The last succesful update
+        ///     The last succesful update
         /// </summary>
         public string LastUpdate
         {
@@ -135,7 +135,7 @@ namespace Agronomist.ViewModels
         }
 
         /// <summary>
-        /// If the last update attempt was successful or if there is an update underway.
+        ///     If the last update attempt was successful or if there is an update underway.
         /// </summary>
         public string UpdateStatus
         {
@@ -149,7 +149,7 @@ namespace Agronomist.ViewModels
         }
 
         /// <summary>
-        /// When the next update is scheduled for.
+        ///     When the next update is scheduled for.
         /// </summary>
         public string NextUpdate
         {
@@ -167,7 +167,14 @@ namespace Agronomist.ViewModels
             UpdateStatus = "Synchronisation in progress...";
             using (var db = new MainDbContext())
             {
-                var result = await db.PullAndPopulate(_lastUpdateTime);
+                var creds = Creds.FromUserIdAndToken(_settings.UserId, _settings.AuthToken);
+                if (null == creds)
+                {
+                    Debug.WriteLine($"Update aborted, no valid creds available.");
+                    return;
+                }
+
+                var result = await db.PullAndPopulate(_lastUpdateTime, creds);
                 var now = DateTimeOffset.Now;
                 if (null == result)
                 {
@@ -210,6 +217,7 @@ namespace Agronomist.ViewModels
             _settings.AuthToken = cred.Token;
             _settings.AuthExpiry = cred.Expiry;
             _settings.LastAuth = cred.Start;
+            _settings.UserId = cred.Userid;
             CalcRenewDate();
             // ReSharper disable once ExplicitCallerInfoArgument
             RaisePropertyChanged(nameof(AuthExpiry));
