@@ -27,6 +27,7 @@ namespace Agronomist.ViewModels
         private DelegateCommand _showBusyCommand;
         private bool _updateButtonEnabled = true;
         private string _updateStatus = "-";
+        private DateTimeOffset _lastUpdateTime;
 
         public SettingsPartViewModel()
         {
@@ -119,6 +120,9 @@ namespace Agronomist.ViewModels
             }
         }
 
+        /// <summary>
+        /// The last succesful update
+        /// </summary>
         public string LastUpdate
         {
             get { return _lastUpdate; }
@@ -130,7 +134,9 @@ namespace Agronomist.ViewModels
             }
         }
 
-
+        /// <summary>
+        /// If the last update attempt was successful or if there is an update underway.
+        /// </summary>
         public string UpdateStatus
         {
             get { return _updateStatus; }
@@ -142,7 +148,9 @@ namespace Agronomist.ViewModels
             }
         }
 
-
+        /// <summary>
+        /// When the next update is scheduled for.
+        /// </summary>
         public string NextUpdate
         {
             get { return _nextUpdate; }
@@ -159,12 +167,13 @@ namespace Agronomist.ViewModels
             UpdateStatus = "Synchronisation in progress...";
             using (var db = new MainDbContext())
             {
-                var result = await db.PullAndPopulate();
+                var result = await db.PullAndPopulate(_lastUpdateTime);
                 var now = DateTimeOffset.Now;
                 if (null == result)
                 {
                     UpdateStatus = $"Successfuly updated.";
                     LastUpdate = now.LocalDateTime.ToString("R");
+                    _lastUpdateTime = now;
                 }
                 else
                 {

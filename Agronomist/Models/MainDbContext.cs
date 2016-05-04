@@ -1,5 +1,6 @@
 ﻿namespace Agronomist.Models
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -8,7 +9,6 @@
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
-    using JetBrains.Annotations;
     using Microsoft.Data.Entity;
     using Microsoft.Data.Entity.Metadata;
     using NetLib;
@@ -73,9 +73,10 @@
         /// </summary>
         /// <typeparam name="TPoco"></typeparam>
         /// <param name="tableName"></param>
+        /// <param name="lastUpdate"></param>
         /// <param name="cred"></param>
         /// <returns></returns>
-        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, Creds cred = null)
+        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, DateTimeOffset lastUpdate, Creds cred = null)
             where TPoco : class
         {
             // Step 1: Request
@@ -95,7 +96,7 @@
             List<TPoco> updatesFromServer;
             try
             {
-                updatesFromServer = JsonConvert.DeserializeObject<List<TPoco>>(response);
+                updatesFromServer = await Task.Run(()=>JsonConvert.DeserializeObject<List<TPoco>>(response));
             }
             catch (JsonSerializationException e)
             {
@@ -106,32 +107,72 @@
 
             // Step 3: Merge
             // Get the DbSet that this request should be inserted into.
-            var dbSet = (DbSet<TPoco>) _dbos.First(d => d is DbSet<TPoco>);
-            if (typeof(TPoco).GetInterfaces().Contains(typeof(IHasId)))
-            {
-                var dbSetAsId = dbSet.Select(d => (IHasId) d).AsNoTracking();
-                foreach (var entry in updatesFromServer)
-                {
-                    var existing = dbSetAsId.FirstOrDefault(d => d.ID == ((IHasId) entry).ID);
-                    AddOrModify(existing, dbSet, entry);
-                }
-            }
+            await AddOrModify(updatesFromServer, lastUpdate);
 
             SaveChanges();
 
             return null;
         }
 
-        private static void AddOrModify<TPoco>(IHasId existing, [NotNull]DbSet<TPoco> dbSet, [NotNull]TPoco entry) where TPoco : class
+
+        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, DateTimeOffset lastUpdate)
+            where TPoco : class
         {
-            if (existing == null)
+            var dbSet = (DbSet<TPoco>) _dbos.First(d => d is DbSet<TPoco>);
+            var pocoType = typeof(TPoco);
+            foreach (var entry in updatesFromServer)
             {
-                dbSet.Add(entry, GraphBehavior.SingleObject);
-            }
-            else
-            {
-                var x = dbSet.Update(entry, GraphBehavior.SingleObject);
-                x.State = EntityState.Modified;
+                TPoco existing = null;
+                if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
+                {
+                    existing =
+                        await
+                            dbSet.Select(a => a)
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(d => ((IHasId) d).ID == ((IHasId) entry).ID);
+                }
+                else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
+                {
+                    existing =
+                        await
+                            dbSet.Select(a => a)
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(d => ((IHasGuid) d).ID == ((IHasGuid) entry).ID);
+                }
+                else if (pocoType == typeof(CropType))
+                {
+                    var x = entry as CropType;
+                    existing = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
+                }
+
+                if (existing == null)
+                {
+                    dbSet.Add(entry, GraphBehavior.SingleObject);
+                }
+                else
+                {
+                    if (entry is BaseEntity && existing is BaseEntity)
+                    {
+                        // These types allow local changes. Check date and don't overwrite unless the server has changed.
+                        var remoteVersion = entry as BaseEntity;
+                        var localVersion = existing as BaseEntity;
+
+                        if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
+                        {
+                            // Overwrite local changes, with the server's changes.
+                            dbSet.Update(entry, GraphBehavior.SingleObject);
+                        }
+                        else
+                        {
+                            // Do nothing, a push will happen whenever the user wants.
+                        }
+                    }
+                    else
+                    {
+                        // Simply take the changes from the server, there are no valid local changes.
+                        dbSet.Update(entry, GraphBehavior.SingleObject);
+                    }
+                }
             }
         }
 
@@ -139,7 +180,7 @@
         ///     Responds with a status message.
         /// </summary>
         /// <returns></returns>
-        public async Task<string> PullAndPopulate()
+        public async Task<string> PullAndPopulate(DateTimeOffset lastUpdate)
         {
             //Reds first since they are an independent set, and they do not require authentication.
             // 1.PlacementType
@@ -188,11 +229,11 @@
                 SensorDatas
             };
 
-            var placementType = await FetchTableAndDeserialise<PlacementType>(nameof(PlacementTypes));
-            var parameters = await FetchTableAndDeserialise<Parameter>(nameof(Parameters));
-            var subsystems = await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems));
-            var paramsAtPlaces = await FetchTableAndDeserialise<ParamAtPlace>("ParamsAtPlaces");
-            var controlTypes = await FetchTableAndDeserialise<ControlType>(nameof(ControlTypes));
+            var placementType = await FetchTableAndDeserialise<PlacementType>(nameof(PlacementTypes), lastUpdate);
+            var parameters = await FetchTableAndDeserialise<Parameter>(nameof(Parameters), lastUpdate);
+            var subsystems = await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems), lastUpdate);
+            var paramsAtPlaces = await FetchTableAndDeserialise<ParamAtPlace>("ParamsAtPlaces", lastUpdate);
+            var controlTypes = await FetchTableAndDeserialise<ControlType>(nameof(ControlTypes), lastUpdate);
 
             var responses = new[]
             {
