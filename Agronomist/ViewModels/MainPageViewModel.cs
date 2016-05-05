@@ -35,6 +35,9 @@ namespace Agronomist.ViewModels
             {
                 Value = suspensionState[nameof(Value)]?.ToString();
             }
+
+            if (null != parameter) Value = parameter.ToString();
+
             await Task.CompletedTask;
         }
 

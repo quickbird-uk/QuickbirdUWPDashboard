@@ -18,11 +18,11 @@ namespace Agronomist.Views
         }
 
         public static Shell Instance { get; set; }
-        public static HamburgerMenu HamburgerMenu => Instance.MyHamburgerMenu;
+        public static HamburgerMenu HamburgerMenu => Instance.HMenu;
 
         public void SetNavigationService(INavigationService navigationService)
         {
-            MyHamburgerMenu.NavigationService = navigationService;
+            HMenu.NavigationService = navigationService;
         }
     }
 }

@@ -60,16 +60,6 @@ namespace Agronomist.ViewModels
             }
         }
 
-        public bool UseShellBackButton
-        {
-            get { return _settings.UseShellBackButton; }
-            set
-            {
-                _settings.UseShellBackButton = value;
-                RaisePropertyChanged();
-            }
-        }
-
         public bool UseLightThemeButton
         {
             get { return _settings.AppTheme.Equals(ApplicationTheme.Light); }

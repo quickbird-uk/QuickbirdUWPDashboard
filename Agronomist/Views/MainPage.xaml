@@ -24,7 +24,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--  TODO: change properties for narrow view  -->
-                        <Setter Target="stateTextBox.Text" Value="Narrow Visual State" />
+                        <Setter Target="StateTextBox.Text" Value="Narrow Visual State" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="VisualStateNormal">
@@ -33,7 +33,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--  TODO: change properties for normal view  -->
-                        <Setter Target="stateTextBox.Text" Value="Normal Visual State" />
+                        <Setter Target="StateTextBox.Text" Value="Normal Visual State" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="VisualStateWide">
@@ -42,13 +42,13 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--  TODO: change properties for wide view  -->
-                        <Setter Target="stateTextBox.Text" Value="Wide Visual State" />
+                        <Setter Target="StateTextBox.Text" Value="Wide Visual State" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
-        <controls:PageHeader x:Name="pageHeader" RelativePanel.AlignLeftWithPanel="True"
+        <controls:PageHeader x:Name="PageHeader" RelativePanel.AlignLeftWithPanel="True"
                              RelativePanel.AlignRightWithPanel="True"
                              RelativePanel.AlignTopWithPanel="True" Text="Main Page">
 
@@ -60,10 +60,10 @@
             </controls:PageHeader.SecondaryCommands>
 
         </controls:PageHeader>
-
-        <controls:Resizer x:Name="parameterResizer" Margin="16,16,16,0"
+        
+        <controls:Resizer x:Name="ParameterResizer" Margin="16,16,16,0"
                           RelativePanel.AlignLeftWithPanel="True"
-                          RelativePanel.Below="pageHeader">
+                          RelativePanel.Below="PageHeader">
 
             <TextBox MinWidth="150" MinHeight="62"
                      Header="Parameter to pass"
@@ -83,17 +83,20 @@
 
         </controls:Resizer>
 
-        <Button x:Name="submitButton"
-                Click="{x:Bind ViewModel.GotoDetailsPage}" Content="Submit"
-                RelativePanel.AlignBottomWith="parameterResizer"
-                RelativePanel.RightOf="parameterResizer" />
 
-        <TextBlock x:Name="stateTextBox" Margin="16,16,0,0"
-                   RelativePanel.AlignLeftWith="parameterResizer"
-                   RelativePanel.Below="parameterResizer"
+        <Button x:Name="SubmitButton"
+                Click="{x:Bind ViewModel.GotoDetailsPage}" Content="Submit"
+                RelativePanel.AlignBottomWith="ParameterResizer"
+                RelativePanel.RightOf="ParameterResizer" />
+
+        <TextBlock x:Name="StateTextBox" Margin="16,16,0,0"
+                   RelativePanel.AlignLeftWith="ParameterResizer"
+                   RelativePanel.Below="ParameterResizer"
                    Text="Current Visual State" />
 
-        <Button x:Name="AuthThenRequestButton" RelativePanel.Below="stateTextBox" Content="Do HTTP" Click="{x:Bind ViewModel.AuthReqTest}"/>
+        <StackPanel RelativePanel.Below="StateTextBox" Margin="16">
+            <TextBlock Text="Placeholder main page, probably temporary" />
+        </StackPanel>
 
     </RelativePanel>
 </Page>
