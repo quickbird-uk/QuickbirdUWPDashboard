@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    public class Greenhouse : BaseEntity
+    public class Site : BaseEntity
     {
         public string Name { get; set; }
 

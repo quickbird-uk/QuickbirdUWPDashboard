@@ -18,9 +18,9 @@
         [Required]
         public string CropTypeName { get; set; }
 
-        public virtual Greenhouse Greenhouse { get; set; }
+        public virtual Site Site { get; set; }
 
         [Required]
-        public Guid GreenhouseID { get; set; }
+        public Guid SiteID { get; set; }
     }
 }

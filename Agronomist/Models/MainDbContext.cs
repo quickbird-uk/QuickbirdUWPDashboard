@@ -29,7 +29,7 @@
         public DbSet<Controllable> Controllables { get; set; }
         public DbSet<CropCycle> Cycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
-        public DbSet<Greenhouse> Greenhouses { get; set; }
+        public DbSet<Site> Sites { get; set; }
         public DbSet<SensorData> SensorDatas { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -45,9 +45,9 @@
             modelBuilder.Entity<ControlHistory>()
                 .HasKey(ct => new {ct.ControllableID, ct.DateTime});
 
-            modelBuilder.Entity<Greenhouse>()
+            modelBuilder.Entity<Site>()
                 .HasOne(gh => gh.Person)
-                .WithMany(p => p.Greenhouses)
+                .WithMany(p => p.Sites)
                 .HasForeignKey(gh => gh.PersonId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.SetNull);
@@ -61,9 +61,9 @@
             modelBuilder.Entity<SensorData>()
                 .HasKey(sd => new {sd.SensorID, sd.DateTime});
 
-            modelBuilder.Entity<Greenhouse>()
+            modelBuilder.Entity<Site>()
                 .HasMany(gh => gh.SensorData)
-                .WithOne(sd => sd.Greenhouse)
+                .WithOne(sd => sd.Site)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
         }
@@ -197,7 +197,7 @@
             //ControlTypes
             //CropTypes
             //Cycles
-            //Greenhouses
+            //Sites
             //Parameters
             //ParamsAtPlaces
             //People
@@ -218,7 +218,7 @@
                 Controllables,
                 Cycles,
                 CropTypes,
-                Greenhouses,
+                Sites,
                 SensorDatas
             };
 
@@ -230,7 +230,7 @@
 
 
             //The user editable merging items. These also requres authentication.
-            // 1.Greenhouse
+            // 1.Site
             // 2.CropType
             // 3.Devices
             // 4.Cycle
@@ -238,7 +238,7 @@
             // 6.Relay
             // 7.
 
-            var greenhouse = await FetchTableAndDeserialise<Greenhouse>(nameof(Greenhouses), creds);
+            var Site = await FetchTableAndDeserialise<Site>(nameof(Sites), creds);
             var cropTypes = await FetchTableAndDeserialise<CropType>(nameof(CropTypes), creds);
             var cycles = await FetchTableAndDeserialise<CropCycle>(nameof(Cycles), creds);
             var controllables = await FetchTableAndDeserialise<Controllable>(nameof(Controllables), creds);
@@ -256,7 +256,7 @@
 
             var responses = new[]
             {
-                placementType, parameters, subsystems, paramsAtPlaces, controlTypes, greenhouse, cropTypes, cycles,
+                placementType, parameters, subsystems, paramsAtPlaces, controlTypes, Site, cropTypes, cycles,
                 controllables
             };
 

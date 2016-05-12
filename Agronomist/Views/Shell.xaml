@@ -16,7 +16,7 @@
         <viewModels:ShellViewModel x:Name="ViewModel" />
     </Page.DataContext>
 
-    <Controls:HamburgerMenu x:Name="HMenu" PrimaryButtons="{x:Bind ViewModel.GreenhouseMenu, Mode=OneWay}">
+    <Controls:HamburgerMenu x:Name="HMenu" PrimaryButtons="{x:Bind ViewModel.SiteMenu, Mode=OneWay}">
         <Controls:HamburgerMenu.SecondaryButtons>
             <!--  settingspage button  -->
             <Controls:HamburgerButtonInfo x:Name="SettingsButton" PageParameter="0"

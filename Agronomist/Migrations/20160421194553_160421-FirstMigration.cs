@@ -129,7 +129,7 @@ namespace Agronomist.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.CreateTable(
-                name: "Greenhouse",
+                name: "Site",
                 columns: table => new
                 {
                     ID = table.Column<Guid>(nullable: false),
@@ -142,9 +142,9 @@ namespace Agronomist.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Greenhouse", x => x.ID);
+                    table.PrimaryKey("PK_Site", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Greenhouse_Person_PersonId",
+                        name: "FK_Site_Person_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Person",
                         principalColumn: "ID",
@@ -157,7 +157,7 @@ namespace Agronomist.Migrations
                     ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
-                    GreenhouseID = table.Column<Guid>(nullable: false),
+                    SiteID = table.Column<Guid>(nullable: false),
                     Location = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     SerialNumber = table.Column<Guid>(nullable: false),
@@ -168,9 +168,9 @@ namespace Agronomist.Migrations
                 {
                     table.PrimaryKey("PK_Device", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Device_Greenhouse_GreenhouseID",
-                        column: x => x.GreenhouseID,
-                        principalTable: "Greenhouse",
+                        name: "FK_Device_Site_SiteID",
+                        column: x => x.SiteID,
+                        principalTable: "Site",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -183,7 +183,7 @@ namespace Agronomist.Migrations
                     ControlTypeID1 = table.Column<long>(nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
-                    GreenhouseID = table.Column<Guid>(nullable: false),
+                    SiteID = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Version = table.Column<byte[]>(nullable: true)
@@ -198,9 +198,9 @@ namespace Agronomist.Migrations
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Controllable_Greenhouse_GreenhouseID",
-                        column: x => x.GreenhouseID,
-                        principalTable: "Greenhouse",
+                        name: "FK_Controllable_Site_SiteID",
+                        column: x => x.SiteID,
+                        principalTable: "Site",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -213,7 +213,7 @@ namespace Agronomist.Migrations
                     CropTypeID = table.Column<Guid>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
                     EndDate = table.Column<DateTimeOffset>(nullable: true),
-                    GreenhouseID = table.Column<Guid>(nullable: false),
+                    SiteID = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     StartDate = table.Column<DateTimeOffset>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
@@ -229,9 +229,9 @@ namespace Agronomist.Migrations
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CropCycle_Greenhouse_GreenhouseID",
-                        column: x => x.GreenhouseID,
-                        principalTable: "Greenhouse",
+                        name: "FK_CropCycle_Site_SiteID",
+                        column: x => x.SiteID,
+                        principalTable: "Site",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -333,15 +333,15 @@ namespace Agronomist.Migrations
                     SensorID = table.Column<Guid>(nullable: false),
                     DateTime = table.Column<DateTimeOffset>(nullable: false),
                     DayData = table.Column<byte[]>(nullable: true),
-                    GreenhouseID = table.Column<Guid>(nullable: true)
+                    SiteID = table.Column<Guid>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SensorData", x => new { x.SensorID, x.DateTime });
                     table.ForeignKey(
-                        name: "FK_SensorData_Greenhouse_GreenhouseID",
-                        column: x => x.GreenhouseID,
-                        principalTable: "Greenhouse",
+                        name: "FK_SensorData_Site_SiteID",
+                        column: x => x.SiteID,
+                        principalTable: "Site",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
@@ -365,7 +365,7 @@ namespace Agronomist.Migrations
             migrationBuilder.DropTable("ControlType");
             migrationBuilder.DropTable("Device");
             migrationBuilder.DropTable("ParamAtPlace");
-            migrationBuilder.DropTable("Greenhouse");
+            migrationBuilder.DropTable("Site");
             migrationBuilder.DropTable("Parameter");
             migrationBuilder.DropTable("PlacementType");
             migrationBuilder.DropTable("Subsystem");

@@ -8,8 +8,8 @@
         public virtual Sensor Sensor { get; set; }
         public Guid SensorID { get; set; }
 
-        public virtual Greenhouse Greenhouse { get; set; }
-        public Guid? GreenhouseID { get; set; }
+        public virtual Site Site { get; set; }
+        public Guid? SiteID { get; set; }
 
         public byte[] DayData { get; set; }
     }

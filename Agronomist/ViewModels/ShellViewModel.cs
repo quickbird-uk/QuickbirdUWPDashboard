@@ -11,15 +11,17 @@
 
     public class ShellViewModel : ViewModelBase
     {
-        public ObservableCollection<HamburgerButtonInfo> GreenhouseMenu = new ObservableCollection<HamburgerButtonInfo>();
+        public ObservableCollection<HamburgerButtonInfo> SiteMenu = new ObservableCollection<HamburgerButtonInfo>();
 
         public ShellViewModel()
         {
-            var button = CreateMenuEntry(Symbol.Add, "New Greenhouse", typeof(MainPage), "A");
-            var button2 = CreateMenuEntry(Symbol.Add, "New Greenhouse 2", typeof(MainPage), "B");
+            var button = CreateMenuEntry(Symbol.Add, "New Site", typeof(NewSitePage), "A");
+            var button2 = CreateMenuEntry(Symbol.Add, "New Site 2", typeof(NewSitePage), "B");
+            var button3 = CreateMenuEntry(Symbol.Add, "New Site 2", typeof(NewSitePage));
 
-            GreenhouseMenu.Add(button);
-            GreenhouseMenu.Add(button2);
+            SiteMenu.Add(button);
+            SiteMenu.Add(button2);
+            SiteMenu.Add(button3);
 
             if (DesignMode.DesignModeEnabled)
             {
@@ -30,7 +32,7 @@
             }
         }
 
-        private static HamburgerButtonInfo CreateMenuEntry(Symbol symbol, string buttonText, Type viewType, object parameter)
+        private static HamburgerButtonInfo CreateMenuEntry(Symbol symbol, string buttonText, Type viewType, object parameter = null)
         {
             var stackPanel = new StackPanel
             {

@@ -25,7 +25,7 @@ namespace Agronomist.Migrations
 
                     b.Property<bool>("Deleted");
 
-                    b.Property<Guid>("GreenhouseID");
+                    b.Property<Guid>("SiteID");
 
                     b.Property<string>("Location");
 
@@ -186,7 +186,7 @@ namespace Agronomist.Migrations
 
                     b.Property<bool>("Deleted");
 
-                    b.Property<Guid>("GreenhouseID");
+                    b.Property<Guid>("SiteID");
 
                     b.Property<string>("Name");
 
@@ -210,7 +210,7 @@ namespace Agronomist.Migrations
 
                     b.Property<DateTimeOffset?>("EndDate");
 
-                    b.Property<Guid>("GreenhouseID");
+                    b.Property<Guid>("SiteID");
 
                     b.Property<string>("Name");
 
@@ -241,7 +241,7 @@ namespace Agronomist.Migrations
                     b.HasKey("ID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Greenhouse", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.Site", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -287,16 +287,16 @@ namespace Agronomist.Migrations
 
                     b.Property<byte[]>("DayData");
 
-                    b.Property<Guid?>("GreenhouseID");
+                    b.Property<Guid?>("SiteID");
 
                     b.HasKey("SensorID", "DateTime");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Greenhouse")
+                    b.HasOne("DatabasePOCOs.User.Site")
                         .WithMany()
-                        .HasForeignKey("GreenhouseID");
+                        .HasForeignKey("SiteID");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.ControlType", b =>
@@ -360,9 +360,9 @@ namespace Agronomist.Migrations
                         .WithMany()
                         .HasForeignKey("ControlTypeID1");
 
-                    b.HasOne("DatabasePOCOs.User.Greenhouse")
+                    b.HasOne("DatabasePOCOs.User.Site")
                         .WithMany()
-                        .HasForeignKey("GreenhouseID");
+                        .HasForeignKey("SiteID");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
@@ -371,12 +371,12 @@ namespace Agronomist.Migrations
                         .WithMany()
                         .HasForeignKey("CropTypeID");
 
-                    b.HasOne("DatabasePOCOs.User.Greenhouse")
+                    b.HasOne("DatabasePOCOs.User.Site")
                         .WithMany()
-                        .HasForeignKey("GreenhouseID");
+                        .HasForeignKey("SiteID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Greenhouse", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.Site", b =>
                 {
                     b.HasOne("DatabasePOCOs.User.Person")
                         .WithMany()
@@ -385,9 +385,9 @@ namespace Agronomist.Migrations
 
             modelBuilder.Entity("DatabasePOCOs.User.SensorData", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Greenhouse")
+                    b.HasOne("DatabasePOCOs.User.Site")
                         .WithMany()
-                        .HasForeignKey("GreenhouseID");
+                        .HasForeignKey("SiteID");
 
                     b.HasOne("DatabasePOCOs.Sensor")
                         .WithMany()

@@ -105,11 +105,11 @@
       <FileName>User\CropCycle.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DatabasePOCOs.User.Greenhouse">
+  <Class Name="DatabasePOCOs.User.Site">
     <Position X="13" Y="3.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>QIAAAAAAAAAAAAAEAAAAAIQAQAAEAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>User\Greenhouse.cs</FileName>
+      <FileName>User\Site.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DatabasePOCOs.User.SensorData">

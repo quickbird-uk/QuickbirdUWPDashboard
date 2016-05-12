@@ -17,6 +17,6 @@
 
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
-        public List<Greenhouse> Greenhouses { get; set; }
+        public List<Site> Sites { get; set; }
     }
 }
