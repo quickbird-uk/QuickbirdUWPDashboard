@@ -1,5 +1,6 @@
 ﻿namespace DatabasePOCOs.Global
 {
+    using Newtonsoft.Json;
     using System.Collections.Generic;
 
     public class Subsystem : IHasId
@@ -8,8 +9,10 @@
 
         public string Name { get; set; }
 
-        public virtual List<ControlType> ControlTypes { get; set; }
+        [JsonIgnore]
+        public virtual List<RelayType> ControlTypes { get; set; }
 
-        public virtual List<ParamAtPlace> ParamsAtPlaces { get; set; }
+        [JsonIgnore]
+        public virtual List<SensorType> SensorTypes { get; set; }
     }
 }

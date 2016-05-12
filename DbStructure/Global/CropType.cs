@@ -1,5 +1,6 @@
 ﻿namespace DatabasePOCOs
 {
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -16,6 +17,7 @@
 
         public Guid? CreatedBy { get; set; } = null;
 
+        [JsonIgnore]
         public virtual List<CropCycle> CropCycles { get; set; }
     }
 }
