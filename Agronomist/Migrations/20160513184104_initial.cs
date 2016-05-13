@@ -4,10 +4,23 @@ using Microsoft.Data.Entity.Migrations;
 
 namespace Agronomist.Migrations
 {
-    public partial class _160421FirstMigration : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "CropType",
+                columns: table => new
+                {
+                    Name = table.Column<string>(nullable: false),
+                    Approved = table.Column<bool>(nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    CreatedBy = table.Column<Guid>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CropType", x => x.Name);
+                });
             migrationBuilder.CreateTable(
                 name: "Parameter",
                 columns: table => new
@@ -22,7 +35,7 @@ namespace Agronomist.Migrations
                     table.PrimaryKey("PK_Parameter", x => x.ID);
                 });
             migrationBuilder.CreateTable(
-                name: "PlacementType",
+                name: "Placement",
                 columns: table => new
                 {
                     ID = table.Column<long>(nullable: false)
@@ -31,7 +44,7 @@ namespace Agronomist.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PlacementType", x => x.ID);
+                    table.PrimaryKey("PK_Placement", x => x.ID);
                 });
             migrationBuilder.CreateTable(
                 name: "Subsystem",
@@ -46,26 +59,10 @@ namespace Agronomist.Migrations
                     table.PrimaryKey("PK_Subsystem", x => x.ID);
                 });
             migrationBuilder.CreateTable(
-                name: "CropType",
-                columns: table => new
-                {
-                    ID = table.Column<Guid>(nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Deleted = table.Column<bool>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Version = table.Column<byte[]>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CropType", x => x.ID);
-                });
-            migrationBuilder.CreateTable(
                 name: "Person",
                 columns: table => new
                 {
-                    ID = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     TwitterHandle = table.Column<string>(nullable: true),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
@@ -77,7 +74,7 @@ namespace Agronomist.Migrations
                     table.PrimaryKey("PK_Person", x => x.ID);
                 });
             migrationBuilder.CreateTable(
-                name: "ControlType",
+                name: "RelayType",
                 columns: table => new
                 {
                     ID = table.Column<long>(nullable: false)
@@ -88,16 +85,16 @@ namespace Agronomist.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ControlType", x => x.ID);
+                    table.PrimaryKey("PK_RelayType", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_ControlType_Subsystem_SubsystemID",
+                        name: "FK_RelayType_Subsystem_SubsystemID",
                         column: x => x.SubsystemID,
                         principalTable: "Subsystem",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.CreateTable(
-                name: "ParamAtPlace",
+                name: "SensorType",
                 columns: table => new
                 {
                     ID = table.Column<long>(nullable: false)
@@ -108,43 +105,43 @@ namespace Agronomist.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ParamAtPlace", x => x.ID);
+                    table.PrimaryKey("PK_SensorType", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_ParamAtPlace_Parameter_ParamID",
+                        name: "FK_SensorType_Parameter_ParamID",
                         column: x => x.ParamID,
                         principalTable: "Parameter",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ParamAtPlace_PlacementType_PlaceID",
+                        name: "FK_SensorType_Placement_PlaceID",
                         column: x => x.PlaceID,
-                        principalTable: "PlacementType",
+                        principalTable: "Placement",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ParamAtPlace_Subsystem_SubsystemID",
+                        name: "FK_SensorType_Subsystem_SubsystemID",
                         column: x => x.SubsystemID,
                         principalTable: "Subsystem",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.CreateTable(
-                name: "Site",
+                name: "Location",
                 columns: table => new
                 {
                     ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    PersonId = table.Column<long>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    PersonId = table.Column<Guid>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Version = table.Column<byte[]>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Site", x => x.ID);
+                    table.PrimaryKey("PK_Location", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Site_Person_PersonId",
+                        name: "FK_Location_Person_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Person",
                         principalColumn: "ID",
@@ -157,9 +154,8 @@ namespace Agronomist.Migrations
                     ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
-                    SiteID = table.Column<Guid>(nullable: false),
-                    Location = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
+                    LocationID = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
                     SerialNumber = table.Column<Guid>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Version = table.Column<byte[]>(nullable: true)
@@ -168,39 +164,9 @@ namespace Agronomist.Migrations
                 {
                     table.PrimaryKey("PK_Device", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Device_Site_SiteID",
-                        column: x => x.SiteID,
-                        principalTable: "Site",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-            migrationBuilder.CreateTable(
-                name: "Controllable",
-                columns: table => new
-                {
-                    ID = table.Column<Guid>(nullable: false),
-                    ControlTypeID = table.Column<Guid>(nullable: false),
-                    ControlTypeID1 = table.Column<long>(nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Deleted = table.Column<bool>(nullable: false),
-                    SiteID = table.Column<Guid>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Version = table.Column<byte[]>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Controllable", x => x.ID);
-                    table.ForeignKey(
-                        name: "FK_Controllable_ControlType_ControlTypeID1",
-                        column: x => x.ControlTypeID1,
-                        principalTable: "ControlType",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Controllable_Site_SiteID",
-                        column: x => x.SiteID,
-                        principalTable: "Site",
+                        name: "FK_Device_Location_LocationID",
+                        column: x => x.LocationID,
+                        principalTable: "Location",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -210,11 +176,11 @@ namespace Agronomist.Migrations
                 {
                     ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    CropTypeID = table.Column<Guid>(nullable: false),
+                    CropTypeName = table.Column<string>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
                     EndDate = table.Column<DateTimeOffset>(nullable: true),
-                    SiteID = table.Column<Guid>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
+                    LocationID = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
                     StartDate = table.Column<DateTimeOffset>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Version = table.Column<byte[]>(nullable: true)
@@ -223,15 +189,48 @@ namespace Agronomist.Migrations
                 {
                     table.PrimaryKey("PK_CropCycle", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_CropCycle_CropType_CropTypeID",
-                        column: x => x.CropTypeID,
+                        name: "FK_CropCycle_CropType_CropTypeName",
+                        column: x => x.CropTypeName,
                         principalTable: "CropType",
+                        principalColumn: "Name",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CropCycle_Location_LocationID",
+                        column: x => x.LocationID,
+                        principalTable: "Location",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+            migrationBuilder.CreateTable(
+                name: "Relay",
+                columns: table => new
+                {
+                    ID = table.Column<Guid>(nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    Deleted = table.Column<bool>(nullable: false),
+                    DeviceID = table.Column<Guid>(nullable: false),
+                    Enabled = table.Column<bool>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    OffTime = table.Column<int>(nullable: false),
+                    OnTime = table.Column<int>(nullable: false),
+                    RelayTypeID = table.Column<long>(nullable: false),
+                    StartDate = table.Column<DateTimeOffset>(nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    Version = table.Column<byte[]>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Relay", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_Relay_Device_DeviceID",
+                        column: x => x.DeviceID,
+                        principalTable: "Device",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CropCycle_Site_SiteID",
-                        column: x => x.SiteID,
-                        principalTable: "Site",
+                        name: "FK_Relay_RelayType_RelayTypeID",
+                        column: x => x.RelayTypeID,
+                        principalTable: "RelayType",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -240,15 +239,16 @@ namespace Agronomist.Migrations
                 columns: table => new
                 {
                     ID = table.Column<Guid>(nullable: false),
-                    AlertHigh = table.Column<double>(nullable: true),
-                    AlertLow = table.Column<double>(nullable: true),
+                    AlertHigh = table.Column<double>(nullable: false),
+                    AlertLow = table.Column<double>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
                     DeviceID = table.Column<Guid>(nullable: false),
+                    Enabled = table.Column<bool>(nullable: false),
                     Multiplier = table.Column<double>(nullable: false),
                     Offset = table.Column<double>(nullable: false),
-                    ParamAtPLaceID = table.Column<long>(nullable: false),
-                    PlacementTypeID = table.Column<long>(nullable: true),
+                    PlacementID = table.Column<long>(nullable: true),
+                    SensorTypeID = table.Column<long>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Version = table.Column<byte[]>(nullable: true)
                 },
@@ -262,90 +262,63 @@ namespace Agronomist.Migrations
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Sensor_ParamAtPlace_ParamAtPLaceID",
-                        column: x => x.ParamAtPLaceID,
-                        principalTable: "ParamAtPlace",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Sensor_PlacementType_PlacementTypeID",
-                        column: x => x.PlacementTypeID,
-                        principalTable: "PlacementType",
+                        name: "FK_Sensor_Placement_PlacementID",
+                        column: x => x.PlacementID,
+                        principalTable: "Placement",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Restrict);
-                });
-            migrationBuilder.CreateTable(
-                name: "Relay",
-                columns: table => new
-                {
-                    ID = table.Column<Guid>(nullable: false),
-                    ControlableID = table.Column<Guid>(nullable: true),
-                    ControllableID = table.Column<Guid>(nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Deleted = table.Column<bool>(nullable: false),
-                    DeviceID = table.Column<Guid>(nullable: false),
-                    Enabled = table.Column<bool>(nullable: false),
-                    OffTime = table.Column<uint>(nullable: false),
-                    OnTime = table.Column<uint>(nullable: false),
-                    StartDate = table.Column<DateTimeOffset>(nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Version = table.Column<byte[]>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Relay", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Relay_Controllable_ControlableID",
-                        column: x => x.ControlableID,
-                        principalTable: "Controllable",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Relay_Device_DeviceID",
-                        column: x => x.DeviceID,
-                        principalTable: "Device",
+                        name: "FK_Sensor_SensorType_SensorTypeID",
+                        column: x => x.SensorTypeID,
+                        principalTable: "SensorType",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.CreateTable(
-                name: "ControlHistory",
+                name: "RelayHistory",
                 columns: table => new
                 {
-                    ControllableID = table.Column<Guid>(nullable: false),
-                    DateTime = table.Column<DateTimeOffset>(nullable: false),
-                    Controllable = table.Column<Guid>(nullable: false),
-                    DataDay = table.Column<byte[]>(nullable: true)
+                    RelayID = table.Column<Guid>(nullable: false),
+                    TimeStamp = table.Column<DateTimeOffset>(nullable: false),
+                    LocationID = table.Column<Guid>(nullable: true),
+                    RawData = table.Column<byte[]>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ControlHistory", x => new { x.ControllableID, x.DateTime });
+                    table.PrimaryKey("PK_RelayHistory", x => new { x.RelayID, x.TimeStamp });
                     table.ForeignKey(
-                        name: "FK_ControlHistory_Controllable_ControllableID",
-                        column: x => x.ControllableID,
-                        principalTable: "Controllable",
+                        name: "FK_RelayHistory_Location_LocationID",
+                        column: x => x.LocationID,
+                        principalTable: "Location",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RelayHistory_Relay_RelayID",
+                        column: x => x.RelayID,
+                        principalTable: "Relay",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                 });
             migrationBuilder.CreateTable(
-                name: "SensorData",
+                name: "SensorHistory",
                 columns: table => new
                 {
                     SensorID = table.Column<Guid>(nullable: false),
-                    DateTime = table.Column<DateTimeOffset>(nullable: false),
-                    DayData = table.Column<byte[]>(nullable: true),
-                    SiteID = table.Column<Guid>(nullable: true)
+                    TimeStamp = table.Column<DateTimeOffset>(nullable: false),
+                    LocationID = table.Column<Guid>(nullable: true),
+                    RawData = table.Column<byte[]>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SensorData", x => new { x.SensorID, x.DateTime });
+                    table.PrimaryKey("PK_SensorHistory", x => new { x.SensorID, x.TimeStamp });
                     table.ForeignKey(
-                        name: "FK_SensorData_Site_SiteID",
-                        column: x => x.SiteID,
-                        principalTable: "Site",
+                        name: "FK_SensorHistory_Location_LocationID",
+                        column: x => x.LocationID,
+                        principalTable: "Location",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_SensorData_Sensor_SensorID",
+                        name: "FK_SensorHistory_Sensor_SensorID",
                         column: x => x.SensorID,
                         principalTable: "Sensor",
                         principalColumn: "ID",
@@ -355,19 +328,18 @@ namespace Agronomist.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable("Relay");
-            migrationBuilder.DropTable("ControlHistory");
             migrationBuilder.DropTable("CropCycle");
-            migrationBuilder.DropTable("SensorData");
-            migrationBuilder.DropTable("Controllable");
+            migrationBuilder.DropTable("RelayHistory");
+            migrationBuilder.DropTable("SensorHistory");
             migrationBuilder.DropTable("CropType");
+            migrationBuilder.DropTable("Relay");
             migrationBuilder.DropTable("Sensor");
-            migrationBuilder.DropTable("ControlType");
+            migrationBuilder.DropTable("RelayType");
             migrationBuilder.DropTable("Device");
-            migrationBuilder.DropTable("ParamAtPlace");
-            migrationBuilder.DropTable("Site");
+            migrationBuilder.DropTable("SensorType");
+            migrationBuilder.DropTable("Location");
             migrationBuilder.DropTable("Parameter");
-            migrationBuilder.DropTable("PlacementType");
+            migrationBuilder.DropTable("Placement");
             migrationBuilder.DropTable("Subsystem");
             migrationBuilder.DropTable("Person");
         }

@@ -1,5 +1,6 @@
 ﻿namespace DatabasePOCOs.User
 {
+    using Newtonsoft.Json;
     using System;
     using System.ComponentModel.DataAnnotations;
 
@@ -13,14 +14,16 @@
 
         public DateTimeOffset? EndDate { get; set; }
 
+        [JsonIgnore]
         public virtual CropType CropType { get; set; }
 
         [Required]
         public string CropTypeName { get; set; }
 
-        public virtual Site Site { get; set; }
+        [JsonIgnore]
+        public virtual Location Location { get; set; }
 
         [Required]
-        public Guid SiteID { get; set; }
+        public Guid LocationID { get; set; }
     }
 }

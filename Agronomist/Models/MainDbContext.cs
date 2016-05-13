@@ -17,55 +17,61 @@
     public class MainDbContext : DbContext
     {
         private List<object> _dbos;
-        public DbSet<ControlType> ControlTypes { get; set; }
-        public DbSet<ParamAtPlace> ParamsAtPlaces { get; set; }
-        public DbSet<Parameter> Parameters { get; set; }
-        public DbSet<PlacementType> PlacementTypes { get; set; }
-        public DbSet<Subsystem> Subsystems { get; set; }
-        public DbSet<Device> Devices { get; set; }
-        public DbSet<Relay> Relays { get; set; }
-        public DbSet<Sensor> Sensors { get; set; }
-        public DbSet<ControlHistory> ControlHistories { get; set; }
-        public DbSet<Controllable> Controllables { get; set; }
-        public DbSet<CropCycle> Cycles { get; set; }
+
+        public DbSet<CropCycle> CropCycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
-        public DbSet<Site> Sites { get; set; }
-        public DbSet<SensorData> SensorDatas { get; set; }
+        public DbSet<Device> Devices { get; set; }
+        public DbSet<Location> Locations { get; set; }
+        public DbSet<Parameter> Parameters { get; set; }
+        public DbSet<Person> People { get; set; }
+        public DbSet<Placement> Placements { get; set; }
+        public DbSet<RelayHistory> RelayHistory { get; set; }
+        public DbSet<Relay> Relays { get; set; }
+        public DbSet<RelayType> RelayTypes { get; set; }
+        public DbSet<Sensor> Sensors { get; set; }
+        public DbSet<SensorHistory> SensorHistory { get; set; }
+        public DbSet<SensorType> SensorTypes { get; set; }
+        public DbSet<Subsystem> Subsystems { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Filename=maindb.db");
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder mb)
         {
-            modelBuilder.Entity<CropType>()
-                .HasKey(c => c.Name);
+            mb.Entity<RelayHistory>().HasKey(rh => new {rh.RelayID, rh.TimeStamp});
+            mb.Entity<SensorHistory>().HasKey(sh => new {sh.SensorID, sh.TimeStamp});
 
-            modelBuilder.Entity<ControlHistory>()
-                .HasKey(ct => new {ct.ControllableID, ct.DateTime});
-
-            modelBuilder.Entity<Site>()
-                .HasOne(gh => gh.Person)
-                .WithMany(p => p.Sites)
-                .HasForeignKey(gh => gh.PersonId)
-                .IsRequired()
+            mb.Entity<Location>()
+                .HasOne(l => l.Person)
+                .WithMany(p => p.Locations)
+                .HasForeignKey(l => l.PersonId).IsRequired()
                 .OnDelete(DeleteBehavior.SetNull);
 
-            //modelBuilder.Entity<Controllable>()
-            //    .HasOne(ct => ct.Relay)
-            //    .WithOne(r => r.)
-            //    .IsRequired(false)
-            //    .OnDelete(DeleteBehavior.SetNull);
+            // Skip the person init, it can't be editied on this side anyway.
 
-            modelBuilder.Entity<SensorData>()
-                .HasKey(sd => new {sd.SensorID, sd.DateTime});
-
-            modelBuilder.Entity<Site>()
-                .HasMany(gh => gh.SensorData)
-                .WithOne(sd => sd.Site)
+            mb.Entity<Location>()
+                .HasMany(loc => loc.SensorHistory)
+                .WithOne(sh => sh.Location)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            mb.Entity<CropType>()
+                .HasKey(ct => ct.Name);
+
+            mb.Entity<CropType>()
+                .Property(ct => ct.Name)
+                .ValueGeneratedNever();
+
+            mb.Entity<CropType>()
+                .HasMany(ct => ct.CropCycles)
+                .WithOne(cc => cc.CropType).IsRequired()
+                .HasForeignKey(cc => cc.CropTypeName);
+
+            mb.Entity<RelayHistory>().Ignore(rh => rh.Data);
+            mb.Entity<SensorHistory>().Ignore(sh => sh.Data);
         }
 
         /// <summary>
@@ -117,7 +123,7 @@
         }
 
         /// <summary>
-        /// Figures out the real type of the table entitiy, performs checks for existing items and merges data where required.
+        ///     Figures out the real type of the table entitiy, performs checks for existing items and merges data where required.
         /// </summary>
         /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
         /// <param name="updatesFromServer">The data recieved from the server.</param>
@@ -185,80 +191,63 @@
         /// <returns></returns>
         public async Task<string> PullAndPopulate(DateTimeOffset lastUpdate, Creds creds)
         {
-            //Reds first since they are an independent set, and they do not require authentication.
-            // 1.PlacementType
-            // 2.Parameter
-            // 3.Subsystem
-            // 4.Placement_has_Parameter
-            // 5.ControlTypes
-
-            // Names on the API
-            //Controllables
-            //ControlTypes
-            //CropTypes
-            //Cycles
-            //Sites
-            //Parameters
-            //ParamsAtPlaces
-            //People
-            //PlacementTypes
-            //Subsystems
-            //Values
             _dbos = new List<object>
             {
-                ControlTypes,
-                ParamsAtPlaces,
-                Parameters,
-                PlacementTypes,
-                Subsystems,
-                Devices,
-                Relays,
-                Sensors,
-                ControlHistories,
-                Controllables,
-                Cycles,
+                CropCycles,
                 CropTypes,
-                Sites,
-                SensorDatas
+                Devices,
+                Locations,
+                Parameters,
+                People,
+                Placements,
+                RelayHistory,
+                Relays,
+                RelayTypes,
+                Sensors,
+                SensorHistory,
+                SensorTypes,
+                Subsystems
             };
 
-            var placementType = await FetchTableAndDeserialise<PlacementType>(nameof(PlacementTypes));
-            var parameters = await FetchTableAndDeserialise<Parameter>(nameof(Parameters));
-            var subsystems = await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems));
-            var paramsAtPlaces = await FetchTableAndDeserialise<ParamAtPlace>(nameof(ParamsAtPlaces));
-            var controlTypes = await FetchTableAndDeserialise<ControlType>(nameof(ControlTypes));
+            // No auth no post types:
+            // 1. Parameters
+            // 2. People
+            // 3. Placements
+            // 4. RelayTypes
+            // 5. SensorTypes
+            // 6. Subsystems
+
+            var responses = new List<string>();
+            responses.Add(await FetchTableAndDeserialise<Parameter>(nameof(Parameters)));
+            responses.Add(await FetchTableAndDeserialise<Person>(nameof(People)));
+            responses.Add(await FetchTableAndDeserialise<Placement>(nameof(Placements)));
+            responses.Add(await FetchTableAndDeserialise<RelayType>(nameof(RelayTypes)));
+            responses.Add(await FetchTableAndDeserialise<SensorType>(nameof(SensorTypes)));
+            responses.Add(await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems)));
 
 
-            //The user editable merging items. These also requres authentication.
-            // 1.Site
-            // 2.CropType
+            // Editable types that must be merged.
+            // 1.CropCycles
+            // 2.CropType (uniqley does not require auth on get).
             // 3.Devices
-            // 4.Cycle
-            // 5.Sensors
-            // 6.Relay
-            // 7.
+            // 4.Locations
+            // 5.Relays
+            // 6.Sensors
 
-            var Site = await FetchTableAndDeserialise<Site>(nameof(Sites), creds);
-            var cropTypes = await FetchTableAndDeserialise<CropType>(nameof(CropTypes), creds);
-            var cycles = await FetchTableAndDeserialise<CropCycle>(nameof(Cycles), creds);
-            var controllables = await FetchTableAndDeserialise<Controllable>(nameof(Controllables), creds);
+            responses.Add(await FetchTableAndDeserialise<CropCycle>(nameof(CropCycles), creds));
+            responses.Add(await FetchTableAndDeserialise<CropType>(nameof(CropTypes), creds));
+            responses.Add(await FetchTableAndDeserialise<Device>(nameof(Devices), creds));
+            responses.Add(await FetchTableAndDeserialise<Location>(nameof(Locations), creds));
+            responses.Add(await FetchTableAndDeserialise<Relay>(nameof(Relays), creds));
+            responses.Add(await FetchTableAndDeserialise<Sensor>(nameof(Sensors), creds));
 
-            //TODO: waiting for API
-            //var devices = await FetchTableAndDeserialise<Device>(nameof(Devices), creds);
-            //var sensors = await FetchTableAndDeserialise<Sensor>(nameof(Sensors), creds);
-            //var relay = await FetchTableAndDeserialise<Relay>(nameof(Relays), creds);
 
-            // Finall the sliced items.
-            // 1.ControlHistory
-            // 2.SensorData
+            // Items that have to get got in time slices.
+            // 1.RelayHistory
+            // 2.SensorHistory
 
             //TODO: waiting for api and need to write requests.
 
-            var responses = new[]
-            {
-                placementType, parameters, subsystems, paramsAtPlaces, controlTypes, Site, cropTypes, cycles,
-                controllables
-            };
 
             var fails = responses.Where(r => r != null).ToList();
             return fails.Any() ? string.Join(", ", fails) : null;

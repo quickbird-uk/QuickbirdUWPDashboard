@@ -8,13 +8,27 @@ using Agronomist.Models;
 namespace Agronomist.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    [Migration("20160421194553_160421-FirstMigration")]
-    partial class _160421FirstMigration
+    [Migration("20160513184104_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.0-rc1-16348");
+
+            modelBuilder.Entity("DatabasePOCOs.CropType", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasAnnotation("MaxLength", 245);
+
+                    b.Property<bool>("Approved");
+
+                    b.Property<DateTimeOffset>("CreatedAt");
+
+                    b.Property<Guid?>("CreatedBy");
+
+                    b.HasKey("Name");
+                });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>
                 {
@@ -25,45 +39,16 @@ namespace Agronomist.Migrations
 
                     b.Property<bool>("Deleted");
 
-                    b.Property<Guid>("SiteID");
+                    b.Property<Guid>("LocationID");
 
-                    b.Property<string>("Location");
-
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.Property<Guid>("SerialNumber");
 
                     b.Property<DateTimeOffset>("UpdatedAt");
 
                     b.Property<byte[]>("Version");
-
-                    b.HasKey("ID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.Global.ControlType", b =>
-                {
-                    b.Property<long>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Additive");
-
-                    b.Property<string>("Name");
-
-                    b.Property<long>("SubsystemID");
-
-                    b.HasKey("ID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.Global.ParamAtPlace", b =>
-                {
-                    b.Property<long>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<long>("ParamID");
-
-                    b.Property<long>("PlaceID");
-
-                    b.Property<long>("SubsystemID");
 
                     b.HasKey("ID");
                 });
@@ -80,12 +65,40 @@ namespace Agronomist.Migrations
                     b.HasKey("ID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.PlacementType", b =>
+            modelBuilder.Entity("DatabasePOCOs.Global.Placement", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("Name");
+
+                    b.HasKey("ID");
+                });
+
+            modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
+                {
+                    b.Property<long>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Additive");
+
+                    b.Property<string>("Name");
+
+                    b.Property<long>("SubsystemID");
+
+                    b.HasKey("ID");
+                });
+
+            modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
+                {
+                    b.Property<long>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("ParamID");
+
+                    b.Property<long>("PlaceID");
+
+                    b.Property<long>("SubsystemID");
 
                     b.HasKey("ID");
                 });
@@ -105,10 +118,6 @@ namespace Agronomist.Migrations
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid?>("ControlableID");
-
-                    b.Property<Guid>("ControllableID");
-
                     b.Property<DateTimeOffset>("CreatedAt");
 
                     b.Property<bool>("Deleted");
@@ -117,9 +126,14 @@ namespace Agronomist.Migrations
 
                     b.Property<bool>("Enabled");
 
-                    b.Property<uint>("OffTime");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
-                    b.Property<uint>("OnTime");
+                    b.Property<int>("OffTime");
+
+                    b.Property<int>("OnTime");
+
+                    b.Property<long>("RelayTypeID");
 
                     b.Property<DateTimeOffset>("StartDate");
 
@@ -135,9 +149,11 @@ namespace Agronomist.Migrations
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<double?>("AlertHigh");
+                    b.Property<double?>("AlertHigh")
+                        .IsRequired();
 
-                    b.Property<double?>("AlertLow");
+                    b.Property<double?>("AlertLow")
+                        .IsRequired();
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
@@ -145,50 +161,15 @@ namespace Agronomist.Migrations
 
                     b.Property<Guid>("DeviceID");
 
+                    b.Property<bool>("Enabled");
+
                     b.Property<double>("Multiplier");
 
                     b.Property<double>("Offset");
 
-                    b.Property<long>("ParamAtPLaceID");
+                    b.Property<long?>("PlacementID");
 
-                    b.Property<long?>("PlacementTypeID");
-
-                    b.Property<DateTimeOffset>("UpdatedAt");
-
-                    b.Property<byte[]>("Version");
-
-                    b.HasKey("ID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.User.ControlHistory", b =>
-                {
-                    b.Property<Guid>("ControllableID");
-
-                    b.Property<DateTimeOffset>("DateTime");
-
-                    b.Property<Guid>("Controllable");
-
-                    b.Property<byte[]>("DataDay");
-
-                    b.HasKey("ControllableID", "DateTime");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.User.Controllable", b =>
-                {
-                    b.Property<Guid>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("ControlTypeID");
-
-                    b.Property<long?>("ControlTypeID1");
-
-                    b.Property<DateTimeOffset>("CreatedAt");
-
-                    b.Property<bool>("Deleted");
-
-                    b.Property<Guid>("SiteID");
-
-                    b.Property<string>("Name");
+                    b.Property<long>("SensorTypeID");
 
                     b.Property<DateTimeOffset>("UpdatedAt");
 
@@ -204,15 +185,17 @@ namespace Agronomist.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
-                    b.Property<Guid>("CropTypeID");
+                    b.Property<string>("CropTypeName")
+                        .IsRequired();
 
                     b.Property<bool>("Deleted");
 
                     b.Property<DateTimeOffset?>("EndDate");
 
-                    b.Property<Guid>("SiteID");
+                    b.Property<Guid>("LocationID");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.Property<DateTimeOffset>("StartDate");
 
@@ -223,7 +206,7 @@ namespace Agronomist.Migrations
                     b.HasKey("ID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.CropType", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -232,27 +215,10 @@ namespace Agronomist.Migrations
 
                     b.Property<bool>("Deleted");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
-                    b.Property<DateTimeOffset>("UpdatedAt");
-
-                    b.Property<byte[]>("Version");
-
-                    b.HasKey("ID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.User.Site", b =>
-                {
-                    b.Property<Guid>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTimeOffset>("CreatedAt");
-
-                    b.Property<bool>("Deleted");
-
-                    b.Property<string>("Name");
-
-                    b.Property<long>("PersonId");
+                    b.Property<Guid>("PersonId");
 
                     b.Property<DateTimeOffset>("UpdatedAt");
 
@@ -263,7 +229,7 @@ namespace Agronomist.Migrations
 
             modelBuilder.Entity("DatabasePOCOs.User.Person", b =>
                 {
-                    b.Property<long>("ID")
+                    b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
                     b.Property<DateTimeOffset>("CreatedAt");
@@ -279,40 +245,53 @@ namespace Agronomist.Migrations
                     b.HasKey("ID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.SensorData", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
+                {
+                    b.Property<Guid>("RelayID");
+
+                    b.Property<DateTimeOffset>("TimeStamp");
+
+                    b.Property<Guid?>("LocationID");
+
+                    b.Property<byte[]>("RawData");
+
+                    b.HasKey("RelayID", "TimeStamp");
+                });
+
+            modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
                 {
                     b.Property<Guid>("SensorID");
 
-                    b.Property<DateTimeOffset>("DateTime");
+                    b.Property<DateTimeOffset>("TimeStamp");
 
-                    b.Property<byte[]>("DayData");
+                    b.Property<Guid?>("LocationID");
 
-                    b.Property<Guid?>("SiteID");
+                    b.Property<byte[]>("RawData");
 
-                    b.HasKey("SensorID", "DateTime");
+                    b.HasKey("SensorID", "TimeStamp");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Site")
+                    b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("SiteID");
+                        .HasForeignKey("LocationID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.ControlType", b =>
+            modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
                 {
                     b.HasOne("DatabasePOCOs.Global.Subsystem")
                         .WithMany()
                         .HasForeignKey("SubsystemID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.ParamAtPlace", b =>
+            modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
                 {
                     b.HasOne("DatabasePOCOs.Global.Parameter")
                         .WithMany()
                         .HasForeignKey("ParamID");
 
-                    b.HasOne("DatabasePOCOs.Global.PlacementType")
+                    b.HasOne("DatabasePOCOs.Global.Placement")
                         .WithMany()
                         .HasForeignKey("PlaceID");
 
@@ -323,13 +302,13 @@ namespace Agronomist.Migrations
 
             modelBuilder.Entity("DatabasePOCOs.Relay", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Controllable")
-                        .WithOne()
-                        .HasForeignKey("DatabasePOCOs.Relay", "ControlableID");
-
                     b.HasOne("DatabasePOCOs.Device")
                         .WithMany()
                         .HasForeignKey("DeviceID");
+
+                    b.HasOne("DatabasePOCOs.Global.RelayType")
+                        .WithMany()
+                        .HasForeignKey("RelayTypeID");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Sensor", b =>
@@ -338,56 +317,49 @@ namespace Agronomist.Migrations
                         .WithMany()
                         .HasForeignKey("DeviceID");
 
-                    b.HasOne("DatabasePOCOs.Global.ParamAtPlace")
+                    b.HasOne("DatabasePOCOs.Global.Placement")
                         .WithMany()
-                        .HasForeignKey("ParamAtPLaceID");
+                        .HasForeignKey("PlacementID");
 
-                    b.HasOne("DatabasePOCOs.Global.PlacementType")
+                    b.HasOne("DatabasePOCOs.Global.SensorType")
                         .WithMany()
-                        .HasForeignKey("PlacementTypeID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.User.ControlHistory", b =>
-                {
-                    b.HasOne("DatabasePOCOs.User.Controllable")
-                        .WithMany()
-                        .HasForeignKey("ControllableID");
-                });
-
-            modelBuilder.Entity("DatabasePOCOs.User.Controllable", b =>
-                {
-                    b.HasOne("DatabasePOCOs.Global.ControlType")
-                        .WithMany()
-                        .HasForeignKey("ControlTypeID1");
-
-                    b.HasOne("DatabasePOCOs.User.Site")
-                        .WithMany()
-                        .HasForeignKey("SiteID");
+                        .HasForeignKey("SensorTypeID");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.CropType")
+                    b.HasOne("DatabasePOCOs.CropType")
                         .WithMany()
-                        .HasForeignKey("CropTypeID");
+                        .HasForeignKey("CropTypeName");
 
-                    b.HasOne("DatabasePOCOs.User.Site")
+                    b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("SiteID");
+                        .HasForeignKey("LocationID");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Site", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
                 {
                     b.HasOne("DatabasePOCOs.User.Person")
                         .WithMany()
                         .HasForeignKey("PersonId");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.SensorData", b =>
+            modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Site")
+                    b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("SiteID");
+                        .HasForeignKey("LocationID");
+
+                    b.HasOne("DatabasePOCOs.Relay")
+                        .WithMany()
+                        .HasForeignKey("RelayID");
+                });
+
+            modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
+                {
+                    b.HasOne("DatabasePOCOs.User.Location")
+                        .WithMany()
+                        .HasForeignKey("LocationID");
 
                     b.HasOne("DatabasePOCOs.Sensor")
                         .WithMany()

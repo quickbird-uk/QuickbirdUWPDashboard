@@ -1,5 +1,6 @@
 ﻿namespace DatabasePOCOs.User
 {
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
 
@@ -17,6 +18,7 @@
 
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
-        public List<Site> Sites { get; set; }
+        [JsonIgnore]
+        public List<Location> Locations { get; set; }
     }
 }
