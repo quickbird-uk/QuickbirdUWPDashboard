@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorResponse.cs" />
+    <Compile Include="Global\RelayType.cs" />
     <Compile Include="Hardware\Device.cs" />
     <Compile Include="Hardware\Relay.cs" />
     <Compile Include="Hardware\Sensor.cs" />
@@ -47,7 +48,6 @@
     <Compile Include="IHasId.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="User\BaseEntity.cs" />
-    <Compile Include="Global\ControlType.cs" />
     <Compile Include="Global\SensorType.cs" />
     <Compile Include="Global\Parameter.cs" />
     <Compile Include="Global\Placement.cs" />

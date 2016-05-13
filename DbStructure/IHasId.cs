@@ -1,6 +1,6 @@
 ﻿namespace DatabasePOCOs
 {
-    internal interface IHasId
+    public interface IHasId
     {
         long ID { get; }
     }
