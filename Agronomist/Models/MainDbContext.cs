@@ -14,9 +14,14 @@
     using NetLib;
     using Newtonsoft.Json;
 
-    public class MainDbContext : DbContext
+    public class MainDbContext : DbContext, IDataModel
     {
-        private List<object> _dbos;
+        /// <summary>
+        ///     The Url of the web api that is used to fetch data.
+        /// </summary>
+        public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
+
+        private List<object> _tables;
 
         public DbSet<CropCycle> CropCycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
@@ -33,12 +38,19 @@
         public DbSet<SensorType> SensorTypes { get; set; }
         public DbSet<Subsystem> Subsystems { get; set; }
 
-
+        /// <summary>
+        ///     Set filename for db.
+        /// </summary>
+        /// <param name="optionsBuilder"></param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Filename=maindb.db");
         }
 
+        /// <summary>
+        ///     Configure the database model.
+        /// </summary>
+        /// <param name="mb"></param>
         protected override void OnModelCreating(ModelBuilder mb)
         {
             mb.Entity<RelayHistory>().HasKey(rh => new {rh.RelayID, rh.TimeStamp});
@@ -75,22 +87,96 @@
         }
 
         /// <summary>
-        ///     Returns null on sucessful merge.
+        /// Downloads each table from the server and updates the data.
+        /// </summary>
+        /// <param name="lastUpdate">Last time update from server was called.</param>
+        /// <param name="creds">Auth creds for the request.</param>
+        /// <returns>Null on success, otherwise a descriptive error message.</returns>
+        public async Task<string> UpdateFromServer(DateTimeOffset lastUpdate, Creds creds)
+        {
+            // No auth no post types:
+            // 1. Parameters
+            // 2. People
+            // 3. Placements
+            // 4. RelayTypes
+            // 5. SensorTypes
+            // 6. Subsystems
+
+            var responses = new List<string>();
+            responses.Add(await DownloadDeserialiseTable<Parameter>(nameof(Parameters)));
+            responses.Add(await DownloadDeserialiseTable<Person>(nameof(People)));
+            responses.Add(await DownloadDeserialiseTable<Placement>(nameof(Placements)));
+            responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(RelayTypes)));
+            responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(SensorTypes)));
+            responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(Subsystems)));
+
+
+            // Editable types that must be merged.
+            // 1.CropCycles
+            // 2.CropType (uniqley does not require auth on get).
+            // 3.Devices
+            // 4.Locations
+            // 5.Relays
+            // 6.Sensors
+
+            responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(CropCycles), creds));
+            responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes), creds));
+            responses.Add(await DownloadDeserialiseTable<Device>(nameof(Devices), creds));
+            responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
+            responses.Add(await DownloadDeserialiseTable<Relay>(nameof(Relays), creds));
+            responses.Add(await DownloadDeserialiseTable<Sensor>(nameof(Sensors), creds));
+
+
+            // Items that have to get got in time slices.
+            // 1.RelayHistory
+            // 2.SensorHistory
+
+            //TODO: waiting for api and need to write requests.
+
+
+            var fails = responses.Where(r => r != null).ToList();
+            return fails.Any() ? string.Join(", ", fails) : null;
+        }
+        
+        private void InitTableList()
+        {
+            if (null != _tables) return;
+
+            _tables = new List<object>
+            {
+                CropCycles,
+                CropTypes,
+                Devices,
+                Locations,
+                Parameters,
+                People,
+                Placements,
+                RelayHistory,
+                Relays,
+                RelayTypes,
+                Sensors,
+                SensorHistory,
+                SensorTypes,
+                Subsystems
+            };
+        }
+
+        /// <summary>
+        ///     Makes a webrequest to the API server to fetch a table.
         /// </summary>
         /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
         /// <param name="tableName">Name of the table to request.</param>
         /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some types.</param>
-        /// <returns></returns>
-        public async Task<string> FetchTableAndDeserialise<TPoco>(string tableName, Creds cred = null)
+        /// <returns>Null on success, otherwise an error message.</returns>
+        private async Task<string> DownloadDeserialiseTable<TPoco>(string tableName, Creds cred = null)
             where TPoco : class
         {
             // Step 1: Request
-            const string baseUrl = "https://ghapi46azure.azurewebsites.net/api";
             string response;
             if (cred == null)
-                response = await Request.RequestTable(baseUrl, tableName);
+                response = await Request.RequestTable(ApiUrl, tableName);
             else
-                response = await Request.RequestTable(baseUrl, tableName, cred);
+                response = await Request.RequestTable(ApiUrl, tableName, cred);
 
             if (null == response)
             {
@@ -131,7 +217,8 @@
         private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer)
             where TPoco : class
         {
-            var dbSet = (DbSet<TPoco>) _dbos.First(d => d is DbSet<TPoco>);
+            InitTableList();
+            var dbSet = (DbSet<TPoco>) _tables.First(d => d is DbSet<TPoco>);
             var pocoType = typeof(TPoco);
             foreach (var entry in updatesFromServer)
             {
@@ -183,74 +270,6 @@
                     }
                 }
             }
-        }
-
-        /// <summary>
-        ///     Responds with a status message.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<string> PullAndPopulate(DateTimeOffset lastUpdate, Creds creds)
-        {
-            _dbos = new List<object>
-            {
-                CropCycles,
-                CropTypes,
-                Devices,
-                Locations,
-                Parameters,
-                People,
-                Placements,
-                RelayHistory,
-                Relays,
-                RelayTypes,
-                Sensors,
-                SensorHistory,
-                SensorTypes,
-                Subsystems
-            };
-
-            // No auth no post types:
-            // 1. Parameters
-            // 2. People
-            // 3. Placements
-            // 4. RelayTypes
-            // 5. SensorTypes
-            // 6. Subsystems
-
-            var responses = new List<string>();
-            responses.Add(await FetchTableAndDeserialise<Parameter>(nameof(Parameters)));
-            responses.Add(await FetchTableAndDeserialise<Person>(nameof(People)));
-            responses.Add(await FetchTableAndDeserialise<Placement>(nameof(Placements)));
-            responses.Add(await FetchTableAndDeserialise<RelayType>(nameof(RelayTypes)));
-            responses.Add(await FetchTableAndDeserialise<SensorType>(nameof(SensorTypes)));
-            responses.Add(await FetchTableAndDeserialise<Subsystem>(nameof(Subsystems)));
-
-
-            // Editable types that must be merged.
-            // 1.CropCycles
-            // 2.CropType (uniqley does not require auth on get).
-            // 3.Devices
-            // 4.Locations
-            // 5.Relays
-            // 6.Sensors
-
-            responses.Add(await FetchTableAndDeserialise<CropCycle>(nameof(CropCycles), creds));
-            responses.Add(await FetchTableAndDeserialise<CropType>(nameof(CropTypes), creds));
-            responses.Add(await FetchTableAndDeserialise<Device>(nameof(Devices), creds));
-            responses.Add(await FetchTableAndDeserialise<Location>(nameof(Locations), creds));
-            responses.Add(await FetchTableAndDeserialise<Relay>(nameof(Relays), creds));
-            responses.Add(await FetchTableAndDeserialise<Sensor>(nameof(Sensors), creds));
-
-
-            // Items that have to get got in time slices.
-            // 1.RelayHistory
-            // 2.SensorHistory
-
-            //TODO: waiting for api and need to write requests.
-
-
-            var fails = responses.Where(r => r != null).ToList();
-            return fails.Any() ? string.Join(", ", fails) : null;
         }
     }
 }
