@@ -117,10 +117,12 @@
             // 3.Devices
             // 4.Locations
             // 5.Relays
-            // 6.Sensors
+            // 6.
+
+            // Crop type is the only mergable that is no-auth.
+            responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes)));
 
             responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(CropCycles), creds));
-            responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes), creds));
             responses.Add(await DownloadDeserialiseTable<Device>(nameof(Devices), creds));
             responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
             responses.Add(await DownloadDeserialiseTable<Relay>(nameof(Relays), creds));
@@ -178,11 +180,11 @@
             else
                 response = await Request.RequestTable(ApiUrl, tableName, cred);
 
-            if (null == response)
+            if (response.StartsWith("Error:"))
             {
-                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}.");
+                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}, {response}");
 
-                return $"Request failed: {tableName}.";
+                return $"Request failed: {tableName}, {response}";
             }
 
 
