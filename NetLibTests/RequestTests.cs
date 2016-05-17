@@ -10,7 +10,7 @@
         public RequestTests()
         {
             const string token =
-                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdGFibGVfc2lkIjoic2lkOjdhN2EwZDZlOWRjNWU0MDA2NGIwOWU0M2Y1ODM0N2EwIiwic3ViIjoic2lkOmQ5NDZiMWNiYzY2M2Y1NTI4MTdkMjQ1NGJhMDljZmQ3IiwiaWRwIjoidHdpdHRlciIsInZlciI6IjMiLCJpc3MiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJhdWQiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJleHAiOjE0NjUxMDAxNDIsIm5iZiI6MTQ2MjUwODE0Mn0.0abeyMVXIPpnTP1Llt0Ct6QItGCPjZUQPSmkL7hQ5gc";
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdGFibGVfc2lkIjoic2lkOjY3MmQ5Mzk4ZTBmOTg0YTczM2I3OWUwYWU0NjU0M2RiIiwic3ViIjoic2lkOmIyYjI1M2JiMGU3MGViMGJhN2YwNGU1OGQwM2FiMDRjIiwiaWRwIjoidHdpdHRlciIsInZlciI6IjMiLCJpc3MiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJhdWQiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJleHAiOjE0NjM5MjczMjMsIm5iZiI6MTQ2MTMzNTMyM30.ALW45aLz40f3irlESmqnm2wrMm5WHpET2iCpUDXC2MM";
             _cred = Creds.FromUserIdAndToken("fakeuser", token);
         }
 
@@ -79,6 +79,15 @@
             var response = await Request.RequestTable(MainDbContext.ApiUrl, "People", _cred);
             //The Json response is always surrounded by [].
             Assert.StartsWith("{\"ID\":", response);
+        }
+
+        const string SensorsHistory = "SensorsHistory";
+
+        [Fact]
+        public async Task SensorHistGetOldestDay()
+        {
+            var response = await Request.RequestTable(MainDbContext.ApiUrl, $"{SensorsHistory}/0/1", _cred);
+            Assert.Null(response);
         }
     }
 }
