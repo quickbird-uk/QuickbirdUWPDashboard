@@ -99,11 +99,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\20160513184104_initial.cs" />
-    <Compile Include="Migrations\20160513184104_initial.designer.cs">
-      <DependentUpon>20160513184104_initial.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Views\MainPage.xaml.cs">
@@ -149,6 +144,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ViewModels\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework.Core, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\.nuget\packages\EntityFramework.Core\7.0.0-rc1-final\lib\netcore50\EntityFramework.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>

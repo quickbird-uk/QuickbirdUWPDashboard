@@ -5,7 +5,7 @@
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
-    using Microsoft.Data.Entity;
+    using Microsoft.EntityFrameworkCore;
     using NetLib;
 
     public interface IDataModel
