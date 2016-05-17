@@ -9,8 +9,8 @@
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
-    using Microsoft.Data.Entity;
-    using Microsoft.Data.Entity.Metadata;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata;
     using NetLib;
     using Newtonsoft.Json;
 
@@ -249,7 +249,7 @@
 
                 if (existing == null)
                 {
-                    dbSet.Add(entry, GraphBehavior.SingleObject);
+                    dbSet.Add(entry);
                 }
                 else
                 {
@@ -262,13 +262,13 @@
                         if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
                         {
                             // Overwrite local changes, with the server's changes.
-                            dbSet.Update(entry, GraphBehavior.SingleObject);
+                            dbSet.Update(entry);
                         }
                     }
                     else
                     {
                         // Simply take the changes from the server, there are no valid local changes.
-                        dbSet.Update(entry, GraphBehavior.SingleObject);
+                        dbSet.Update(entry);
                     }
                 }
             }

@@ -1,7 +1,7 @@
 ﻿namespace Agronomist.Views
 {
     using Windows.UI.Xaml.Controls;
-    using Microsoft.Data.Entity;
+    using Microsoft.EntityFrameworkCore;
     using Models;
 
     /// <summary>

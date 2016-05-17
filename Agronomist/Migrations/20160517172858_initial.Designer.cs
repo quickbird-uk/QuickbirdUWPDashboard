@@ -1,20 +1,20 @@
-using System;
-using Microsoft.Data.Entity;
-using Microsoft.Data.Entity.Infrastructure;
-using Microsoft.Data.Entity.Metadata;
-using Microsoft.Data.Entity.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Agronomist.Models;
 
 namespace Agronomist.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    [Migration("20160513184104_initial")]
+    [Migration("20160517172858_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.0-rc1-16348");
+                .HasAnnotation("ProductVersion", "1.0.0-rc2-20896");
 
             modelBuilder.Entity("DatabasePOCOs.CropType", b =>
                 {
@@ -28,6 +28,8 @@ namespace Agronomist.Migrations
                     b.Property<Guid?>("CreatedBy");
 
                     b.HasKey("Name");
+
+                    b.ToTable("CropTypes");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>
@@ -51,6 +53,10 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("Version");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("LocationID");
+
+                    b.ToTable("Devices");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.Parameter", b =>
@@ -63,6 +69,8 @@ namespace Agronomist.Migrations
                     b.Property<string>("Unit");
 
                     b.HasKey("ID");
+
+                    b.ToTable("Parameters");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.Placement", b =>
@@ -73,6 +81,8 @@ namespace Agronomist.Migrations
                     b.Property<string>("Name");
 
                     b.HasKey("ID");
+
+                    b.ToTable("Placements");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
@@ -87,6 +97,10 @@ namespace Agronomist.Migrations
                     b.Property<long>("SubsystemID");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("SubsystemID");
+
+                    b.ToTable("RelayTypes");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
@@ -101,6 +115,14 @@ namespace Agronomist.Migrations
                     b.Property<long>("SubsystemID");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("ParamID");
+
+                    b.HasIndex("PlaceID");
+
+                    b.HasIndex("SubsystemID");
+
+                    b.ToTable("SensorTypes");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.Subsystem", b =>
@@ -111,6 +133,8 @@ namespace Agronomist.Migrations
                     b.Property<string>("Name");
 
                     b.HasKey("ID");
+
+                    b.ToTable("Subsystems");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Relay", b =>
@@ -142,6 +166,12 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("Version");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DeviceID");
+
+                    b.HasIndex("RelayTypeID");
+
+                    b.ToTable("Relays");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Sensor", b =>
@@ -176,6 +206,14 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("Version");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DeviceID");
+
+                    b.HasIndex("PlacementID");
+
+                    b.HasIndex("SensorTypeID");
+
+                    b.ToTable("Sensors");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
@@ -204,6 +242,12 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("Version");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("CropTypeName");
+
+                    b.HasIndex("LocationID");
+
+                    b.ToTable("CropCycles");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
@@ -225,6 +269,10 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("Version");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("PersonId");
+
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.Person", b =>
@@ -243,6 +291,8 @@ namespace Agronomist.Migrations
                     b.Property<ulong>("twitterID");
 
                     b.HasKey("ID");
+
+                    b.ToTable("People");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
@@ -256,6 +306,12 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("RawData");
 
                     b.HasKey("RelayID", "TimeStamp");
+
+                    b.HasIndex("LocationID");
+
+                    b.HasIndex("RelayID");
+
+                    b.ToTable("RelayHistory");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
@@ -269,53 +325,67 @@ namespace Agronomist.Migrations
                     b.Property<byte[]>("RawData");
 
                     b.HasKey("SensorID", "TimeStamp");
+
+                    b.HasIndex("LocationID");
+
+                    b.HasIndex("SensorID");
+
+                    b.ToTable("SensorHistory");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>
                 {
                     b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("LocationID");
+                        .HasForeignKey("LocationID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
                 {
                     b.HasOne("DatabasePOCOs.Global.Subsystem")
                         .WithMany()
-                        .HasForeignKey("SubsystemID");
+                        .HasForeignKey("SubsystemID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
                 {
                     b.HasOne("DatabasePOCOs.Global.Parameter")
                         .WithMany()
-                        .HasForeignKey("ParamID");
+                        .HasForeignKey("ParamID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DatabasePOCOs.Global.Placement")
                         .WithMany()
-                        .HasForeignKey("PlaceID");
+                        .HasForeignKey("PlaceID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DatabasePOCOs.Global.Subsystem")
                         .WithMany()
-                        .HasForeignKey("SubsystemID");
+                        .HasForeignKey("SubsystemID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Relay", b =>
                 {
                     b.HasOne("DatabasePOCOs.Device")
                         .WithMany()
-                        .HasForeignKey("DeviceID");
+                        .HasForeignKey("DeviceID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DatabasePOCOs.Global.RelayType")
                         .WithMany()
-                        .HasForeignKey("RelayTypeID");
+                        .HasForeignKey("RelayTypeID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Sensor", b =>
                 {
                     b.HasOne("DatabasePOCOs.Device")
                         .WithMany()
-                        .HasForeignKey("DeviceID");
+                        .HasForeignKey("DeviceID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DatabasePOCOs.Global.Placement")
                         .WithMany()
@@ -323,25 +393,29 @@ namespace Agronomist.Migrations
 
                     b.HasOne("DatabasePOCOs.Global.SensorType")
                         .WithMany()
-                        .HasForeignKey("SensorTypeID");
+                        .HasForeignKey("SensorTypeID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
                 {
                     b.HasOne("DatabasePOCOs.CropType")
                         .WithMany()
-                        .HasForeignKey("CropTypeName");
+                        .HasForeignKey("CropTypeName")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("LocationID");
+                        .HasForeignKey("LocationID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
                 {
                     b.HasOne("DatabasePOCOs.User.Person")
                         .WithMany()
-                        .HasForeignKey("PersonId");
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
@@ -352,18 +426,21 @@ namespace Agronomist.Migrations
 
                     b.HasOne("DatabasePOCOs.Relay")
                         .WithMany()
-                        .HasForeignKey("RelayID");
+                        .HasForeignKey("RelayID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
                 {
                     b.HasOne("DatabasePOCOs.User.Location")
                         .WithMany()
-                        .HasForeignKey("LocationID");
+                        .HasForeignKey("LocationID")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("DatabasePOCOs.Sensor")
                         .WithMany()
-                        .HasForeignKey("SensorID");
+                        .HasForeignKey("SensorID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
         }
     }
