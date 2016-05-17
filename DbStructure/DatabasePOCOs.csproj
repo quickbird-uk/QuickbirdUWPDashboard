@@ -53,8 +53,6 @@
     <Compile Include="Global\Placement.cs" />
     <Compile Include="Global\Subsystem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="User\BaseHistorical.cs" />
-    <Compile Include="User\IHistorical.cs" />
     <Compile Include="User\RelayHistory.cs" />
     <Compile Include="User\CropCycle.cs" />
     <Compile Include="Global\CropType.cs" />
