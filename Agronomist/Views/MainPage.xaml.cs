@@ -3,19 +3,21 @@
     using Windows.UI.Xaml.Controls;
     using Microsoft.EntityFrameworkCore;
     using Models;
+    using ViewModels;
 
-    /// <summary>
-    ///     An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MainPage : Page
     {
         public MainPage()
         {
+            ViewModel = new MainPageViewModel();
+            DataContext = new MainPageViewModel();
             InitializeComponent();
             using (var db = new MainDbContext())
             {
                 db.Database.Migrate();
             }
         }
+
+        public MainPageViewModel ViewModel { get; set; }
     }
 }

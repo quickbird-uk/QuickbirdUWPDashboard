@@ -10,7 +10,7 @@ namespace Agronomist.ViewModels
     using System.Runtime.CompilerServices;
     using JetBrains.Annotations;
 
-    class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

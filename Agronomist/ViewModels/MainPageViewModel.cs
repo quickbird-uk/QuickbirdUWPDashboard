@@ -3,7 +3,7 @@
     using System;
     using NetLib;
 
-    internal class MainPageViewModel : ViewModelBase
+    public class MainPageViewModel : ViewModelBase
     {
         private string _token;
 
@@ -40,7 +40,7 @@
             Creds creds;
             try
             {
-                creds = await NetLib.Creds.FromBroker(entryUrl, resultUrl);
+                creds = await Creds.FromBroker(entryUrl, resultUrl);
             }
             catch (Exception)
             {
@@ -48,10 +48,11 @@
                 return;
             }
 
-            var roamingSettings = Windows.Storage.ApplicationData.Current.RoamingSettings;
-            roamingSettings.Values["CredToken"] = creds.Token;
-            roamingSettings.Values["CredUserId"] = creds.Userid;
-
+            var settings = new Settings
+            {
+                CredToken = creds.Token,
+                CredUserId = creds.Userid
+            };
         }
     }
 }
