@@ -7,11 +7,14 @@
     using JetBrains.Annotations;
 
     /// <summary>
-    /// A class to create settings properties in. 
-    /// Local and roaming are hard coded into individual properties.
+    ///     A class to create settings properties in.
+    ///     Local and roaming are hard coded into individual properties.
     /// </summary>
     internal class Settings : INotifyPropertyChanged
     {
+        /// <summary>
+        ///     Enum for choosing where a property that you want to delete exists.
+        /// </summary>
         public enum SettingsType
         {
             Local,
@@ -21,12 +24,18 @@
         private readonly ApplicationDataContainer _localSettings;
         private readonly ApplicationDataContainer _roamingSettings;
 
+        /// <summary>
+        ///     Creata a new settings obbject that gives acces to local and roaming settings.
+        /// </summary>
         public Settings()
         {
             _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
         }
 
+        /// <summary>
+        ///     The credentials token setting.
+        /// </summary>
         public string CredToken
         {
             get { return Get<string>(_roamingSettings, null); }
@@ -38,6 +47,9 @@
             }
         }
 
+        /// <summary>
+        ///     The credentials userID setting.
+        /// </summary>
         public string CredUserId
         {
             get { return Get<string>(_roamingSettings, null); }
@@ -51,6 +63,14 @@
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        ///     Gets the setting with the name of the property it is called from.
+        /// </summary>
+        /// <typeparam name="T">The type of the setting, must be the same as the property.</typeparam>
+        /// <param name="settingsContainer">Local or roaming.</param>
+        /// <param name="defaultValue">The value to return if the setting is not set.</param>
+        /// <param name="settingsName">The name of the setting, should be autoset when called from a property.</param>
+        /// <returns></returns>
         private T Get<T>([NotNull] ApplicationDataContainer settingsContainer, [CanBeNull] T defaultValue,
             [CallerMemberName] string settingsName = null)
         {
@@ -65,12 +85,24 @@
             return defaultValue;
         }
 
+        /// <summary>
+        ///     Sets the setting with the name of the property it is called from.
+        /// </summary>
+        /// <typeparam name="T">The type of the setting value.</typeparam>
+        /// <param name="settingsContainer">Local or roaming.</param>
+        /// <param name="value">The value to set.</param>
+        /// <param name="settingsName">The name of the setting, should be autoset when called from a property.</param>
         private void Set<T>([NotNull] ApplicationDataContainer settingsContainer, T value,
             [CallerMemberName] string settingsName = null)
         {
             settingsContainer.Values[settingsName] = value;
         }
 
+        /// <summary>
+        ///     Method to unset a method value if it exists, otherwise it does nothing.
+        /// </summary>
+        /// <param name="settingsName">Name of the setting to unset.</param>
+        /// <param name="settingsType">Roaming or local.</param>
         public void Delete([NotNull] string settingsName, SettingsType settingsType)
         {
             ApplicationDataContainer container;
@@ -86,7 +118,8 @@
                     throw new ArgumentOutOfRangeException(nameof(settingsType), settingsType, null);
             }
 
-            container.Values.Remove(settingsName);
+            if (container.Values.ContainsKey(settingsName))
+                container.Values.Remove(settingsName);
         }
 
         [NotifyPropertyChangedInvocator]
