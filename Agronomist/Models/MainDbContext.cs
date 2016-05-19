@@ -181,9 +181,9 @@
             // Step 1: Request
             string response;
             if (cred == null)
-                response = await Request.RequestTable(ApiUrl, tableName);
+                response = await Request.GetTable(ApiUrl, tableName);
             else
-                response = await Request.RequestTable(ApiUrl, tableName, cred);
+                response = await Request.GetTable(ApiUrl, tableName, cred);
 
             if (response.StartsWith("Error:"))
             {

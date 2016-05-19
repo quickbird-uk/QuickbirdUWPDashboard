@@ -14,7 +14,7 @@
 
         /// <summary>
         ///     Fetches a table, catches errors either returns the resonse or a message starting with "Error".
-        /// A valid message will be Json starting enad ending with either [] or {}.
+        ///     A valid message will be Json starting enad ending with either [] or {}.
         /// </summary>
         /// <param name="baseUrl">Base url of the request API.</param>
         /// <param name="tableName">The name of the table to put on the end of the baseUrl.</param>
