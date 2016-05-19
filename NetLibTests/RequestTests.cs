@@ -29,7 +29,7 @@
         [InlineData("CropTypes")]
         public async Task NoAuthGetTest(string tableName)
         {
-            var response = await Request.RequestTable(MainDbContext.ApiUrl, tableName);
+            var response = await Request.GetTable(MainDbContext.ApiUrl, tableName);
             //The Json response is always surrounded by [].
             Assert.StartsWith("[", response);
             Assert.EndsWith("]", response);
@@ -49,7 +49,7 @@
         {
             const string expected = "Unauthorized (401)";
 
-            var response = await Request.RequestTable(MainDbContext.ApiUrl, tableName);
+            var response = await Request.GetTable(MainDbContext.ApiUrl, tableName);
             Assert.Contains(expected, response);
         }
 
@@ -64,7 +64,7 @@
         [InlineData("Sensors")]
         public async Task AuthorisedGetTest(string tableName)
         {
-            var response = await Request.RequestTable(MainDbContext.ApiUrl, tableName, _cred);
+            var response = await Request.GetTable(MainDbContext.ApiUrl, tableName, _cred);
             //The Json response is always surrounded by [].
             Assert.StartsWith("[", response);
             Assert.EndsWith("]", response);
@@ -76,7 +76,7 @@
         [Fact]
         public async Task PeopleGetTest()
         {
-            var response = await Request.RequestTable(MainDbContext.ApiUrl, "People", _cred);
+            var response = await Request.GetTable(MainDbContext.ApiUrl, "People", _cred);
             //The Json response is always surrounded by [].
             Assert.StartsWith("{\"ID\":", response);
         }
@@ -86,7 +86,7 @@
         [Fact]
         public async Task SensorHistGetOldestDay()
         {
-            var response = await Request.RequestTable(MainDbContext.ApiUrl, $"{SensorsHistory}/0/1", _cred);
+            var response = await Request.GetTable(MainDbContext.ApiUrl, $"{SensorsHistory}/0/1", _cred);
             Assert.Null(response);
         }
     }
