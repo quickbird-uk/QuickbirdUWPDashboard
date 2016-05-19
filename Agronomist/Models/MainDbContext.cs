@@ -39,6 +39,62 @@
         public DbSet<Subsystem> Subsystems { get; set; }
 
         /// <summary>
+        ///     Downloads each table from the server and updates the data.
+        /// </summary>
+        /// <param name="lastUpdate">Last time update from server was called.</param>
+        /// <param name="creds">Auth creds for the request.</param>
+        /// <returns>Null on success, otherwise a descriptive error message.</returns>
+        public async Task<string> UpdateFromServer(DateTimeOffset lastUpdate, Creds creds)
+        {
+            // No auth no post types:
+            // 1. Parameters
+            // 2. People
+            // 3. Placements
+            // 4. RelayTypes
+            // 5. SensorTypes
+            // 6. Subsystems
+
+            var responses = new List<string>();
+            responses.Add(await DownloadDeserialiseTable<Parameter>(nameof(Parameters)));
+            responses.Add(await DownloadDeserialiseTable<Person>(nameof(People)));
+            responses.Add(await DownloadDeserialiseTable<Placement>(nameof(Placements)));
+            responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(RelayTypes)));
+            responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(SensorTypes)));
+            responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(Subsystems)));
+
+
+            // Editable types that must be merged.
+            // 1.CropCycles
+            // 2.CropType (uniqley does not require auth on get).
+            // 3.Devices
+            // 4.Locations
+            // 5.Relays
+            // 6.
+
+            // Crop type is the only mergable that is no-auth.
+            responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes)));
+
+            responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(CropCycles), creds));
+            responses.Add(await DownloadDeserialiseTable<Device>(nameof(Devices), creds));
+            responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
+            responses.Add(await DownloadDeserialiseTable<Relay>(nameof(Relays), creds));
+            responses.Add(await DownloadDeserialiseTable<Sensor>(nameof(Sensors), creds));
+
+
+            // Items that have to get got in time slices.
+            // 1.RelayHistory
+            // 2.SensorHistory
+
+            var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
+
+            responses.Add(await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorHistory)}/{unixtime}/9001"));
+            responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001"));
+
+            var fails = responses.Where(r => r != null).ToList();
+            return fails.Any() ? string.Join(", ", fails) : null;
+        }
+
+        /// <summary>
         ///     A list of all the tables, used automatically select the correct table for updating.
         /// </summary>
         private void InitTableList()
@@ -110,62 +166,6 @@
 
             mb.Entity<RelayHistory>().Ignore(rh => rh.Data);
             mb.Entity<SensorHistory>().Ignore(sh => sh.Data);
-        }
-
-        /// <summary>
-        ///     Downloads each table from the server and updates the data.
-        /// </summary>
-        /// <param name="lastUpdate">Last time update from server was called.</param>
-        /// <param name="creds">Auth creds for the request.</param>
-        /// <returns>Null on success, otherwise a descriptive error message.</returns>
-        public async Task<string> UpdateFromServer(DateTimeOffset lastUpdate, Creds creds)
-        {
-            // No auth no post types:
-            // 1. Parameters
-            // 2. People
-            // 3. Placements
-            // 4. RelayTypes
-            // 5. SensorTypes
-            // 6. Subsystems
-
-            var responses = new List<string>();
-            responses.Add(await DownloadDeserialiseTable<Parameter>(nameof(Parameters)));
-            responses.Add(await DownloadDeserialiseTable<Person>(nameof(People)));
-            responses.Add(await DownloadDeserialiseTable<Placement>(nameof(Placements)));
-            responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(RelayTypes)));
-            responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(SensorTypes)));
-            responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(Subsystems)));
-
-
-            // Editable types that must be merged.
-            // 1.CropCycles
-            // 2.CropType (uniqley does not require auth on get).
-            // 3.Devices
-            // 4.Locations
-            // 5.Relays
-            // 6.
-
-            // Crop type is the only mergable that is no-auth.
-            responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes)));
-
-            responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(CropCycles), creds));
-            responses.Add(await DownloadDeserialiseTable<Device>(nameof(Devices), creds));
-            responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
-            responses.Add(await DownloadDeserialiseTable<Relay>(nameof(Relays), creds));
-            responses.Add(await DownloadDeserialiseTable<Sensor>(nameof(Sensors), creds));
-
-
-            // Items that have to get got in time slices.
-            // 1.RelayHistory
-            // 2.SensorHistory
-
-            var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
-
-            responses.Add(await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorHistory)}/{unixtime}/9001"));
-            responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001"));
-
-            var fails = responses.Where(r => r != null).ToList();
-            return fails.Any() ? string.Join(", ", fails) : null;
         }
 
         /// <summary>
@@ -298,9 +298,16 @@
 
                         if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
                         {
-                            // Overwrite local changes, with the server's changes.
+                            // Overwrite local version, with the server's changes.
                             dbSet.Update(entry);
                         }
+                        // We are not using this mode where ther server gets to override local changes. Far too confusing.
+                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
+                        //{
+                        //    // Overwrite local version with remote version that was modified since the last update.
+                        //    // The local version is newer but we have decided to overwrite it 
+                        //    dbSet.Update(entry);
+                        //}
                     }
                     else if (typeof(TPoco) == typeof(SensorHistory) ||
                              typeof(TPoco) == typeof(RelayHistory))
@@ -317,9 +324,52 @@
             }
         }
 
-        private async Task PostChanges()
+        /// <summary>
+        ///     Posts changes saved in the local DB (excluding histories) to the server.
+        /// </summary>
+        /// <param name="creds">Credentials, required to post.</param>
+        /// <param name="lastPost">The time of the last post, only items modified after this time are posted.</param>
+        /// <returns>List of errors.</returns>
+        private async Task<List<string>> PostChanges(Creds creds, DateTimeOffset lastPost)
         {
-            
+            var responses = new List<string>();
+            // Simple tables that change:
+            // CropCycle, Devices.
+            responses.Add(await Post(CropCycles, nameof(CropCycles), lastPost, creds));
+            responses.Add(await Post(Devices, nameof(Devices), lastPost, creds));
+
+            // CropTypes is unique:
+            var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastPost);
+
+            if (changedCropTypes.Any())
+            {
+                var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
+                responses.Add(await Request.PostTable(ApiUrl, nameof(CropTypes), cropTypeData, creds));
+            }
+
+            return responses.Where(r => r != null).ToList();
+        }
+
+        /// <summary>
+        ///     Only supports tables that derive from BaseEntity and Croptype.
+        /// </summary>
+        /// <param name="table">The DBSet object for the table.</param>
+        /// <param name="tableName">The name of the table in the API .</param>
+        /// <param name="lastPost">The last time the table was synced.</param>
+        /// <param name="creds">Authentication credentials.</param>
+        /// <returns>Null on success otherwise an error message.</returns>
+        private async Task<string> Post(IQueryable<BaseEntity> table, string tableName, DateTimeOffset lastPost,
+            Creds creds)
+        {
+            var edited = table
+                .Where(t => t.UpdatedAt > lastPost)
+                .ToList();
+
+            if (!edited.Any()) return null;
+
+            var data = JsonConvert.SerializeObject(edited);
+            var req = await Request.PostTable(ApiUrl, tableName, data, creds);
+            return req;
         }
     }
 }
