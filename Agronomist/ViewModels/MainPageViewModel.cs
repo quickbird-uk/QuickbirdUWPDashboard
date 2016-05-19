@@ -5,6 +5,12 @@
 
     public class MainPageViewModel : ViewModelBase
     {
+        public MainPageViewModel()
+        {
+            var settings = new Settings();
+            _token = settings.CredToken ?? "No saved auth.";
+        }
+
         private string _token;
 
         public string Token

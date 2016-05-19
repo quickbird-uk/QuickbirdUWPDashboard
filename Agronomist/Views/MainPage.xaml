@@ -8,7 +8,10 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
-            <Button Click="{x:Bind ViewModel.Login}" Content="Login" />
+            <Button Click="{x:Bind ViewModel.Login}"
+                    Content="Login"
+                    IsEnabled="{x:Bind ViewModel.LoginEnabled}" />
+            <TextBox Text="{x:Bind ViewModel.Token}" />
         </StackPanel>
     </Grid>
 </Page>

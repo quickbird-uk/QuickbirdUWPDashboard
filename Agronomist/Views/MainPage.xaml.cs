@@ -12,10 +12,6 @@
             ViewModel = new MainPageViewModel();
             DataContext = new MainPageViewModel();
             InitializeComponent();
-            using (var db = new MainDbContext())
-            {
-                db.Database.Migrate();
-            }
         }
 
         public MainPageViewModel ViewModel { get; set; }

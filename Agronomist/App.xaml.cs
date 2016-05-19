@@ -6,6 +6,8 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
+    using Microsoft.EntityFrameworkCore;
+    using Models;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
@@ -29,6 +31,11 @@
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            using (var db = new MainDbContext())
+            {
+                db.Database.Migrate();
+            }
+
             var rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
