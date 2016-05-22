@@ -108,6 +108,7 @@
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />
+    <Compile Include="Networking.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
@@ -145,6 +146,10 @@
     <ProjectReference Include="..\DbStructure\DatabasePOCOs.csproj">
       <Project>{27ff170a-961d-4372-a340-818dc56c53d0}</Project>
       <Name>DatabasePOCOs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GnatMQ\GnatMQ.csproj">
+      <Project>{6f54ccaf-5b22-4293-9afc-a664cc180ec9}</Project>
+      <Name>GnatMQ</Name>
     </ProjectReference>
     <ProjectReference Include="..\NetLib\NetLib.csproj">
       <Project>{ba28c443-0ff2-492f-9351-f1cf4f76bb93}</Project>
