@@ -10,20 +10,20 @@
 
     public interface IDataModel
     {
-        DbSet<CropCycle> CropCycles { get; set; }
-        DbSet<CropType> CropTypes { get; set; }
-        DbSet<Device> Devices { get; set; }
-        DbSet<Location> Locations { get; set; }
-        DbSet<Parameter> Parameters { get; set; }
-        DbSet<Person> People { get; set; }
-        DbSet<Placement> Placements { get; set; }
-        DbSet<RelayHistory> RelayHistory { get; set; }
-        DbSet<Relay> Relays { get; set; }
-        DbSet<RelayType> RelayTypes { get; set; }
-        DbSet<SensorHistory> SensorHistory { get; set; }
-        DbSet<Sensor> Sensors { get; set; }
-        DbSet<SensorType> SensorTypes { get; set; }
-        DbSet<Subsystem> Subsystems { get; set; }
+        DbSet<CropCycle> CropCycles { get; }
+        DbSet<CropType> CropTypes { get; }
+        DbSet<Device> Devices { get; }
+        DbSet<Location> Locations { get; }
+        DbSet<Parameter> Parameters { get; }
+        DbSet<Person> People { get; }
+        DbSet<Placement> Placements { get; }
+        DbSet<RelayHistory> RelayHistory { get; }
+        DbSet<Relay> Relays { get; }
+        DbSet<RelayType> RelayTypes { get; }
+        DbSet<SensorHistory> SensorHistory { get; }
+        DbSet<Sensor> Sensors { get; }
+        DbSet<SensorType> SensorTypes { get; }
+        DbSet<Subsystem> Subsystems { get; }
 
         Task<string> UpdateFromServer(DateTimeOffset lastUpdate, Creds creds);
     }
