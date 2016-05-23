@@ -350,6 +350,11 @@
             return responses.Where(r => r != null).ToList();
         }
 
+        private async Task<List<string>> PostHistoryChanges()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     Only supports tables that derive from BaseEntity and Croptype.
         /// </summary>
