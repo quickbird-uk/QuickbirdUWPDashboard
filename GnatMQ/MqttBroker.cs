@@ -42,7 +42,7 @@ namespace uPLibrary.Networking.M2Mqtt
     /// </summary>
     public class MqttBroker : IDirectPublish
     {
-        public delegate void  DirectPublishEventHandler(MqttMsgPublish message);
+        public delegate void  DirectPublishEventHandler(KeyValuePair<string, MqttMsgPublish> message);
 
         // MQTT broker settings
         private MqttSettings settings;
@@ -222,10 +222,12 @@ namespace uPLibrary.Networking.M2Mqtt
             MqttClient client = (MqttClient)sender;
 
             // Fire event on threadpool so that a host application can directly access published messages.
-            var messageForEvent = new MqttMsgPublish(e.Topic, e.Message, false, e.QosLevel, e.Retain);
+            var mqttPublihForEvent = new MqttMsgPublish(e.Topic, e.Message, false, e.QosLevel, e.Retain);
+            var messageEvent = new KeyValuePair<string, MqttMsgPublish>(client.ClientId, mqttPublihForEvent);
+            
             Task.Run(() =>
-            {
-                Interlocked.CompareExchange(ref MessagePublished, null, null)?.Invoke(messageForEvent);
+            {                
+                Interlocked.CompareExchange(ref MessagePublished, null, null)?.Invoke(messageEvent);
             });
 
             // create PUBLISH message to publish

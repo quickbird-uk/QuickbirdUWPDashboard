@@ -29,31 +29,42 @@ namespace Agronomist
 
         }
 
-        private void MqttMessageRecieved(MqttMsgPublish message)
+        private void MqttMessageRecieved(KeyValuePair<string, MqttMsgPublish> publishEvent)
         {
-            SensorMessage[] readings; 
-            if (message.Topic.Contains("reading"))
-            { 
-                byte[] rawData = message.Message;
-                if (rawData.Length % SensorMessage.length != 0)
+            //TODO move this GUID parsing code somewhere appropriate!
+            Guid clientID;
+            string rawClientID = publishEvent.Key.Replace(":", string.Empty);
+            if (Guid.TryParse(rawClientID, out clientID) == false)
+            {
+                Debug.WriteLine("recieved message with invalid ClientID");
+            }
+            else
+            {
+                SensorMessage[] readings;
+                var message = publishEvent.Value;
+                if (message.Topic.Contains("reading"))
                 {
-                    Debug.WriteLine("message recieved over MQTT has incorrect length!");
-                }
-                else
-                {
-                    int numberOfReadings = rawData.Length / SensorMessage.length; 
-                    readings = new SensorMessage [numberOfReadings]; 
-                    //process each reading
-                    for (int i = 0; i < numberOfReadings; i++)
+                    byte[] rawData = message.Message;
+                    if (rawData.Length % SensorMessage.length != 0)
                     {
-                        readings[i].value = BitConverter.ToSingle(rawData, i * SensorMessage.length);
-                        readings[i].duration = BitConverter.ToInt32(rawData, i * SensorMessage.length + 4);
-                        readings[i].SensorTypeID = rawData[i * SensorMessage.length + 8];
+                        Debug.WriteLine("message recieved over MQTT has incorrect length!");
                     }
-                    Debug.WriteLine(readings.FirstOrDefault(r => r.SensorTypeID == 16).value.ToString());
+                    else
+                    {
+                        int numberOfReadings = rawData.Length / SensorMessage.length;
+                        readings = new SensorMessage[numberOfReadings];
+                        //process each reading
+                        for (int i = 0; i < numberOfReadings; i++)
+                        {
+                            readings[i].value = BitConverter.ToSingle(rawData, i * SensorMessage.length);
+                            readings[i].duration = BitConverter.ToInt32(rawData, i * SensorMessage.length + 4);
+                            readings[i].SensorTypeID = rawData[i * SensorMessage.length + 8];
+                        }
+                        Debug.WriteLine(readings.FirstOrDefault(r => r.SensorTypeID == 16).value.ToString());
+                    }
+                    Debug.WriteLine("we got a message!");
+
                 }
-                Debug.WriteLine("we got a message!");
-               
             }
         }
 
