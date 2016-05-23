@@ -2,19 +2,32 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using uPLibrary.Networking.M2Mqtt.Messages;
+using Windows.Networking.Connectivity;
+using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
+using Windows.UI.Xaml;
 
-namespace Agronomist
+namespace Agronomist.LocalNetworking
 {
 
-    public class Networking
+    public class Manager
     {
         private static uPLibrary.Networking.M2Mqtt.MqttBroker _mqttBroker = null;
-        private static object _lock = new object(); 
+        private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public Networking()
+        private static object _lock = new object();
+
+        private static UDPMessaging udpMessaging= null; 
+
+
+
+
+        public Manager()
         {
             lock (_lock)
             {
@@ -22,8 +35,8 @@ namespace Agronomist
                 {               
                     _mqttBroker = new uPLibrary.Networking.M2Mqtt.MqttBroker();
                     _mqttBroker.Start(); 
-                    _mqttBroker.MessagePublished += MqttMessageRecieved; 
-
+                    _mqttBroker.MessagePublished += MqttMessageRecieved;
+                    udpMessaging = new UDPMessaging(); 
                 }
             }
 
@@ -67,6 +80,9 @@ namespace Agronomist
                 }
             }
         }
+
+     
+
 
         private struct SensorMessage
         {

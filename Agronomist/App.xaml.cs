@@ -15,7 +15,7 @@
     sealed partial class App : Application
     {
 
-        private Networking _networking; 
+        private LocalNetworking.Manager _networking; 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
         ///     executed, and as such is the logical equivalent of main() or WinMain().
@@ -40,7 +40,7 @@
 
             var rootFrame = Window.Current.Content as Frame;
 
-            _networking = new Networking(); 
+            _networking = new LocalNetworking.Manager(); 
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
