@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using System.ServiceModel.Channels;
     using System.Threading.Tasks;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
@@ -13,6 +14,7 @@
     using Microsoft.EntityFrameworkCore.Metadata;
     using NetLib;
     using Newtonsoft.Json;
+    using Util;
 
     public class MainDbContext : DbContext, IDataModel
     {
@@ -266,6 +268,13 @@
                         merged.SerialiseData();
                         existing = merged as TPoco;
                     }
+
+                    if (hist != null)
+                    {
+                        var id = hist.SensorID;
+                        await Messenger.Instance.NewSensorDataPoint.Invoke(
+                            hist.Data.Select(d => new Messenger.SensorDataPoint(id, d.Value, d.TimeStamp, d.Duration)));
+                    }
                 }
                 else if (pocoType == typeof(RelayHistory))
                 {
@@ -282,11 +291,23 @@
                         merged.SerialiseData();
                         existing = merged as TPoco;
                     }
+
+                    if (hist != null)
+                    {
+                        var id = hist.RelayID;
+                        await Messenger.Instance.NewRelayDataPoint.Invoke(
+                            hist.Data.Select(d => new Messenger.RelayDataPoint(id, d.State, d.TimeStamp, d.Duration)));
+                    }
                 }
 
                 if (existing == null)
                 {
                     dbSet.Add(entry);
+
+                    if (entry is BaseEntity)
+                    {
+                        await Messenger.Instance.UserTablesChanged.Invoke("new");
+                    }
                 }
                 else
                 {

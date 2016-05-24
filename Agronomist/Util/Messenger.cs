@@ -11,31 +11,19 @@
     /// </summary>
     public class Messenger
     {
-        public enum HardwareTables
-        {
-            Devices,
-            Relays,
-            Sensors,
-            Greenhouse
-        }
-
-        public enum UserTables
-        {
-            CropCycle,
-            Location,
-            RelayHistory,
-            SensorHistory
-        }
-
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
-        public BroadcastMessage<SensorDataPoint> NewSensorDataPoint { get; } = new BroadcastMessage<SensorDataPoint>();
+        public BroadcastMessage<IEnumerable<SensorDataPoint>> NewSensorDataPoint { get; } =
+            new BroadcastMessage<IEnumerable<SensorDataPoint>>();
 
-        public BroadcastMessage<KeyValuePair<HardwareTables, IEnumerable<Guid>>> HardwareTableChanged { get; } =
-            new BroadcastMessage<KeyValuePair<HardwareTables, IEnumerable<Guid>>>();
+        public BroadcastMessage<IEnumerable<RelayDataPoint>> NewRelayDataPoint { get; } =
+            new BroadcastMessage<IEnumerable<RelayDataPoint>>();
 
-        public BroadcastMessage<KeyValuePair<UserTables, IEnumerable<Guid>>> UserTablesTableChanged { get; } =
-            new BroadcastMessage<KeyValuePair<UserTables, IEnumerable<Guid>>>();
+        public BroadcastMessage<string> HardwareTableChanged { get; } =
+            new BroadcastMessage<string>();
+
+        public BroadcastMessage<string> UserTablesChanged { get; } =
+            new BroadcastMessage<string>();
 
         public struct SensorDataPoint
         {
@@ -54,6 +42,25 @@
             public DateTimeOffset Timestamp { get; }
 
             public Guid SensorId { get; }
+        }
+
+        public struct RelayDataPoint
+        {
+            public RelayDataPoint(Guid id, bool state, DateTimeOffset timestamp, TimeSpan duration)
+            {
+                State = state;
+                Duration = duration;
+                Timestamp = timestamp;
+                RelayId = id;
+            }
+
+            public bool State { get; }
+
+            public TimeSpan Duration { get; }
+
+            public DateTimeOffset Timestamp { get; }
+
+            public Guid RelayId { get; }
         }
 
         /// <summary>
@@ -107,13 +114,11 @@
 
         #region SingletonInit
 
-        private static readonly Messenger SingletonInstance = new Messenger();
-
         private Messenger()
         {
         }
 
-        public Messenger Instance => SingletonInstance;
+        public static Messenger Instance { get; } = new Messenger();
 
         #endregion
     }
