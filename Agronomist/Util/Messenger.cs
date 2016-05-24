@@ -12,12 +12,25 @@
         private readonly List<WeakReference<Action<string>>> _onNewDeviceList =
             new List<WeakReference<Action<string>>>();
 
-        public void AddOnNewDevice(Action<string> doThis)
+        private readonly List<WeakReference<Action<IEnumerable<SensorDataPoint>>>> _onNewLiveDataPoint =
+            new List<WeakReference<Action<IEnumerable<SensorDataPoint>>>>();
+
+        public void AddOnNewDevice(Action<IEnumerable<SensorDataPoint>> action)
         {
-            _onNewDeviceList.Add(new WeakReference<Action<string>>(doThis));
+            _onNewLiveDataPoint.Add(new WeakReference<Action<IEnumerable<SensorDataPoint>>>(action));
         }
 
-        public async void OnNewDevice(string deviceId)
+        public void AddOnNewDevice(Action<string> action)
+        {
+            _onNewDeviceList.Add(new WeakReference<Action<string>>(action));
+        }
+
+        public async Task OnNewLiveDataPoint(IEnumerable<SensorDataPoint> data)
+        {
+            await PruneRefsAndFireActions(data, _onNewLiveDataPoint);
+        }
+
+        public async Task OnNewDevice(string deviceId)
         {
             await PruneRefsAndFireActions(deviceId, _onNewDeviceList);
         }
@@ -50,6 +63,25 @@
             {
                 await new Task(() => strongRef(param));
             }
+        }
+
+        public struct SensorDataPoint
+        {
+            public SensorDataPoint(Guid id, double value, DateTimeOffset timestamp, TimeSpan duration)
+            {
+                Value = value;
+                Duration = duration;
+                Timestamp = timestamp;
+                SensorId = id;
+            }
+
+            public double Value { get; }
+
+            public TimeSpan Duration { get; }
+
+            public DateTimeOffset Timestamp { get; }
+
+            public Guid SensorId { get; }
         }
 
         #region SingletonInit
