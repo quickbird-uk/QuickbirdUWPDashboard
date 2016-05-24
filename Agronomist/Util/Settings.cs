@@ -1,4 +1,4 @@
-﻿namespace Agronomist
+﻿namespace Agronomist.Util
 {
     using System;
     using System.ComponentModel;

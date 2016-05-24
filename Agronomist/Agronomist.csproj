@@ -106,7 +106,7 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Messenger.cs" />
+    <Compile Include="Util\Messenger.cs" />
     <Compile Include="Migrations\20160517172858_initial.cs" />
     <Compile Include="Migrations\20160517172858_initial.designer.cs">
       <DependentUpon>20160517172858_initial.cs</DependentUpon>
@@ -115,7 +115,7 @@
     <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
-    <Compile Include="Settings.cs" />
+    <Compile Include="Util\Settings.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\MainPage.xaml.cs">

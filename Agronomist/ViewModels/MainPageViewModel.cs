@@ -2,6 +2,7 @@
 {
     using System;
     using NetLib;
+    using Util;
 
     public class MainPageViewModel : ViewModelBase
     {
