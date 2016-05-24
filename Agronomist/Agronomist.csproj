@@ -106,6 +106,7 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
+    <Compile Include="Messenger.cs" />
     <Compile Include="Migrations\20160517172858_initial.cs" />
     <Compile Include="Migrations\20160517172858_initial.designer.cs">
       <DependentUpon>20160517172858_initial.cs</DependentUpon>
