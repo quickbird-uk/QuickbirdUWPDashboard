@@ -11,10 +11,14 @@ using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
+using Agronomist.LocalNetworking; 
 
 namespace Agronomist.LocalNetworking
 {
-
+    /// <summary>
+    /// This class is in charge of all the local communication. It initiates MQTT and UDP messaging. 
+    /// IF you try to instantiate this class twice, it will throw and exception! 
+    /// </summary>
     public class Manager
     {
         private static uPLibrary.Networking.M2Mqtt.MqttBroker _mqttBroker = null;
@@ -22,7 +26,8 @@ namespace Agronomist.LocalNetworking
 
         private static object _lock = new object();
 
-        private static UDPMessaging udpMessaging= null; 
+        private static UDPMessaging _udpMessaging= null;
+        private static DatapointsSaver _datapointsSaver = null; 
 
 
 
@@ -36,7 +41,12 @@ namespace Agronomist.LocalNetworking
                     _mqttBroker = new uPLibrary.Networking.M2Mqtt.MqttBroker();
                     _mqttBroker.Start(); 
                     _mqttBroker.MessagePublished += MqttMessageRecieved;
-                    udpMessaging = new UDPMessaging(); 
+                    _udpMessaging = new UDPMessaging();
+                    _datapointsSaver = new DatapointsSaver(); 
+                }
+                else
+                {
+                    throw new Exception("You should onl;y instantiate this class once! "); 
                 }
             }
 
@@ -55,42 +65,43 @@ namespace Agronomist.LocalNetworking
             {
                 SensorMessage[] readings;
                 var message = publishEvent.Value;
+                
                 if (message.Topic.Contains("reading"))
                 {
                     byte[] rawData = message.Message;
-                    if (rawData.Length % SensorMessage.length != 0)
+                    if (rawData.Length % SensorMessage.incomingLength != 0)
                     {
                         Debug.WriteLine("message recieved over MQTT has incorrect length!");
                     }
                     else
                     {
-                        int numberOfReadings = rawData.Length / SensorMessage.length;
+                        int numberOfReadings = rawData.Length / SensorMessage.incomingLength;
                         readings = new SensorMessage[numberOfReadings];
                         //process each reading
                         for (int i = 0; i < numberOfReadings; i++)
                         {
-                            readings[i].value = BitConverter.ToSingle(rawData, i * SensorMessage.length);
-                            readings[i].duration = BitConverter.ToInt32(rawData, i * SensorMessage.length + 4);
-                            readings[i].SensorTypeID = rawData[i * SensorMessage.length + 8];
+                            readings[i].value = BitConverter.ToSingle(rawData, i * SensorMessage.incomingLength);
+                            readings[i].duration = BitConverter.ToInt32(rawData, i * SensorMessage.incomingLength + 4);
+                            readings[i].SensorTypeID = rawData[i * SensorMessage.incomingLength + 8];
                         }
-                        Debug.WriteLine(readings.FirstOrDefault(r => r.SensorTypeID == 16).value.ToString());
-                    }
-                    Debug.WriteLine("we got a message!");
+                        KeyValuePair<Guid, SensorMessage[]> toWrite = 
+                            new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
 
+                        _datapointsSaver.BufferReadings(toWrite); 
+                    }
                 }
             }
         }
 
-     
-
-
-        private struct SensorMessage
+        public struct SensorMessage
         {
             public float value;
             public Int32 duration;
             public byte SensorTypeID;
-            public const int length = 9; 
+            public const int incomingLength = 9;
         }
+
+
 
 
     }

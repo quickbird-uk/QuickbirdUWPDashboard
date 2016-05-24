@@ -15,6 +15,13 @@ using Windows.Networking;
 
 namespace Agronomist.LocalNetworking
 {
+    /// <summary>
+    /// This class broadcasts UDP messages.  It should be instantiated by the Manager. 
+    /// The sensor boxees listen for those UDP messages, and connect to the server that sent them. 
+    /// That way the server does not need a static IP 
+    /// Here i use a System.Net api which is different to Windows.Networking, and is somewhat lower level. 
+    /// If you try to instantiate this class twice, you will get an exception! 
+    /// </summary>
     public class UDPMessaging
     {
         private static UDPMessaging _instance = null;
@@ -25,6 +32,7 @@ namespace Agronomist.LocalNetworking
 
         Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
+
 
         public UDPMessaging()
         {
@@ -39,6 +47,7 @@ namespace Agronomist.LocalNetworking
                 UdpBroadcastTimer.Start();
 
                 _udpSocket.Bind(remoteEndPoint);
+                ///this event is used to give all the parameters to WSystem.net api
                 SocketAsyncEventArgs e = new SocketAsyncEventArgs();
                 byte[] buffer = new byte[1024];
                 e.SetBuffer(buffer, 0, buffer.Length);
@@ -53,11 +62,11 @@ namespace Agronomist.LocalNetworking
                     ReceiveFromCallback(_udpSocket, e);
                 }
 
-               
+                _instance = this; 
             }
         }
 
-        private async void UDPBroadcast(object sender, object o)
+        private void UDPBroadcast(object sender, object o)
         {
             foreach (HostName localHostName in NetworkInformation.GetHostNames())
             {
@@ -97,7 +106,11 @@ namespace Agronomist.LocalNetworking
         }
 
 
-
+        /// <summary>
+        /// This is a call-back function triggered wehn we receive a new message, otehrwise known as Async for C 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ReceiveFromCallback(object sender, SocketAsyncEventArgs e)
         {
             if (e.SocketError != SocketError.Success)
