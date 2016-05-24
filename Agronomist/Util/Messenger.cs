@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
 
     /// <summary>
@@ -10,83 +11,31 @@
     /// </summary>
     public class Messenger
     {
-        private readonly List<WeakReference<Action<string>>> _onNewDeviceList =
-            new List<WeakReference<Action<string>>>();
-
-        private readonly List<WeakReference<Action<IEnumerable<SensorDataPoint>>>> _onNewLiveDataPoint =
-            new List<WeakReference<Action<IEnumerable<SensorDataPoint>>>>();
-
-        public void AddOnNewDevice(Action<IEnumerable<SensorDataPoint>> action)
+        public enum HardwareTables
         {
-            _onNewLiveDataPoint.Add(new WeakReference<Action<IEnumerable<SensorDataPoint>>>(action));
+            Devices,
+            Relays,
+            Sensors,
+            Greenhouse
         }
 
-        public void AddOnNewDevice(Action<string> action)
+        public enum UserTables
         {
-            _onNewDeviceList.Add(new WeakReference<Action<string>>(action));
+            CropCycle,
+            Location,
+            RelayHistory,
+            SensorHistory
         }
 
-        public async Task OnNewLiveDataPoint(IEnumerable<SensorDataPoint> data)
-        {
-            await PruneRefsAndFireActions(data, _onNewLiveDataPoint);
-        }
+        public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
-        public async Task OnNewDevice(string deviceId)
-        {
-            await PruneRefsAndFireActions(deviceId, _onNewDeviceList);
-        }
+        public BroadcastMessage<SensorDataPoint> NewSensorDataPoint { get; } = new BroadcastMessage<SensorDataPoint>();
 
-        private async Task PruneRefsAndFireActions<T>(T param, List<WeakReference<Action<T>>> weakList)
-        {
-            //The first half of this code has externally mutable lists, so no awaits.
-            var strongRefs = new List<Action<T>>();
-            var deleteMe = new List<WeakReference<Action<T>>>();
-            foreach (var weakReference in weakList)
-            {
-                Action<T> target;
-                if (weakReference.TryGetTarget(out target))
-                {
-                    strongRefs.Add(target);
-                }
-                else
-                {
-                    deleteMe.Add(weakReference);
-                }
-            }
+        public BroadcastMessage<KeyValuePair<HardwareTables, IEnumerable<Guid>>> HardwareTableChanged { get; } =
+            new BroadcastMessage<KeyValuePair<HardwareTables, IEnumerable<Guid>>>();
 
-            foreach (var weakReference in deleteMe)
-            {
-                weakList.Remove(weakReference);
-            }
-
-            // Looping through external lists complete, can await now.
-            foreach (var strongRef in strongRefs)
-            {
-                await GetCoreDispatcher().RunAsync(CoreDispatcherPriority.Normal, () => strongRef(param));
-            }
-        }
-
-        private static CoreDispatcher GetCoreDispatcher()
-        {
-            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
-            return dispatcher;
-        }
-
-        private async Task<TReturn> FireFunc<TReturn, TParam>(TParam param,
-            WeakReference<Func<TParam, TReturn>> weakRef)
-        {
-
-                Func<TParam, TReturn> func;
-                if (weakRef.TryGetTarget(out func))
-                {
-                    return await new Task<TReturn>(() => func(param));
-                }
-                else
-                {
-                    return default(TReturn);
-                }
-            }
-        
+        public BroadcastMessage<KeyValuePair<UserTables, IEnumerable<Guid>>> UserTablesTableChanged { get; } =
+            new BroadcastMessage<KeyValuePair<UserTables, IEnumerable<Guid>>>();
 
         public struct SensorDataPoint
         {
@@ -105,6 +54,55 @@
             public DateTimeOffset Timestamp { get; }
 
             public Guid SensorId { get; }
+        }
+
+        /// <summary>
+        ///     Broacast a message to multiple subscribers.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public class BroadcastMessage<T>
+        {
+            private readonly List<WeakReference<Action<T>>> _subscribers = new List<WeakReference<Action<T>>>();
+
+            public void Subscribe(Action<T> action)
+            {
+                _subscribers.Add(new WeakReference<Action<T>>(action));
+            }
+
+            public async Task Invoke(T param, bool useCoreDispatcher = false)
+            {
+                //The first half of this code has externally mutable lists, so no awaits.
+                var actions = new List<Action<T>>();
+                var deadActions = new List<WeakReference<Action<T>>>();
+
+                foreach (var weakReference in _subscribers)
+                {
+                    Action<T> target;
+                    if (weakReference.TryGetTarget(out target))
+                        actions.Add(target);
+                    else
+                        deadActions.Add(weakReference);
+                }
+
+                // Prune disposed actions (corresponding objects no longer exist).
+                _subscribers.RemoveAll(deadActions.Contains);
+
+                CoreDispatcher dispatcher = null;
+                if (useCoreDispatcher) dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+
+                // Looping through external lists complete, safe to await now.
+                foreach (var action in actions)
+                {
+                    if (useCoreDispatcher)
+                    {
+                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
+                    }
+                    else
+                    {
+                        await new Task(() => action(param));
+                    }
+                }
+            }
         }
 
         #region SingletonInit
