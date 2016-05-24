@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
 
     /// <summary>
     ///     A middleman class for passing information between parts of the program.
@@ -61,9 +62,31 @@
             // Looping through external lists complete, can await now.
             foreach (var strongRef in strongRefs)
             {
-                await new Task(() => strongRef(param));
+                await GetCoreDispatcher().RunAsync(CoreDispatcherPriority.Normal, () => strongRef(param));
             }
         }
+
+        private static CoreDispatcher GetCoreDispatcher()
+        {
+            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
+            return dispatcher;
+        }
+
+        private async Task<TReturn> FireFunc<TReturn, TParam>(TParam param,
+            WeakReference<Func<TParam, TReturn>> weakRef)
+        {
+
+                Func<TParam, TReturn> func;
+                if (weakRef.TryGetTarget(out func))
+                {
+                    return await new Task<TReturn>(() => func(param));
+                }
+                else
+                {
+                    return default(TReturn);
+                }
+            }
+        
 
         public struct SensorDataPoint
         {
