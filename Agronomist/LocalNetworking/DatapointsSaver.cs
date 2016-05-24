@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DatabasePOCOs.User;
 using DatabasePOCOs;
+using DatabasePOCOs.Global;
 using Agronomist.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -16,7 +17,10 @@ namespace Agronomist.LocalNetworking
     public class DatapointsSaver
     {
 
+
+
         //Local Cache
+        private List<SensorType> _sensorTypes = null; 
         private List<Device> _dbDevices;
         private List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
         private List<SensorHistory> _sensorDays = new List<SensorHistory>();
@@ -92,6 +96,7 @@ namespace Agronomist.LocalNetworking
             var db = new MainDbContext();
             _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
             List<SensorHistory> sensorsHistory = db.SensorHistory.Where(sh => sh.TimeStamp > Today).ToList();
+            _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).ToList(); 
 
             //Add missing sensors and relays 
             foreach (Sensor sensor in _dbDevices.SelectMany(dv => dv.Sensors))
@@ -185,22 +190,42 @@ namespace Agronomist.LocalNetworking
                     var sbuffer = _sensorBuffer[i];
 
 
-                    SensorDatapoint sensorDatapoint; 
+                    SensorDatapoint sensorDatapoint = null; 
+
                     if (sbuffer.freshBuffer.Count > 0)
                     {
                         DateTimeOffset startTime = sbuffer.freshBuffer[0].TimeStamp;                     
                         DateTimeOffset endTime = sbuffer.freshBuffer.Last().TimeStamp;
-                        DateTimeOffset Duration = startTime.Subtract(sbuffer.freshBuffer[0].Duration);
+                        TimeSpan duration = (endTime - startTime).Subtract(sbuffer.freshBuffer[0].Duration); 
+
+                        TimeSpan cumulativeDuration = TimeSpan.Zero;
+                        double cumulativeValue = 0; 
 
                         for (int b = 0; b < sbuffer.freshBuffer.Count; b++)
                         {
-                            //For normal
-
-                            //for float switch
-
-                            //for water meter
+                            cumulativeDuration += sbuffer.freshBuffer[b].Duration;
+                            cumulativeValue += sbuffer.freshBuffer[b].Value; 
                         }
+
+                        SensorType sensorType = _sensorTypes.First(st => st.ID == sbuffer.sensor.SensorTypeID);
+                        double value = cumulativeValue / sbuffer.freshBuffer.Count;
+
+                        if (sensorType.ParamID == 5) // Level
+                        {
+                            sensorDatapoint = new SensorDatapoint(Math.Round(value), endTime, duration);
+                        }
+                        else if(sensorType.ParamID == 9) //water flow
+                        {
+                            sensorDatapoint = new SensorDatapoint(value, endTime, cumulativeDuration);
+                        } 
+                        else
+                        {
+                            sensorDatapoint = new SensorDatapoint(value, endTime, duration);
+                        }
+
+                        sbuffer.freshBuffer.RemoveRange(0, sbuffer.freshBuffer.Count); 
                     }
+
                     
                     //{ //save taht length of data
                     //    List<SensorDatapoint> dpBuffer = sbuffer.freshBuffer; 
