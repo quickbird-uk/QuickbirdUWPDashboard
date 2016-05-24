@@ -39,10 +39,11 @@ namespace Agronomist.LocalNetworking
                 if (_mqttBroker == null)
                 {               
                     _mqttBroker = new uPLibrary.Networking.M2Mqtt.MqttBroker();
-                    _mqttBroker.Start(); 
-                    _mqttBroker.MessagePublished += MqttMessageRecieved;
+                    _mqttBroker.Start();
                     _udpMessaging = new UDPMessaging();
-                    _datapointsSaver = new DatapointsSaver(); 
+                    _datapointsSaver = new DatapointsSaver();
+                    _mqttBroker.MessagePublished += MqttMessageRecieved;
+
                 }
                 else
                 {
