@@ -334,7 +334,8 @@ namespace Agronomist.LocalNetworking
                     }
                     else if(sbuffer.dataDay != null && sensorDatapoint != null)
                     {
-                        db.SensorsHistory.Attach(sbuffer.dataDay); 
+                        db.SensorsHistory.Attach(sbuffer.dataDay);
+                         
                     }
 
                     //Make changes to the database
@@ -346,7 +347,8 @@ namespace Agronomist.LocalNetworking
                     }
                 }
                 //Once we are done here, mark changes to the db
-               // db.UpdateRange(updatedSensorHistories); 
+                // db.UpdateRange(updatedSensorHistories); 
+                Debug.WriteLine("Saving");
                 db.SaveChanges();
                 Debug.WriteLine("SavedSensorHistories"); 
                 db.Dispose(); 
