@@ -35,9 +35,9 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160525141655_initial.cs" />
-    <Compile Include="Migrations\20160525141655_initial.designer.cs">
-      <DependentUpon>20160525141655_initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160525145354_Initial.cs" />
+    <Compile Include="Migrations\20160525145354_Initial.designer.cs">
+      <DependentUpon>20160525145354_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Util\Messenger.cs" />
@@ -93,12 +93,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Reference Include="EntityFramework.Core, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\.nuget\packages\EntityFramework.Core\7.0.0-rc1-final\lib\netcore50\EntityFramework.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Agronomist.Migrations
 {
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -250,8 +250,8 @@ namespace Agronomist.Migrations
                 columns: table => new
                 {
                     ID = table.Column<Guid>(nullable: false),
-                    AlertHigh = table.Column<double>(nullable: false),
-                    AlertLow = table.Column<double>(nullable: false),
+                    AlertHigh = table.Column<double>(nullable: true),
+                    AlertLow = table.Column<double>(nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
                     DeviceID = table.Column<Guid>(nullable: false),

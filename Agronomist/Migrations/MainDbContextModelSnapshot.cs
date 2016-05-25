@@ -178,11 +178,9 @@ namespace Agronomist.Migrations
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<double?>("AlertHigh")
-                        .IsRequired();
+                    b.Property<double?>("AlertHigh");
 
-                    b.Property<double?>("AlertLow")
-                        .IsRequired();
+                    b.Property<double?>("AlertLow");
 
                     b.Property<DateTimeOffset>("CreatedAt");
 

@@ -8,8 +8,8 @@ using Agronomist.Models;
 namespace Agronomist.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    [Migration("20160525141655_initial")]
-    partial class initial
+    [Migration("20160525145354_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -179,11 +179,9 @@ namespace Agronomist.Migrations
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<double?>("AlertHigh")
-                        .IsRequired();
+                    b.Property<double?>("AlertHigh");
 
-                    b.Property<double?>("AlertLow")
-                        .IsRequired();
+                    b.Property<double?>("AlertLow");
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
