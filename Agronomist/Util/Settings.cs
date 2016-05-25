@@ -103,11 +103,11 @@
 
         public DateTimeOffset LastDatabaseUpdate
         {
-            get { return Get(_roamingSettings, default(DateTimeOffset)); }
+            get { return Get(_localSettings, default(DateTimeOffset)); }
             set
             {
                 if (value == LastDatabaseUpdate) return;
-                Set(_roamingSettings, value);
+                Set(_localSettings, value);
                 OnPropertyChanged();
             }
         }
