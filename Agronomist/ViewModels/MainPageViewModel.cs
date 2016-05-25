@@ -100,5 +100,23 @@
                 settings.LastDatabaseUpdate = now;
             }
         }
+
+        public async void PostSensorData()
+        {
+            DatabaseErrors = "posting";
+            using (var context = new MainDbContext())
+            {
+                DatabaseErrors = await context.PostHistoryChanges();
+            }
+        }
+
+        public async void PostDatabase()
+        {
+            DatabaseErrors = "posting";
+            using (var context = new MainDbContext())
+            {
+                DatabaseErrors = string.Join(",", await context.PostChanges());
+            }
+        }
     }
 }

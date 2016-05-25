@@ -15,6 +15,9 @@
             <TextBox Text="{x:Bind ViewModel.Token, Mode=OneWay}" />
             <Button Click="{x:Bind ViewModel.UpdateData}" Content="Update Database" />
             <TextBox Text="{x:Bind ViewModel.DatabaseErrors, Mode=OneWay}" />
+
+            <Button Click="{x:Bind ViewModel.PostSensorData}" Content="Post Sensor Data" />
+            <Button Click="{x:Bind ViewModel.PostDatabase}" Content="Post Database" />
         </StackPanel>
     </Grid>
 </Page>

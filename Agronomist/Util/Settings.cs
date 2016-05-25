@@ -112,6 +112,27 @@
             }
         }
 
+        public DateTimeOffset LastSensorDataPost
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+            set
+            {
+                if (value == LastDatabaseUpdate) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+        public DateTimeOffset LastDatabasePost
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+            set
+            {
+                if (value == LastDatabaseUpdate) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
         ///     Gets the setting with the name of the property it is called from.
         /// </summary>

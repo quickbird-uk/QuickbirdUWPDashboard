@@ -11,6 +11,7 @@
     using DatabasePOCOs.User;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
+    using MoreLinq;
     using NetLib;
     using Newtonsoft.Json;
     using Util;
@@ -351,18 +352,23 @@
         ///     Posts changes saved in the local DB (excluding histories) to the server.
         /// </summary>
         /// <param name="creds">Credentials, required to post.</param>
-        /// <param name="lastPost">The time of the last post, only items modified after this time are posted.</param>
+        /// <param name="lastDatabasePost">The time of the last post, only items modified after this time are posted.</param>
         /// <returns>List of errors.</returns>
-        private async Task<List<string>> PostChanges(Creds creds, DateTimeOffset lastPost)
+        public async Task<List<string>> PostChanges()
         {
+            var settings = new Settings();
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var lastDatabasePost = settings.LastDatabasePost;
+
+            var postTime = DateTimeOffset.Now;
             var responses = new List<string>();
             // Simple tables that change:
             // CropCycle, Devices.
-            responses.Add(await Post(CropCycles, nameof(CropCycles), lastPost, creds));
-            responses.Add(await Post(Devices, nameof(Devices), lastPost, creds));
+            responses.Add(await Post(CropCycles, nameof(CropCycles), lastDatabasePost, creds));
+            responses.Add(await Post(Devices, nameof(Devices), lastDatabasePost, creds));
 
             // CropTypes is unique:
-            var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastPost);
+            var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
 
             if (changedCropTypes.Any())
             {
@@ -370,12 +376,31 @@
                 responses.Add(await Request.PostTable(ApiUrl, nameof(CropTypes), cropTypeData, creds));
             }
 
-            return responses.Where(r => r != null).ToList();
+
+            var errors = responses.Where(r => r != null).ToList();
+            if (!errors.Any()) settings.LastDatabasePost = postTime;
+            return errors;
         }
 
-        private async Task<List<string>> PostHistoryChanges()
+        public  async Task<string> PostHistoryChanges()
         {
-            throw new NotImplementedException();
+            var settings = new Settings();
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var lastSensorDataPost = settings.LastSensorDataPost;
+
+            if (!SensorsHistory.Any()) return null;
+
+            var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
+            var postTime = DateTimeOffset.Now;
+            todaysSensorHistory.DeserialiseData();
+            var sliceToPost = todaysSensorHistory.Slice(lastSensorDataPost);
+            var result =
+                await Request.PostTable(ApiUrl, nameof(SensorsHistory), JsonConvert.SerializeObject(sliceToPost), creds);
+            if (result == null)
+            {
+                settings.LastSensorDataPost = postTime;
+            }
+            return result;
         }
 
         /// <summary>
