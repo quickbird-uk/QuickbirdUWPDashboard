@@ -123,7 +123,7 @@ namespace Agronomist.LocalNetworking
 
             byte[] buffer = e.Buffer;
             //NOw we got hte data!!
-            Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred));
+           // Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred));
 
             if (!udpSocket.ReceiveFromAsync(e))
             {

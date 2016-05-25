@@ -273,7 +273,7 @@
                     {
                         var id = hist.SensorID;
                         await Messenger.Instance.NewSensorDataPoint.Invoke(
-                            hist.Data.Select(d => new Messenger.SensorDataPoint(id, d.Value, d.TimeStamp, d.Duration)));
+                            hist.Data.Select(d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
                     }
                 }
                 else if (pocoType == typeof(RelayHistory))
@@ -296,7 +296,7 @@
                     {
                         var id = hist.RelayID;
                         await Messenger.Instance.NewRelayDataPoint.Invoke(
-                            hist.Data.Select(d => new Messenger.RelayDataPoint(id, d.State, d.TimeStamp, d.Duration)));
+                            hist.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
                     }
                 }
 

@@ -89,7 +89,7 @@ namespace Agronomist.LocalNetworking
                         KeyValuePair<Guid, SensorMessage[]> toWrite = 
                             new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
 
-                        _datapointsSaver.BufferReadings(toWrite); 
+                        _datapointsSaver.BufferAndSendReadings(toWrite); 
                     }
                 }
             }
