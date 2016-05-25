@@ -20,7 +20,7 @@
         DbSet<RelayHistory> RelayHistory { get; }
         DbSet<Relay> Relays { get; }
         DbSet<RelayType> RelayTypes { get; }
-        DbSet<SensorHistory> SensorHistory { get; }
+        DbSet<SensorHistory> SensorsHistory { get; }
         DbSet<Sensor> Sensors { get; }
         DbSet<SensorType> SensorTypes { get; }
         DbSet<Subsystem> Subsystems { get; }

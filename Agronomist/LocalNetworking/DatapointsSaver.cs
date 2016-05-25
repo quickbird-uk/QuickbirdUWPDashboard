@@ -14,6 +14,8 @@ using System.Threading;
 
 namespace Agronomist.LocalNetworking
 {
+    using Util;
+
     public class DatapointsSaver
     {
 
@@ -100,7 +102,7 @@ namespace Agronomist.LocalNetworking
         {
             var db = new MainDbContext();
             _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
-            List<SensorHistory> sensorsHistory = db.SensorHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
+            List<SensorHistory> sensorsHistory = db.SensorsHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
             _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).AsNoTracking().ToList(); 
 
             //Add missing sensors and relays 
@@ -305,7 +307,7 @@ namespace Agronomist.LocalNetworking
                     //Make changes to the database
                     if(sensorDatapoint != null)
                     {
-                        db.SensorHistory.Attach(sbuffer.dataDay);
+                        db.SensorsHistory.Attach(sbuffer.dataDay);
                         sbuffer.dataDay.Data.Add(sensorDatapoint);
                         sbuffer.dataDay.SerialiseData();
                     }

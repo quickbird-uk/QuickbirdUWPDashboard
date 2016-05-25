@@ -10,8 +10,11 @@
         <StackPanel>
             <Button Click="{x:Bind ViewModel.Login}"
                     Content="Login"
-                    IsEnabled="{x:Bind ViewModel.LoginEnabled}" />
-            <TextBox Text="{x:Bind ViewModel.Token}" />
+                    IsEnabled="{x:Bind ViewModel.LoginEnabled, Mode=OneWay}" />
+            <Button Click="{x:Bind ViewModel.DeleteCreds}" Content="Delete Creds" />
+            <TextBox Text="{x:Bind ViewModel.Token, Mode=OneWay}" />
+            <Button Click="{x:Bind ViewModel.UpdateData}" Content="Update Database" />
+            <TextBox Text="{x:Bind ViewModel.DatabaseErrors, Mode=OneWay}" />
         </StackPanel>
     </Grid>
 </Page>

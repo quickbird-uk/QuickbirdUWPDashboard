@@ -1,8 +1,6 @@
 ﻿namespace Agronomist.Views
 {
     using Windows.UI.Xaml.Controls;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
     using ViewModels;
 
     public sealed partial class MainPage : Page

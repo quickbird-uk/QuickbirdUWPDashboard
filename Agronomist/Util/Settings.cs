@@ -33,13 +33,24 @@
             _localSettings = ApplicationData.Current.LocalSettings;
         }
 
+        public bool CredsSet
+        {
+            get { return Get(_roamingSettings, false); }
+            private set
+            {
+                if (value == CredsSet) return;
+                Set(_roamingSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
         ///     The credentials token setting.
         /// </summary>
         public string CredToken
         {
             get { return Get<string>(_roamingSettings, null); }
-            set
+            private set
             {
                 if (value == CredToken) return;
                 Set(_roamingSettings, value);
@@ -53,7 +64,7 @@
         public string CredUserId
         {
             get { return Get<string>(_roamingSettings, null); }
-            set
+            private set
             {
                 if (value == CredUserId) return;
                 Set(_roamingSettings, value);
@@ -61,7 +72,34 @@
             }
         }
 
+        public Guid CredStableSid
+        {
+            get { return Get(_roamingSettings, default(Guid)); }
+            private set
+            {
+                if (value == CredStableSid) return;
+                Set(_roamingSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public void SetNewCreds(string token, string userId, Guid stableSid)
+        {
+            CredToken = token;
+            CredUserId = userId;
+            CredStableSid = stableSid;
+            CredsSet = true;
+        }
+
+        public void UnsetCreds()
+        {
+            CredsSet = false;
+            Delete(nameof(CredToken), SettingsType.Roaming);
+            Delete(nameof(CredUserId), SettingsType.Roaming);
+            Delete(nameof(CredStableSid), SettingsType.Roaming);
+        }
 
         /// <summary>
         ///     Gets the setting with the name of the property it is called from.

@@ -36,7 +36,7 @@
         public DbSet<Relay> Relays { get; set; }
         public DbSet<RelayType> RelayTypes { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
-        public DbSet<SensorHistory> SensorHistory { get; set; }
+        public DbSet<SensorHistory> SensorsHistory { get; set; }
         public DbSet<SensorType> SensorTypes { get; set; }
         public DbSet<Subsystem> Subsystems { get; set; }
 
@@ -50,7 +50,7 @@
         {
             // No auth no post types:
             // 1. Parameters
-            // 2. People
+            // 2. --------------------------People WRONG
             // 3. Placements
             // 4. RelayTypes
             // 5. SensorTypes
@@ -58,11 +58,10 @@
 
             var responses = new List<string>();
             responses.Add(await DownloadDeserialiseTable<Parameter>(nameof(Parameters)));
-            responses.Add(await DownloadDeserialiseTable<Person>(nameof(People)));
             responses.Add(await DownloadDeserialiseTable<Placement>(nameof(Placements)));
+            responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(Subsystems)));
             responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(RelayTypes)));
             responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(SensorTypes)));
-            responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(Subsystems)));
 
 
             // Editable types that must be merged.
@@ -73,6 +72,7 @@
             // 5.Relays
             // 6.
 
+            responses.Add(await DownloadDeserialiseTable<Person>(nameof(People), creds));
             // Crop type is the only mergable that is no-auth.
             responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes)));
 
@@ -89,8 +89,8 @@
 
             var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
 
-            responses.Add(await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorHistory)}/{unixtime}/9001"));
-            responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001"));
+            responses.Add(await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorsHistory)}/{unixtime}/9001", creds));
+            responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001", creds));
 
             var fails = responses.Where(r => r != null).ToList();
             return fails.Any() ? string.Join(", ", fails) : null;
@@ -116,7 +116,7 @@
                 Relays,
                 RelayTypes,
                 Sensors,
-                SensorHistory,
+                SensorsHistory,
                 SensorTypes,
                 Subsystems
             };
