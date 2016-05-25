@@ -36,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 5;
+        private const int _saveIntervalSeconds = 10;
         private static DatapointsSaver _Instance = null;
         private Action<string> _onHardwareChanged; 
 
@@ -129,7 +129,7 @@ namespace Agronomist.LocalNetworking
                     sHistory.DeserialiseData();
                     _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistory); 
                 }
-                else
+                else if(_sensorBuffer[mIndex].dataDay.Data != null && sHistory.Data != null)
                 {
                     SensorHistory sHistMerged = SensorHistory.Merge(_sensorBuffer[mIndex].dataDay, sHistory);
                     _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistMerged); 
@@ -342,15 +342,15 @@ namespace Agronomist.LocalNetworking
                                     Data = new List<SensorDatapoint>(),
                                 };
                                 _sensorBuffer[i] = new SensorBuffer(sbuffer.sensor, dataDay);
-                                db.Entry(sbuffer.dataDay).State = EntityState.Added;
+                                db.Entry(dataDay).State = EntityState.Added;
                             }
                             else
                             {  //this will not attach related entities, which is good 
                                 db.Entry(sbuffer.dataDay).State = EntityState.Unchanged;
                             }
 
-                            sbuffer.dataDay.Data.Add(sensorDatapoint);
-                            sbuffer.dataDay.SerialiseData();
+                            _sensorBuffer[i].dataDay.Data.Add(sensorDatapoint);
+                            _sensorBuffer[i].dataDay.SerialiseData();
 
                         }
                     }

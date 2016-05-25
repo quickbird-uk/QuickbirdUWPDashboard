@@ -7,6 +7,7 @@
     using Windows.Web.Http;
     using Windows.Web.Http.Filters;
     using JetBrains.Annotations;
+    using System.Net.Http.Headers;
 
     public static class Request
     {
@@ -85,6 +86,7 @@
             try
             {
                 IHttpContent content = new HttpStringContent(data);
+                content.Headers.ContentType = new Windows.Web.Http.Headers.HttpMediaTypeHeaderValue("application/json");
                 var response = await client.PostAsync(url, content).AsTask((CancellationToken) canceller);
                 return response.IsSuccessStatusCode
                     ? null
