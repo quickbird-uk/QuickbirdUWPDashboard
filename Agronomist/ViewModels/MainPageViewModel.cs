@@ -25,7 +25,7 @@
             }
         }
 
-        private bool _loginEnabled;
+        private bool _loginEnabled = true;
 
         public bool LoginEnabled
         {
