@@ -311,6 +311,10 @@
                     {
                         await Messenger.Instance.UserTablesChanged.Invoke("new");
                     }
+                    else
+                    {
+                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                    }
                 }
                 else
                 {
@@ -324,6 +328,7 @@
                         {
                             // Overwrite local version, with the server's changes.
                             dbSet.Update(entry);
+                            await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
                         // We are not using this mode where ther server gets to override local changes. Far too confusing.
                         //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
@@ -338,11 +343,14 @@
                     {
                         // Minor hack, this is existing merged into entry.
                         dbSet.Update(existing);
+                        // The messenger message is done earlier, no difference between new and update.
                     }
                     else
                     {
                         // Simply take the changes from the server, there are no valid local changes.
                         dbSet.Update(entry);
+
+                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
                     }
                 }
             }
