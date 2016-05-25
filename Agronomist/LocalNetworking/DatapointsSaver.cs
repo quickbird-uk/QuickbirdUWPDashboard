@@ -65,6 +65,7 @@ namespace Agronomist.LocalNetworking
             }
         }
 
+
         public DatapointsSaver()
         {
             if(_Instance == null)
@@ -72,14 +73,18 @@ namespace Agronomist.LocalNetworking
                 _Instance = this;
                 var factory = new TaskFactory(TaskCreationOptions.LongRunning,
                    TaskContinuationOptions.LongRunning);
+                _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
+                _saveTimer.Tick += SaveBufferedReadings;
+                _saveTimer.Start();
 
-               _localTask = factory.StartNew(() =>
+                _localTask = factory.StartNew(() =>
                {
                    LoadData();
-                   _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
-                   _saveTimer.Tick += SaveBufferedReadings;
-                   _saveTimer.Start();
                }, TaskCreationOptions.LongRunning); 
+            }
+            else
+            {
+                throw new Exception("You can't initialise mroe than one datapoint Saver");
             }
 
         }
@@ -95,8 +100,8 @@ namespace Agronomist.LocalNetworking
         {
             var db = new MainDbContext();
             _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
-            List<SensorHistory> sensorsHistory = db.SensorHistory.Where(sh => sh.TimeStamp > Today).ToList();
-            _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).ToList(); 
+            List<SensorHistory> sensorsHistory = db.SensorHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
+            _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).AsNoTracking().ToList(); 
 
             //Add missing sensors and relays 
             foreach (Sensor sensor in _dbDevices.SelectMany(dv => dv.Sensors))
@@ -105,7 +110,7 @@ namespace Agronomist.LocalNetworking
                 {
                     _sensorBuffer.Add(new SensorBuffer(sensor));
                 }
-            }            
+            }            //TODO merge the datapoints! 
             foreach(SensorHistory sHistory in sensorsHistory)
             {
                 var sensorBuffered = _sensorBuffer.First(sb => sb.sensor.ID == sHistory.SensorID); 
@@ -134,10 +139,10 @@ namespace Agronomist.LocalNetworking
             _localTask.ContinueWith((Task previous) =>
             {
                 LoadData();
-                Device device = _dbDevices.FirstOrDefault(dv => dv.ID == values.Key);
+                Device device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
                 if (device == null)
                 {
-                    DeviceNotInDB();
+                    CreateDevice(values); 
                 }
                 else
                 {
@@ -162,20 +167,72 @@ namespace Agronomist.LocalNetworking
             }); 
         }
 
-        //public void CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
-        //{
-        //    MainDbContext db; 
-        //    Device device = new Device
-        //    {
-        //        ID = Guid.NewGuid(),
-        //        SerialNumber = values.Key,
-        //        CreatedAt =DateTimeOffset.Now,
-        //        UpdatedAt = DateTimeOffset.Now, 
-        //        Deleted = false,
-        //        l
-        //    }
+        /// <summary>
+        /// To be used internaly
+        /// </summary>
+        /// <param name="values"></param>
+        private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        {
+            Settings settings = new Settings();
+            if (settings.CredToken != null)
+            {
+                MainDbContext db = new MainDbContext();
 
-        //}
+                Device device = new Device
+                {
+                    ID = Guid.NewGuid(),
+                    SerialNumber = values.Key,
+                    Deleted = false,
+                    CreatedAt = DateTimeOffset.Now,
+                    UpdatedAt = DateTimeOffset.Now,
+                    Name = string.Format("Box Number {0}", _dbDevices.Count),
+                    Relays = new List<Relay>(),
+                    Sensors = new List<Sensor>(),
+                    Version = new byte[32],
+                    Location = new Location
+                    {
+                        ID = Guid.NewGuid(),
+                        Deleted = false,
+                        Name = string.Format("Box Number {0}", _dbDevices.Count),
+                        PersonId = Guid.Parse(settings.CredUserId),
+                        Version = new byte[32],
+                        CropCycles = new List<CropCycle>(),
+                        Devices = new List<Device>(),
+                        RelayHistory = new List<RelayHistory>(),
+                        SensorHistory = new List<SensorHistory>(),
+                        CreatedAt = DateTimeOffset.Now,
+                        UpdatedAt = DateTimeOffset.Now,
+                    }
+                };
+
+                db.Devices.Add(device);
+                //Add sensors
+                foreach (var inSensors in values.Value)
+                {
+                    //Todo check correctness of hte sensorType
+                    Sensor newSensor = new Sensor
+                    {
+                        CreatedAt = DateTimeOffset.Now,
+                        UpdatedAt = DateTimeOffset.Now,
+                        ID = Guid.NewGuid(),
+                        DeviceID = device.ID,
+                        Deleted = false,
+                        SensorTypeID = inSensors.SensorTypeID,
+                        Enabled = true,
+                        Multiplier = 1,
+                        Offset = 0,
+                        Version = new byte[32]
+                    };
+                    db.Sensors.Add(newSensor);
+                }
+                db.SaveChanges();
+                return true;
+            }
+            else
+                return false; 
+        }
+
+
 
         //Closes sensor Histories that are no longer usefull
         private void SaveBufferedReadings(object sender, object e)
@@ -183,8 +240,8 @@ namespace Agronomist.LocalNetworking
             _localTask.ContinueWith((Task previous) =>
             {
                 var db = new MainDbContext();
-                Guid[] sensorIDs = _sensorBuffer.Select(sb => sb.sensor.ID).ToArray();
 
+                //loop for each sensorBuffer
                 for (int i = 0; i < _sensorBuffer.Count; i++)
                 {
                     var sbuffer = _sensorBuffer[i];
@@ -226,30 +283,14 @@ namespace Agronomist.LocalNetworking
                         sbuffer.freshBuffer.RemoveRange(0, sbuffer.freshBuffer.Count); 
                     }
 
-                    
-                    //{ //save taht length of data
-                    //    List<SensorDatapoint> dpBuffer = sbuffer.freshBuffer; 
-                    //    DateTimeOffset startTime = dpBuffer[0].TimeStamp;
-
-                    //    for(int t =0; startTime.AddSeconds(_saveIntervalSeconds) > dpBuffer[t]?.TimeStamp; t++) 
-                    //}
-
-
-
-                    //for(int b =0; b< sbuffer.freshBuffer.Count; b++)
-                    //{
-
-                        //}
-                        //SensorDatapoint dataPoint = new SensorDatapoint()
-
-
-                        ////Check if dataday need to be closed
-                    if (sbuffer.dataDay != null && sbuffer.dataDay?.TimeStamp < Tomorrow)
+                    //check if corresponding dataDay is too old and needsto be closed
+                    if(sbuffer.dataDay?.TimeStamp < sensorDatapoint?.TimeStamp)
                     {
                         sbuffer.dataDay = null; 
                     }
-                    //Chekc if new data needs to be written
-                    if (sbuffer.dataDay == null)
+                    
+                    //if there is no suitable dat day, create it, but oinly if we have data to put there 
+                    if (sbuffer.dataDay == null && sensorDatapoint != null)
                     {
                         sbuffer.dataDay = new SensorHistory
                         {
@@ -261,27 +302,16 @@ namespace Agronomist.LocalNetworking
                         };
                     }
 
-
+                    //Make changes to the database
+                    if(sensorDatapoint != null)
+                    {
+                        db.SensorHistory.Attach(sbuffer.dataDay);
+                        sbuffer.dataDay.Data.Add(sensorDatapoint);
+                        sbuffer.dataDay.SerialiseData();
+                    }
                 }
-
-                    ////removes DataDays that don;t need to be there
-                    //_sensorDays.RemoveAll(sh => sh.TimeStamp < Tomorrow);
-                    ////Check if data day is no longer is same location as the device
-                    //for(int i =0; i< _sensorBuffer.Count; i++)
-                    //{
-
-                    //}
-
-
-                    ////Check if dataday needs to be created
-
-
-
-
-
-                    ///foreach 
-                    // Sensor sensors 
-                    //SHIT! 
+                //Once we are done here, mark changes to the db
+                db.SaveChanges(); 
             }); 
         }
 
@@ -290,7 +320,7 @@ namespace Agronomist.LocalNetworking
         //TODO make usefull
         private void DeviceNotInDB()
         {
-
+            
         }
 
         private void HardwareChanged()

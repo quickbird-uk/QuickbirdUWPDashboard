@@ -21,6 +21,7 @@ namespace Agronomist.LocalNetworking
     /// </summary>
     public class Manager
     {
+
         private static uPLibrary.Networking.M2Mqtt.MqttBroker _mqttBroker = null;
         private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
