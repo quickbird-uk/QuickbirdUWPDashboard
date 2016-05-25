@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{B267F886-254B-419F-B527-8D814FDDC1CA}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -23,77 +23,6 @@
     <PackageCertificateThumbprint>F6B11D3EC045105F13CDE4009C4D92F3C60E7962</PackageCertificateThumbprint>
     <AppxPackageDir>C:\Users\Vladimir Akopyan\Desktop\AgronomistPackage\</AppxPackageDir>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\ARM\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
-    <OutputPath>bin\ARM\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
-    <EnableGatekeeperAnalysis>false</EnableGatekeeperAnalysis>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
@@ -172,20 +101,52 @@
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <PlatformTarget>ARM</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <PlatformTarget>ARM</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|x86'">
     <OutputPath>bin\x86\NATIVE\</OutputPath>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>x86</PlatformTarget>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|ARM'">
     <OutputPath>bin\ARM\NATIVE\</OutputPath>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>ARM</PlatformTarget>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|x64'">
     <OutputPath>bin\x64\NATIVE\</OutputPath>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
