@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Windows.UI.Xaml;
 using System.Threading;
+using Agronomist.Util;
+using NetLib;
 
 namespace Agronomist.LocalNetworking
 {
@@ -133,12 +135,12 @@ namespace Agronomist.LocalNetworking
             db.Dispose();
         }
 
-        public void BufferReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
+            
             //Purposefull fire and forget
             _localTask.ContinueWith((Task previous) =>
             {
-                LoadData();
                 Device device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
                 if (device == null)
                 {
@@ -146,6 +148,8 @@ namespace Agronomist.LocalNetworking
                 }
                 else
                 {
+
+                    List<Messenger.SensorReading> sensorReadings = new List<Messenger.SensorReading>(); 
                     foreach (Manager.SensorMessage message in values.Value)
                     {
                         try
@@ -155,6 +159,9 @@ namespace Agronomist.LocalNetworking
                             DateTimeOffset timeStamp = DateTimeOffset.Now;
                             SensorDatapoint datapoint = new SensorDatapoint(message.value, timeStamp, duration);
                             sensorBuffer.freshBuffer.Add(datapoint);
+                            Messenger.SensorReading sensorReading = new Messenger.SensorReading(sensorBuffer.sensor.ID,
+                                datapoint.Value, datapoint.TimeStamp, datapoint.Duration);
+                            sensorReadings.Add(sensorReading); 
                         }
                         catch (ArgumentNullException)
                         {
@@ -162,6 +169,8 @@ namespace Agronomist.LocalNetworking
                         }
 
                     }
+                    //this is meant to be fire-forget, that's cool 
+                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true); 
                 }
 
             }); 
@@ -173,8 +182,11 @@ namespace Agronomist.LocalNetworking
         /// <param name="values"></param>
         private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
+            //Make sure that if fired several times, the constraints are maintained
+
             Settings settings = new Settings();
-            if (settings.CredToken != null)
+
+            if (settings.CredToken != null && _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
             {
                 MainDbContext db = new MainDbContext();
 
@@ -194,7 +206,7 @@ namespace Agronomist.LocalNetworking
                         ID = Guid.NewGuid(),
                         Deleted = false,
                         Name = string.Format("Box Number {0}", _dbDevices.Count),
-                        PersonId = Guid.Parse(settings.CredUserId),
+                        PersonId = Guid.NewGuid(), //TODO use the thing from settings! 
                         Version = new byte[32],
                         CropCycles = new List<CropCycle>(),
                         Devices = new List<Device>(),
@@ -223,9 +235,19 @@ namespace Agronomist.LocalNetworking
                         Offset = 0,
                         Version = new byte[32]
                     };
-                    db.Sensors.Add(newSensor);
+                    device.Sensors.Add(newSensor);
                 }
                 db.SaveChanges();
+
+                //Add the device to the cached data? 
+                _dbDevices.Add(device);
+                foreach(var sensor in device.Sensors)
+                {
+                    _sensorBuffer.Add(
+                        new SensorBuffer(sensor)); 
+                }
+                db.Dispose(); 
+                
                 return true;
             }
             else

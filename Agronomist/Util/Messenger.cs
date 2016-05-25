@@ -13,11 +13,11 @@
     {
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
-        public BroadcastMessage<IEnumerable<SensorDataPoint>> NewSensorDataPoint { get; } =
-            new BroadcastMessage<IEnumerable<SensorDataPoint>>();
+        public BroadcastMessage<IEnumerable<SensorReading>> NewSensorDataPoint { get; } =
+            new BroadcastMessage<IEnumerable<SensorReading>>();
 
-        public BroadcastMessage<IEnumerable<RelayDataPoint>> NewRelayDataPoint { get; } =
-            new BroadcastMessage<IEnumerable<RelayDataPoint>>();
+        public BroadcastMessage<IEnumerable<RelayReading>> NewRelayDataPoint { get; } =
+            new BroadcastMessage<IEnumerable<RelayReading>>();
 
         public BroadcastMessage<string> HardwareTableChanged { get; } =
             new BroadcastMessage<string>();
@@ -25,9 +25,9 @@
         public BroadcastMessage<string> UserTablesChanged { get; } =
             new BroadcastMessage<string>();
 
-        public struct SensorDataPoint
+        public struct SensorReading
         {
-            public SensorDataPoint(Guid id, double value, DateTimeOffset timestamp, TimeSpan duration)
+            public SensorReading(Guid id, double value, DateTimeOffset timestamp, TimeSpan duration)
             {
                 Value = value;
                 Duration = duration;
@@ -44,9 +44,9 @@
             public Guid SensorId { get; }
         }
 
-        public struct RelayDataPoint
+        public struct RelayReading
         {
-            public RelayDataPoint(Guid id, bool state, DateTimeOffset timestamp, TimeSpan duration)
+            public RelayReading(Guid id, bool state, DateTimeOffset timestamp, TimeSpan duration)
             {
                 State = state;
                 Duration = duration;
