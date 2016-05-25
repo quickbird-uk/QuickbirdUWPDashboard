@@ -5,7 +5,6 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using System.ServiceModel.Channels;
     using System.Threading.Tasks;
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
@@ -89,7 +88,8 @@
 
             var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
 
-            responses.Add(await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorsHistory)}/{unixtime}/9001", creds));
+            responses.Add(
+                await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorsHistory)}/{unixtime}/9001", creds));
             responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001", creds));
 
             var fails = responses.Where(r => r != null).ToList();
@@ -266,7 +266,7 @@
                     if (null != existing)
                     {
                         // They are the same primary key so merge them.
-                        var merged = DatabasePOCOs.User.SensorHistory.Merge(hist, oldHist);
+                        var merged = SensorHistory.Merge(hist, oldHist);
                         merged.SerialiseData();
                         existing = merged as TPoco;
                     }
