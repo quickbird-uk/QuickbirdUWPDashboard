@@ -313,7 +313,7 @@ namespace Agronomist.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SensorHistory",
+                name: "SensorsHistory",
                 columns: table => new
                 {
                     SensorID = table.Column<Guid>(nullable: false),
@@ -323,15 +323,15 @@ namespace Agronomist.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SensorHistory", x => new { x.SensorID, x.TimeStamp });
+                    table.PrimaryKey("PK_SensorsHistory", x => new { x.SensorID, x.TimeStamp });
                     table.ForeignKey(
-                        name: "FK_SensorHistory_Locations_LocationID",
+                        name: "FK_SensorsHistory_Locations_LocationID",
                         column: x => x.LocationID,
                         principalTable: "Locations",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_SensorHistory_Sensors_SensorID",
+                        name: "FK_SensorsHistory_Sensors_SensorID",
                         column: x => x.SensorID,
                         principalTable: "Sensors",
                         principalColumn: "ID",
@@ -414,13 +414,13 @@ namespace Agronomist.Migrations
                 column: "RelayID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SensorHistory_LocationID",
-                table: "SensorHistory",
+                name: "IX_SensorsHistory_LocationID",
+                table: "SensorsHistory",
                 column: "LocationID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SensorHistory_SensorID",
-                table: "SensorHistory",
+                name: "IX_SensorsHistory_SensorID",
+                table: "SensorsHistory",
                 column: "SensorID");
         }
 
@@ -433,7 +433,7 @@ namespace Agronomist.Migrations
                 name: "RelayHistory");
 
             migrationBuilder.DropTable(
-                name: "SensorHistory");
+                name: "SensorsHistory");
 
             migrationBuilder.DropTable(
                 name: "CropTypes");

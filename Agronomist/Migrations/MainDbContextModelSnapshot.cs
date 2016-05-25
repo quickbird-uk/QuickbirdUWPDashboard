@@ -329,7 +329,7 @@ namespace Agronomist.Migrations
 
                     b.HasIndex("SensorID");
 
-                    b.ToTable("SensorHistory");
+                    b.ToTable("SensorsHistory");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>

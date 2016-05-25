@@ -8,7 +8,7 @@ using Agronomist.Models;
 namespace Agronomist.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    [Migration("20160517172858_initial")]
+    [Migration("20160525141655_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -330,7 +330,7 @@ namespace Agronomist.Migrations
 
                     b.HasIndex("SensorID");
 
-                    b.ToTable("SensorHistory");
+                    b.ToTable("SensorsHistory");
                 });
 
             modelBuilder.Entity("DatabasePOCOs.Device", b =>

@@ -35,12 +35,12 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Util\Messenger.cs" />
-    <Compile Include="Migrations\20160517172858_initial.cs" />
-    <Compile Include="Migrations\20160517172858_initial.designer.cs">
-      <DependentUpon>20160517172858_initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160525141655_initial.cs" />
+    <Compile Include="Migrations\20160525141655_initial.designer.cs">
+      <DependentUpon>20160525141655_initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
+    <Compile Include="Util\Messenger.cs" />
     <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
