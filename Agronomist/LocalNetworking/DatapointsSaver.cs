@@ -118,11 +118,16 @@ namespace Agronomist.LocalNetworking
             }            //TODO merge the datapoints! 
             foreach(SensorHistory sHistory in sensorsHistory)
             {
-                var sensorBuffered = _sensorBuffer.First(sb => sb.sensor.ID == sHistory.SensorID); 
-                if (sensorBuffered.dataDay == null || sensorBuffered.dataDay.TimeStamp < sHistory.TimeStamp)
+                int mIndex = _sensorBuffer.FindIndex(sb => sb.sensor.ID == sHistory.SensorID); 
+                if (_sensorBuffer[mIndex].dataDay == null || _sensorBuffer[mIndex].dataDay.TimeStamp < sHistory.TimeStamp)
                 {
-                    sHistory.DeserialiseData(); 
-                    sensorBuffered.dataDay = sHistory; 
+                    sHistory.DeserialiseData();
+                    _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistory); 
+                }
+                else
+                {
+                    SensorHistory sHistMerged = SensorHistory.Merge(_sensorBuffer[mIndex].dataDay, sHistory);
+                    _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistMerged); 
                 }
             }
 
@@ -312,45 +317,36 @@ namespace Agronomist.LocalNetworking
 
                         sbuffer.freshBuffer.RemoveRange(0, sbuffer.freshBuffer.Count); 
                     }
-
-                    //check if corresponding dataDay is too old and needsto be closed
-                    if(sbuffer.dataDay?.TimeStamp < sensorDatapoint?.TimeStamp)
+                    //only if new data is present
+                    if (sensorDatapoint != null)
                     {
-                        sbuffer.dataDay = null; 
-                    }
-                    
-                    //if there is no suitable dat day, create it, but oinly if we have data to put there 
-                    if (sbuffer.dataDay == null && sensorDatapoint != null)
-                    {
-                        sbuffer.dataDay = new SensorHistory
+                        //check if corresponding dataDay is too old or none exists at all 
+                        if (sbuffer.dataDay?.TimeStamp < sensorDatapoint?.TimeStamp || sbuffer.dataDay == null)
                         {
-                            LocationID = sbuffer.sensor.Device.LocationID,
-                            SensorID = sbuffer.sensor.ID,
-                            Sensor = sbuffer.sensor,
-                            TimeStamp = Tomorrow,
-                            Data = new List<SensorDatapoint>(),
-                        };
-                        db.SensorsHistory.Add(sbuffer.dataDay); 
-                    }
-                    else if(sbuffer.dataDay != null && sensorDatapoint != null)
-                    {
-                        db.SensorsHistory.Attach(sbuffer.dataDay);
-                         
-                    }
+                            SensorHistory dataDay = new SensorHistory
+                            {
+                                LocationID = sbuffer.sensor.Device.LocationID,
+                                SensorID = sbuffer.sensor.ID,
+                                Sensor = sbuffer.sensor,
+                                TimeStamp = Tomorrow,
+                                Data = new List<SensorDatapoint>(),
+                            };
+                            _sensorBuffer[i] = new SensorBuffer(sbuffer.sensor, dataDay); 
+                            db.Entry(sbuffer.dataDay).State = EntityState.Added;
+                        }
+                        else 
+                        {  //this will not attach related entities, which is good 
+                            db.Entry(sbuffer.dataDay).State = EntityState.Unchanged;
+                        }
 
-                    //Make changes to the database
-                    if(sensorDatapoint != null)
-                    {
                         sbuffer.dataDay.Data.Add(sensorDatapoint);
                         sbuffer.dataDay.SerialiseData();
-                        //sbuffer.dataDay.
+
                     }
                 }
                 //Once we are done here, mark changes to the db
-                // db.UpdateRange(updatedSensorHistories); 
-                Debug.WriteLine("Saving");
                 db.SaveChanges();
-                Debug.WriteLine("SavedSensorHistories"); 
+                //Debug.WriteLine("SavedSensorHistories"); 
                 db.Dispose(); 
             }); 
         }
@@ -376,11 +372,11 @@ namespace Agronomist.LocalNetworking
         private struct SensorBuffer
         {
 
-            public SensorBuffer(Sensor assignSensor)
+            public SensorBuffer(Sensor assignSensor, SensorHistory inDataDay = null)
             {
                 sensor = assignSensor;
                 freshBuffer = new List<SensorDatapoint>();
-                dataDay = null; 
+                dataDay = inDataDay; 
             }
             public readonly Sensor sensor;
             public readonly List<SensorDatapoint> freshBuffer;
