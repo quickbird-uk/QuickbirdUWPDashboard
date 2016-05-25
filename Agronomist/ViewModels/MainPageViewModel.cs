@@ -94,8 +94,10 @@
             {
                 var settings = new Settings();
                 var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-                var errors = await context.UpdateFromServer(DateTimeOffset.MinValue, creds);
+                var now = DateTimeOffset.Now;
+                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
                 DatabaseErrors = errors;
+                settings.LastDatabaseUpdate = now;
             }
         }
     }

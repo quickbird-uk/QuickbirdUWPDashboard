@@ -101,6 +101,17 @@
             Delete(nameof(CredStableSid), SettingsType.Roaming);
         }
 
+        public DateTimeOffset LastDatabaseUpdate
+        {
+            get { return Get(_roamingSettings, default(DateTimeOffset)); }
+            set
+            {
+                if (value == LastDatabaseUpdate) return;
+                Set(_roamingSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
         ///     Gets the setting with the name of the property it is called from.
         /// </summary>
