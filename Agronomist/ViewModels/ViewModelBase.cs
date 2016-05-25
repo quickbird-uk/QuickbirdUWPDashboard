@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Agronomist.ViewModels
+﻿namespace Agronomist.ViewModels
 {
     using System.ComponentModel;
     using System.Runtime.CompilerServices;
