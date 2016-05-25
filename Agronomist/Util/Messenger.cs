@@ -76,7 +76,7 @@
                 _subscribers.Add(new WeakReference<Action<T>>(action));
             }
 
-            public async Task Invoke(T param, bool useCoreDispatcher = false)
+            public async Task Invoke(T param, bool useCoreDispatcher = true)
             {
                 //The first half of this code has externally mutable lists, so no awaits.
                 var actions = new List<Action<T>>();
