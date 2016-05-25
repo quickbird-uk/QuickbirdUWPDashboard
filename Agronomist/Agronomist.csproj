@@ -35,9 +35,9 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160525141655_initial.cs" />
-    <Compile Include="Migrations\20160525141655_initial.designer.cs">
-      <DependentUpon>20160525141655_initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160525145354_Initial.cs" />
+    <Compile Include="Migrations\20160525145354_Initial.designer.cs">
+      <DependentUpon>20160525145354_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Util\Messenger.cs" />

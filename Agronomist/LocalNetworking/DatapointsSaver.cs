@@ -16,6 +16,7 @@ using NetLib;
 
 namespace Agronomist.LocalNetworking
 {
+    using System.Diagnostics;
     using Util;
 
     public class DatapointsSaver
@@ -35,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 120;
+        private const int _saveIntervalSeconds = 5;
         private static DatapointsSaver _Instance = null;
 
         /// <summary>
@@ -167,7 +168,8 @@ namespace Agronomist.LocalNetworking
                         }
                         catch (ArgumentNullException)
                         {
-                            //TODO add a nhew sensor to the device! 
+                            
+                            //TODO add a new sensor to the device! 
                         }
 
                     }
@@ -188,8 +190,10 @@ namespace Agronomist.LocalNetworking
 
             Settings settings = new Settings();
 
-            if (settings.CredToken != null && _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
+            if (settings.CredsSet && 
+                settings.LastDatabaseUpdate != default(DateTimeOffset) && _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
             {
+                Debug.WriteLine("addingDevice"); 
                 MainDbContext db = new MainDbContext();
 
                 Device device = new Device
@@ -208,7 +212,7 @@ namespace Agronomist.LocalNetworking
                         ID = Guid.NewGuid(),
                         Deleted = false,
                         Name = string.Format("Box Number {0}", _dbDevices.Count),
-                        PersonId = Guid.NewGuid(), //TODO use the thing from settings! 
+                        PersonId = settings.CredStableSid, //TODO use the thing from settings! 
                         Version = new byte[32],
                         CropCycles = new List<CropCycle>(),
                         Devices = new List<Device>(),
@@ -220,6 +224,7 @@ namespace Agronomist.LocalNetworking
                 };
 
                 db.Devices.Add(device);
+                db.Locations.Add(device.Location); 
                 //Add sensors
                 foreach (var inSensors in values.Value)
                 {
@@ -264,6 +269,7 @@ namespace Agronomist.LocalNetworking
             _localTask.ContinueWith((Task previous) =>
             {
                 var db = new MainDbContext();
+               // List<SensorHistory> updatedSensorHistories = new List<SensorHistory>(); 
 
                 //loop for each sensorBuffer
                 for (int i = 0; i < _sensorBuffer.Count; i++)
@@ -324,18 +330,26 @@ namespace Agronomist.LocalNetworking
                             TimeStamp = Tomorrow,
                             Data = new List<SensorDatapoint>(),
                         };
+                        db.SensorsHistory.Add(sbuffer.dataDay); 
+                    }
+                    else if(sbuffer.dataDay != null && sensorDatapoint != null)
+                    {
+                        db.SensorsHistory.Attach(sbuffer.dataDay); 
                     }
 
                     //Make changes to the database
                     if(sensorDatapoint != null)
                     {
-                        db.SensorsHistory.Attach(sbuffer.dataDay);
                         sbuffer.dataDay.Data.Add(sensorDatapoint);
                         sbuffer.dataDay.SerialiseData();
+                        //sbuffer.dataDay.
                     }
                 }
                 //Once we are done here, mark changes to the db
-                db.SaveChanges(); 
+               // db.UpdateRange(updatedSensorHistories); 
+                db.SaveChanges();
+                Debug.WriteLine("SavedSensorHistories"); 
+                db.Dispose(); 
             }); 
         }
 

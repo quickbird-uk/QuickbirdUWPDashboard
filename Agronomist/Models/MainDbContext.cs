@@ -147,6 +147,8 @@
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Skip the person init, it can't be editied on this side anyway.
+            mb.Entity<Sensor>().Property(s => s.AlertHigh).IsRequired(false);
+            mb.Entity<Sensor>().Property(s => s.AlertLow).IsRequired(false);
 
             mb.Entity<Location>()
                 .HasMany(loc => loc.SensorHistory)
