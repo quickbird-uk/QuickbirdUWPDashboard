@@ -107,6 +107,7 @@ namespace Agronomist.LocalNetworking
         /// <returns>true if it loaded something, false otherwise</returns>
         private void LoadData()
         {
+            Debug.WriteLine("DatapointsSaver refreshing cache"); 
             var db = new MainDbContext();
             _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
             List<SensorHistory> sensorsHistory = db.SensorsHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
@@ -355,7 +356,7 @@ namespace Agronomist.LocalNetworking
                     }
                     //Once we are done here, mark changes to the db
                     db.SaveChanges();
-                    //Debug.WriteLine("SavedSensorHistories"); 
+                    Debug.WriteLine("Saved Sensor Data"); 
                     db.Dispose();
                 }
             }); 
@@ -371,6 +372,7 @@ namespace Agronomist.LocalNetworking
 
         private void HardwareChanged(string value)
         {
+            
             _localTask.ContinueWith((Task previous) =>
             {
                 LoadData();
