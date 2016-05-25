@@ -38,6 +38,7 @@ namespace Agronomist.LocalNetworking
         private DispatcherTimer _saveTimer;
         private const int _saveIntervalSeconds = 5;
         private static DatapointsSaver _Instance = null;
+        private Action<string> _onHardwareChanged; 
 
         /// <summary>
         /// The date of yesturday with hours, minutes and seconds set to zero 
@@ -82,7 +83,8 @@ namespace Agronomist.LocalNetworking
                 _saveTimer.Tick += SaveBufferedReadings;
                 _saveTimer.Start();
 
-                //Messenger.Instance.HardwareTableChanged.Subscribe(HardwareChanged); 
+                _onHardwareChanged = HardwareChanged; 
+                Messenger.Instance.HardwareTableChanged.Subscribe(_onHardwareChanged); 
 
                 _localTask = factory.StartNew(() =>
                {
@@ -367,7 +369,7 @@ namespace Agronomist.LocalNetworking
             
         }
 
-        private void HardwareChanged()
+        private void HardwareChanged(string value)
         {
             _localTask.ContinueWith((Task previous) =>
             {
