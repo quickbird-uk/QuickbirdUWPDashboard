@@ -8,6 +8,8 @@
     using Windows.Web.Http.Filters;
     using JetBrains.Annotations;
     using System.Net.Http.Headers;
+    using Windows.Storage.Streams;
+    using Windows.Security.Cryptography;
 
     public static class Request
     {
@@ -85,8 +87,11 @@
 
             try
             {
-                IHttpContent content = new HttpStringContent(data);
+                IBuffer buffUTF8 = CryptographicBuffer.ConvertStringToBinary(data, BinaryStringEncoding.Utf8);
+                IHttpContent content = new HttpBufferContent(buffUTF8, 0, buffUTF8.Length);
+                var body = await content.ReadAsStringAsync(); 
                 content.Headers.ContentType = new Windows.Web.Http.Headers.HttpMediaTypeHeaderValue("application/json");
+                
                 var response = await client.PostAsync(url, content).AsTask((CancellationToken) canceller);
                 var it = response.Content; 
                 return response.IsSuccessStatusCode
