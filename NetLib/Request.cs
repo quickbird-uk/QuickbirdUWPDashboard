@@ -88,6 +88,7 @@
                 IHttpContent content = new HttpStringContent(data);
                 content.Headers.ContentType = new Windows.Web.Http.Headers.HttpMediaTypeHeaderValue("application/json");
                 var response = await client.PostAsync(url, content).AsTask((CancellationToken) canceller);
+                var it = response.Content; 
                 return response.IsSuccessStatusCode
                     ? null
                     : $"Error: Request returned {response.StatusCode} ({response.ReasonPhrase})";
