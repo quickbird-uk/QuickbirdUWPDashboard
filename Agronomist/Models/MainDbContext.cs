@@ -93,6 +93,12 @@
                 await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorsHistory)}/{unixtime}/9001", creds));
             responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001", creds));
 
+
+            // Notify the app that the tables have been updated.
+            await Messenger.Instance.UserTablesChanged.Invoke(null);
+
+            await Messenger.Instance.HardwareTableChanged.Invoke(null);
+
             var fails = responses.Where(r => r != null).ToList();
             return fails.Any() ? string.Join(", ", fails) : null;
         }
@@ -307,14 +313,14 @@
                 {
                     dbSet.Add(entry);
 
-                    if (entry is BaseEntity)
-                    {
-                        await Messenger.Instance.UserTablesChanged.Invoke("new");
-                    }
-                    else
-                    {
-                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
-                    }
+                    // if (entry is BaseEntity)
+                    // {
+                    //     await Messenger.Instance.UserTablesChanged.Invoke("new");
+                    // }
+                    // else
+                    // {
+                    //     await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                    // }
                 }
                 else
                 {
@@ -328,7 +334,7 @@
                         {
                             // Overwrite local version, with the server's changes.
                             dbSet.Update(entry);
-                            await Messenger.Instance.UserTablesChanged.Invoke("update");
+                            //await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
                         // We are not using this mode where ther server gets to override local changes. Far too confusing.
                         //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
@@ -350,7 +356,7 @@
                         // Simply take the changes from the server, there are no valid local changes.
                         dbSet.Update(entry);
 
-                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                        //await Messenger.Instance.HardwareTableChanged.Invoke("new");
                     }
                 }
             }
@@ -397,7 +403,7 @@
             var lastSensorDataPost = settings.LastSensorDataPost;
 
             if (!SensorsHistory.Any()) return null;
-
+            
             var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
             var postTime = DateTimeOffset.Now;
             todaysSensorHistory.DeserialiseData();
