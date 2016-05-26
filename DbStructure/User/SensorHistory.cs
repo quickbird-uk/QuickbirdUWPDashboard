@@ -17,7 +17,7 @@
         public Guid? LocationID { get; set; }
 
         [JsonIgnore]
-        public byte[] RawData { get; set; }
+        public byte[] RawData { get; set; } = new byte[0]; 
 
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
@@ -87,7 +87,15 @@
 
         public static SensorHistory Merge(SensorHistory slice1, SensorHistory slice2)
         {
-            if(slice1.SensorID!= slice2.SensorID)
+            //Some null checks! 
+            if ((slice1 == null || slice1?.Data == null) && slice2 != null && slice2?.Data != null)
+                return slice2;
+            else if ((slice2 == null || slice2?.Data == null) && slice1 != null && slice1?.Data != null)
+                return slice1;
+            else if((slice2 == null || slice2?.Data == null) && (slice1 == null || slice1?.Data == null))
+                throw new Exception("Attempted to merge SensorHistory slices that are both null!");
+
+            if (slice1.SensorID!= slice2.SensorID)
             {
                 throw new Exception("Attempted to merge SensorHistory slices from different sensors! "
                 + slice1.SensorID + " and " + slice2.SensorID);
@@ -103,6 +111,8 @@
                 throw new Exception("Attempted to merge SensorHistory from different days! "
                     + slice1.TimeStamp + " and " + slice2.TimeStamp);
             }
+
+
 
             SensorHistory result = new SensorHistory
             {

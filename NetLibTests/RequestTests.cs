@@ -4,13 +4,14 @@
     using Agronomist.Models;
     using NetLib;
     using Xunit;
+    using System;
 
     public class RequestTests
     {
         public RequestTests()
         {
             const string token =
-                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdGFibGVfc2lkIjoic2lkOjY3MmQ5Mzk4ZTBmOTg0YTczM2I3OWUwYWU0NjU0M2RiIiwic3ViIjoic2lkOmIyYjI1M2JiMGU3MGViMGJhN2YwNGU1OGQwM2FiMDRjIiwiaWRwIjoidHdpdHRlciIsInZlciI6IjMiLCJpc3MiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJhdWQiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJleHAiOjE0NjM5MjczMjMsIm5iZiI6MTQ2MTMzNTMyM30.ALW45aLz40f3irlESmqnm2wrMm5WHpET2iCpUDXC2MM";
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdGFibGVfc2lkIjoic2lkOjY3MmQ5Mzk4ZTBmOTg0YTczM2I3OWUwYWU0NjU0M2RiIiwic3ViIjoic2lkOmIyYjI1M2JiMGU3MGViMGJhN2YwNGU1OGQwM2FiMDRjIiwiaWRwIjoidHdpdHRlciIsInZlciI6IjMiLCJpc3MiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJhdWQiOiJodHRwczovL2doYXBpNDZhenVyZS5henVyZXdlYnNpdGVzLm5ldC8iLCJleHAiOjE0NjY2OTkyMjEsIm5iZiI6MTQ2NDEwNzIyMX0.qdxQXvBv4GwLVELuhvvuvUmz9frOdIeFEDz-4xbC1WU";
             _cred = Creds.FromUserIdAndToken("fakeuser", token);
         }
 
@@ -64,7 +65,10 @@
         [InlineData("Sensors")]
         public async Task AuthorisedGetTest(string tableName)
         {
-            var response = await Request.GetTable(MainDbContext.ApiUrl, tableName, _cred);
+            string response; 
+            response = await Request.GetTable(MainDbContext.ApiUrl, tableName, _cred);
+
+
             //The Json response is always surrounded by [].
             Assert.StartsWith("[", response);
             Assert.EndsWith("]", response);
