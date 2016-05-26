@@ -390,6 +390,8 @@
             return errors;
         }
 
+
+        //TODO: what does this do? post a single item? 
         public  async Task<string> PostHistoryChanges()
         {
             var settings = new Settings();
@@ -398,6 +400,7 @@
 
             if (!SensorsHistory.Any()) return null;
 
+            //is this meant to be MaxAsync? what's with the strange MaxBy fuinction? 
             var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
             var postTime = DateTimeOffset.Now;
             todaysSensorHistory.DeserialiseData();

@@ -36,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 10;
+        private const int _saveIntervalSeconds = 120;
         private static DatapointsSaver _Instance = null;
         private Action<string> _onHardwareChanged; 
 
@@ -342,6 +342,7 @@ namespace Agronomist.LocalNetworking
                                     Data = new List<SensorDatapoint>(),
                                 };
                                 _sensorBuffer[i] = new SensorBuffer(sbuffer.sensor, dataDay);
+                                //Only uses this entity, and does not follow the references to stick related references in the DB  
                                 db.Entry(dataDay).State = EntityState.Added;
                             }
                             else
