@@ -272,8 +272,8 @@
                     if (null != existing)
                     {
                         // They are the same primary key so merge them.
+                        oldHist.DeserialiseData(); 
                         var merged = SensorHistory.Merge(hist, oldHist);
-                        merged.SerialiseData();
                         existing = merged as TPoco;
                     }
 
@@ -295,8 +295,8 @@
                     if (null != existing)
                     {
                         // They are the same primary key so merge them.
+                        oldHist.DeserialiseData();
                         var merged = DatabasePOCOs.User.RelayHistory.Merge(hist, oldHist);
-                        merged.SerialiseData();
                         existing = merged as TPoco;
                     }
 
@@ -343,12 +343,19 @@
                         //    dbSet.Update(entry);
                         //}
                     }
-                    else if (typeof(TPoco) == typeof(SensorHistory) ||
-                             typeof(TPoco) == typeof(RelayHistory))
+                    else if (typeof(TPoco) == typeof(SensorHistory))
                     {
                         // Minor hack, this is existing merged into entry.
-                        dbSet.Update(existing);
+                        var hist = entry as SensorHistory;
+                        hist.SerialiseData(); 
+                        dbSet.Update(entry);
                         // The messenger message is done earlier, no difference between new and update.
+                    }
+                    else if (typeof(TPoco) == typeof(RelayHistory))
+                    {
+                        var hist = entry as RelayHistory;
+                        hist.SerialiseData();
+                        dbSet.Update(entry);
                     }
                     else
                     {

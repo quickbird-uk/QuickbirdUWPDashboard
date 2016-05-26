@@ -22,7 +22,7 @@
         public DateTimeOffset TimeStamp { get; set; }
 
         [JsonIgnore]
-        public byte[] RawData{ get; set; }
+        public byte[] RawData { get; set; } = new byte[0];
 
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
