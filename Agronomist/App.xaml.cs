@@ -47,9 +47,10 @@
                 // assume that the user explicitly launched the app such as updating
                 // the online presence of the user on a social network, updating a
                 // what's new feed, etc.
-                _networking = new LocalNetworking.Manager();
+                
             }
-            
+
+            _networking = new LocalNetworking.Manager();
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
