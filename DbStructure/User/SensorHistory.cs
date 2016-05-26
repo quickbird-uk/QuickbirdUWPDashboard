@@ -87,13 +87,6 @@
 
         public static SensorHistory Merge(SensorHistory slice1, SensorHistory slice2)
         {
-            //Some null checks! 
-            if ((slice1 == null || slice1?.Data == null) && slice2 != null && slice2?.Data != null)
-                return slice2;
-            else if ((slice2 == null || slice2?.Data == null) && slice1 != null && slice1?.Data != null)
-                return slice1;
-            else if((slice2 == null || slice2?.Data == null) && (slice1 == null || slice1?.Data == null))
-                throw new Exception("Attempted to merge SensorHistory slices that are both null!");
 
             if (slice1.SensorID!= slice2.SensorID)
             {
