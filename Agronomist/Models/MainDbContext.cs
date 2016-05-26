@@ -404,6 +404,16 @@
 
             if (!SensorsHistory.Any()) return null;
             
+            var needsPost = SensorHistory.AsNoTracking().Where(s=>s.TimeStamp > lastSensorDataPost);
+            var sliceToday = needsPost.Select(sensorHistory=>
+            {
+                var endOfLastUpdateDay = (lastSensorDataPost + DateTimeOffset.Days(1)).Date;
+                if(sensorHistory.TimeStamp =< endOfLastUpdateDay)
+                {
+                    
+                }
+            });
+
             var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
             var postTime = DateTimeOffset.Now;
             todaysSensorHistory.DeserialiseData();
