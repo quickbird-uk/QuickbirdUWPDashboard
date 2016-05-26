@@ -75,10 +75,9 @@
             responses.Add(await DownloadDeserialiseTable<Person>(nameof(People), creds));
             // Crop type is the only mergable that is no-auth.
             responses.Add(await DownloadDeserialiseTable<CropType>(nameof(CropTypes)));
-
+            responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
             responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(CropCycles), creds));
             responses.Add(await DownloadDeserialiseTable<Device>(nameof(Devices), creds));
-            responses.Add(await DownloadDeserialiseTable<Location>(nameof(Locations), creds));
             responses.Add(await DownloadDeserialiseTable<Relay>(nameof(Relays), creds));
             responses.Add(await DownloadDeserialiseTable<Sensor>(nameof(Sensors), creds));
 

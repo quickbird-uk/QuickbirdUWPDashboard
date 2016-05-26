@@ -137,14 +137,14 @@ namespace Agronomist.LocalNetworking
             }
 
 
-            foreach (Relay relay in _dbDevices.SelectMany(dv => dv.Relays))
-            {
-                if (_relayBuffer.Any(rb => rb.Key.ID == relay.ID) == false)
-                {
-                    _relayBuffer.Add(new KeyValuePair<Relay, List<RelayDatapoint>>(
-                        relay, new List<RelayDatapoint>()));
-                }
-            }
+            //foreach (Relay relay in _dbDevices.SelectMany(dv => dv.Relays))
+            //{
+            //    if (_relayBuffer.Any(rb => rb.Key.ID == relay.ID) == false)
+            //    {
+            //        _relayBuffer.Add(new KeyValuePair<Relay, List<RelayDatapoint>>(
+            //            relay, new List<RelayDatapoint>()));
+            //    }
+            //}
             db.Dispose();
         }
 
