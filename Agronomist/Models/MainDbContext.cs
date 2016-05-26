@@ -396,7 +396,10 @@
         }
 
 
-        //TODO: what does this do? post a single item? 
+        /// <summary>
+        /// Posts all new history items since the last time data was posted.
+        /// </summary>
+        /// <returns></returns>
         public  async Task<string> PostHistoryChanges()
         {
             var settings = new Settings();
@@ -419,12 +422,19 @@
                 return slice;
             });
 
+            if (!deserialiseAndSlice.Any())
+            {
+                // Nothing to post so quit as a success.
+                return null;
+            }
+
             var json = JsonConvert.SerializeObject(deserialiseAndSlice);
 
             var result =
                 await Request.PostTable(ApiUrl, nameof(SensorsHistory), json, creds);
             if (result == null)
             {
+                // Only update last post if it was successfull.
                 settings.LastSensorDataPost = postTime;
             }
             return result;
