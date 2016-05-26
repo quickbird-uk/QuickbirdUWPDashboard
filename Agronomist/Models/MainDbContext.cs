@@ -405,24 +405,25 @@
             var lastSensorDataPost = settings.LastSensorDataPost;
 
             if (!SensorsHistory.Any()) return null;
-            
-            var needsPost = SensorHistory.AsNoTracking().Where(s=>s.TimeStamp > lastSensorDataPost);
-            var sliceToday = needsPost.Select(sensorHistory=>
+
+            // Get the time just before we raid the database.
+            var postTime = DateTimeOffset.Now;
+            var needsPost = SensorsHistory.AsNoTracking().Where(s=>s.TimeStamp > lastSensorDataPost).ToList();
+            var deserialiseAndSlice = needsPost.Select(sensorHistory =>
             {
-                var endOfLastUpdateDay = (lastSensorDataPost + DateTimeOffset.Days(1)).Date;
-                if(sensorHistory.TimeStamp =< endOfLastUpdateDay)
-                {
-                    
-                }
+                // All data loaded from the DB must be deserialised to properly populate the poco object.
+                sensorHistory.DeserialiseData();
+                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
+                // If the last post was halfway though a day that day will need to be sliced.
+                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
+                var slice = sensorHistory.Slice(lastSensorDataPost);                                      
+                return slice;
             });
 
-            //is this meant to be MaxAsync? what's with the strange MaxBy fuinction? 
-            var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
-            var postTime = DateTimeOffset.Now;
-            todaysSensorHistory.DeserialiseData();
-            var sliceToPost = todaysSensorHistory.Slice(lastSensorDataPost);
+            var json = JsonConvert.SerializeObject(deserialiseAndSlice);
+
             var result =
-                await Request.PostTable(ApiUrl, nameof(SensorsHistory), JsonConvert.SerializeObject(sliceToPost), creds);
+                await Request.PostTable(ApiUrl, nameof(SensorsHistory), json, creds);
             if (result == null)
             {
                 settings.LastSensorDataPost = postTime;
