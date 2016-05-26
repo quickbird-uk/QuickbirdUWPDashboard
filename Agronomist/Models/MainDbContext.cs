@@ -92,6 +92,12 @@
                 await DownloadDeserialiseTable<SensorHistory>($"{nameof(SensorsHistory)}/{unixtime}/9001", creds));
             responses.Add(await DownloadDeserialiseTable<RelayHistory>($"{nameof(RelayHistory)}/{unixtime}/9001", creds));
 
+
+            // Notify the app that the tables have been updated.
+            await Messenger.Instance.UserTablesChanged.Invoke(null);
+
+            await Messenger.Instance.HardwareTableChanged.Invoke(null);
+
             var fails = responses.Where(r => r != null).ToList();
             return fails.Any() ? string.Join(", ", fails) : null;
         }
@@ -306,14 +312,14 @@
                 {
                     dbSet.Add(entry);
 
-                    if (entry is BaseEntity)
-                    {
-                        await Messenger.Instance.UserTablesChanged.Invoke("new");
-                    }
-                    else
-                    {
-                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
-                    }
+                    // if (entry is BaseEntity)
+                    // {
+                    //     await Messenger.Instance.UserTablesChanged.Invoke("new");
+                    // }
+                    // else
+                    // {
+                    //     await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                    // }
                 }
                 else
                 {
@@ -327,7 +333,7 @@
                         {
                             // Overwrite local version, with the server's changes.
                             dbSet.Update(entry);
-                            await Messenger.Instance.UserTablesChanged.Invoke("update");
+                            //await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
                         // We are not using this mode where ther server gets to override local changes. Far too confusing.
                         //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
@@ -356,7 +362,7 @@
                         // Simply take the changes from the server, there are no valid local changes.
                         dbSet.Update(entry);
 
-                        await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                        //await Messenger.Instance.HardwareTableChanged.Invoke("new");
                     }
                 }
             }
@@ -397,7 +403,10 @@
         }
 
 
-        //TODO: what does this do? post a single item? 
+        /// <summary>
+        /// Posts all new history items since the last time data was posted.
+        /// </summary>
+        /// <returns></returns>
         public  async Task<string> PostHistoryChanges()
         {
             var settings = new Settings();
@@ -406,15 +415,33 @@
 
             if (!SensorsHistory.Any()) return null;
 
-            //is this meant to be MaxAsync? what's with the strange MaxBy fuinction? 
-            var todaysSensorHistory = SensorsHistory.MaxBy(sh => sh.TimeStamp);
+            // Get the time just before we raid the database.
             var postTime = DateTimeOffset.Now;
-            todaysSensorHistory.DeserialiseData();
-            var sliceToPost = todaysSensorHistory.Slice(lastSensorDataPost);
+            var needsPost = SensorsHistory.AsNoTracking().Where(s=>s.TimeStamp > lastSensorDataPost).ToList();
+            var deserialiseAndSlice = needsPost.Select(sensorHistory =>
+            {
+                // All data loaded from the DB must be deserialised to properly populate the poco object.
+                sensorHistory.DeserialiseData();
+                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
+                // If the last post was halfway though a day that day will need to be sliced.
+                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
+                var slice = sensorHistory.Slice(lastSensorDataPost);                                      
+                return slice;
+            });
+
+            if (!deserialiseAndSlice.Any())
+            {
+                // Nothing to post so quit as a success.
+                return null;
+            }
+
+            var json = JsonConvert.SerializeObject(deserialiseAndSlice);
+
             var result =
-                await Request.PostTable(ApiUrl, nameof(SensorsHistory), JsonConvert.SerializeObject(sliceToPost), creds);
+                await Request.PostTable(ApiUrl, nameof(SensorsHistory), json, creds);
             if (result == null)
             {
+                // Only update last post if it was successfull.
                 settings.LastSensorDataPost = postTime;
             }
             return result;
