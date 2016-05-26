@@ -388,6 +388,7 @@
             responses.Add(await Post(CropCycles, nameof(CropCycles), lastDatabasePost, creds));
             responses.Add(await Post(Devices, nameof(Devices), lastDatabasePost, creds));
             responses.Add(await Post(Sensors, nameof(Sensors), lastDatabasePost, creds));
+            responses.Add(await Post(Relays, nameof(Relays), lastDatabasePost, creds));
 
             // CropTypes is unique:
             var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
