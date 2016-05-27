@@ -36,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 10;
+        private const int _saveIntervalSeconds = 60;
         private static DatapointsSaver _Instance = null;
         private Action<string> _onHardwareChanged; 
 
