@@ -36,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 120;
+        private const int _saveIntervalSeconds = 10;
         private static DatapointsSaver _Instance = null;
         private Action<string> _onHardwareChanged; 
 
@@ -123,10 +123,10 @@ namespace Agronomist.LocalNetworking
             }            //TODO merge the datapoints! 
             foreach(SensorHistory sHistory in sensorsHistory)
             {
+                sHistory.DeserialiseData();
                 int mIndex = _sensorBuffer.FindIndex(sb => sb.sensor.ID == sHistory.SensorID); 
                 if (_sensorBuffer[mIndex].dataDay == null || _sensorBuffer[mIndex].dataDay.TimeStamp < sHistory.TimeStamp)
                 {
-                    sHistory.DeserialiseData();
                     _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistory); 
                 }
                 else if(_sensorBuffer[mIndex].dataDay.Data != null && sHistory.Data != null)
