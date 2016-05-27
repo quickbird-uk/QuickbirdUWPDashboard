@@ -425,9 +425,9 @@
             {
                 // All data loaded from the DB must be deserialised to properly populate the poco object.
                 sensorHistory.DeserialiseData();
-                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
+                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).UtcDateTime;
                 // If the last post was halfway though a day that day will need to be sliced.
-                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
+                if (sensorHistory.TimeStamp.UtcDateTime <= endOfLastUpdateDay) return sensorHistory;
                 var slice = sensorHistory.Slice(lastSensorDataPost);                                      
                 return slice;
             });
