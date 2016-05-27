@@ -380,8 +380,11 @@
             var responses = new List<string>();
             // Simple tables that change:
             // CropCycle, Devices.
+            responses.Add(await Post(Locations, nameof(Locations), lastDatabasePost, creds));
             responses.Add(await Post(CropCycles, nameof(CropCycles), lastDatabasePost, creds));
             responses.Add(await Post(Devices, nameof(Devices), lastDatabasePost, creds));
+            responses.Add(await Post(Sensors, nameof(Sensors), lastDatabasePost, creds));
+            responses.Add(await Post(Relays, nameof(Relays), lastDatabasePost, creds));
 
             // CropTypes is unique:
             var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
@@ -460,7 +463,7 @@
 
             if (!edited.Any()) return null;
 
-            var data = JsonConvert.SerializeObject(edited);
+            var data = JsonConvert.SerializeObject(edited, Formatting.None);
             var req = await Request.PostTable(ApiUrl, tableName, data, creds);
             return req;
         }

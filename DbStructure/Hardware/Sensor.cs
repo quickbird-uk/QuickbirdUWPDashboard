@@ -13,9 +13,9 @@
         public double Multiplier { get; set; } = 1;
         [Required]
         public double Offset { get; set; } = 0;
-        [Required]
+
         public double? AlertHigh { get; set; } = null;
-        [Required]
+
         public double? AlertLow { get; set; } = null;
 
         [Required]
