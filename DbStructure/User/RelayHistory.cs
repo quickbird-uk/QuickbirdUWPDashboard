@@ -60,7 +60,7 @@
                 bool state = RawData[i] > 0;
                 TimeSpan duration = TimeSpan.FromTicks(BitConverter.ToInt64(RawData, i + 1));
                 long timestampTicks = BitConverter.ToInt64(RawData, i + 9);
-                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset);
+                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset).Add(TimeStamp.Offset); ;
                 dataItems.Add(new RelayDatapoint(state, timeStamp, duration)); 
             }
 

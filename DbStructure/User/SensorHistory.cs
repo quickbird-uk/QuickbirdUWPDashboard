@@ -52,6 +52,7 @@
                 double value = BitConverter.ToDouble(RawData, i);
                 TimeSpan duration = TimeSpan.FromTicks(BitConverter.ToInt64(RawData, i + 8));
                 long timestampTicks = BitConverter.ToInt64(RawData, i + 16);
+                //we need to add the time in because the timestampTicks are in UTC
                 DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset).Add(TimeStamp.Offset);
                 dataItems.Add(new SensorDatapoint(value, timeStamp, duration));
             }
