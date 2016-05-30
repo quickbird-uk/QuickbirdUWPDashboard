@@ -1,24 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
-
-namespace TheDream.Views
+﻿namespace Agronomist.Views
 {
-    class ReadingCard
+    using System.Collections.Generic;
+    using Windows.UI;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Media;
+
+    internal class ReadingCard
     {
         public string Reading { get; set; }
         public string ReadingType { get; set; }
@@ -27,17 +14,17 @@ namespace TheDream.Views
     }
 
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    ///     An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class CropRunHome : Page
     {
         public CropRunHome()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
-            List<ReadingCard> ReadingCards = new List<ReadingCard>();
+            var ReadingCards = new List<ReadingCard>();
 
-            ReadingCards.Add(new ReadingCard()
+            ReadingCards.Add(new ReadingCard
             {
                 Reading = "1.276",
                 ReadingType = "Conductivity",
@@ -45,7 +32,7 @@ namespace TheDream.Views
                 StatusColor = new SolidColorBrush(Colors.DarkOrange)
             });
 
-            ReadingCards.Add(new ReadingCard()
+            ReadingCards.Add(new ReadingCard
             {
                 Reading = "23.34",
                 ReadingType = "Temperature",
@@ -53,7 +40,7 @@ namespace TheDream.Views
                 StatusColor = new SolidColorBrush(Colors.LimeGreen)
             });
 
-            ReadingCards.Add(new ReadingCard()
+            ReadingCards.Add(new ReadingCard
             {
                 Reading = "5.76",
                 ReadingType = "Acidity",
@@ -66,7 +53,6 @@ namespace TheDream.Views
 
         private void ReadingSelected(object sender, ItemClickEventArgs e)
         {
-
         }
     }
 }

@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
-
-namespace TheDream.Views
+﻿namespace Agronomist.Views
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Navigation;
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -108,7 +97,7 @@ namespace TheDream.Views
 
             menu.ItemsSource = CropRuns;
 
-            contentFrame.Navigate(typeof(CropRunHome), this);
+            contentFrame.Navigate(typeof(Agronomist.Views.CropRunHome), this);
         }
 
         private void rocketButtonClicked(object sender, RoutedEventArgs e)
