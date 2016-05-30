@@ -1,0 +1,153 @@
+﻿<UserControl x:Class="TheDream.Views.LiveCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:TheDream.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             Height="160"
+             Width="306">
+
+    <Grid x:Name="rootGrid"
+          Background="#FF4A90E2">
+
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="44" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1"
+                    Background="#E5EBEBEB"
+                    Orientation="Horizontal">
+            <ToggleButton x:Name="adjustButton"
+                          Foreground="#FF4A90E2"
+                          Width="102"
+                          VerticalAlignment="Stretch"
+                          VerticalContentAlignment="Center"
+                          HorizontalContentAlignment="Center"
+                          Background="#00000000"
+                          BorderBrush="#00000000"
+                          RequestedTheme="Light"
+                          Checked="adjustButtonChecked"
+                          Unchecked="adjustButtonUnchecked">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Text="&#xE174;"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontSize="14"
+                               Text="Adjust"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+            <ToggleButton x:Name="muteAlertsButton"
+                          Foreground="#FF4A90E2"
+                          Width="102"
+                          VerticalAlignment="Stretch"
+                          VerticalContentAlignment="Center"
+                          HorizontalContentAlignment="Center"
+                          Background="#00000000"
+                          BorderBrush="#00000000"
+                          RequestedTheme="Light">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Text="&#xE198;"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontSize="14"
+                               Text="Mute"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+            <Button x:Name="removeButton"
+                    Foreground="#FF4A90E2"
+                    Width="102"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    Background="#00000000"
+                    BorderBrush="#00000000"
+                    RequestedTheme="Light">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Text="&#xE107;"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontSize="14"
+                               Text="Remove"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <Pivot x:Name="settingsPanel"
+               Foreground="#FFEBEBEB"
+               Height="116"
+               Width="306"
+               RequestedTheme="Dark"
+               Padding="20,0,20,12">
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock FontSize="16"
+                               FontWeight="Bold"
+                               Text="alerts" />
+                </PivotItem.Header>
+                <Grid />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock FontSize="16"
+                               FontWeight="Bold"
+                               Text="increase" />
+                </PivotItem.Header>
+                <Grid />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock FontSize="16"
+                               FontWeight="Bold"
+                               Text="decrease" />
+                </PivotItem.Header>
+                <Grid />
+            </PivotItem>
+        </Pivot>
+        <StackPanel x:Name="infoPanel"
+                    Orientation="Horizontal"
+                    Background="#FF4A90E2"
+                    Width="306"
+                    Height="116">
+            <StackPanel Margin="28,24,0,0"
+                        Padding="0,0,64,0"
+                        VerticalAlignment="Top">
+                <TextBlock FontSize="14"
+                           Foreground="#FFEBEBEB"
+                           Text="water conductivity" />
+                <TextBlock Margin="0,4,0,0"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="#FFEBEBEB"
+                           Text="very high" />
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Top">
+                <TextBlock Text="9.9"
+                           FontSize="60"
+                           FontWeight="Light"
+                           Foreground="#FFEBEBEB"
+                           HorizontalAlignment="Right"
+                           TextAlignment="Right"
+                           Margin="0,8,0,0" />
+                <TextBlock Text="mS/cm"
+                           FontSize="12"
+                           FontWeight="Bold"
+                           TextAlignment="Center"
+                           Foreground="#CCEBEBEB"
+                           Margin="0,-2,0,0" />
+            </StackPanel>
+        </StackPanel>
+
+    </Grid>
+</UserControl>
