@@ -8,6 +8,7 @@ using Agronomist.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq;
+using MoreLinq;
 
 namespace Agronomist.ViewModels
 {
@@ -20,7 +21,7 @@ namespace Agronomist.ViewModels
         /// <summary>
         /// Cached Data, of all cropCycles
         /// </summary>
-        private List<Tuple<Location, CropCycle, List<Sensor>>> _cache; 
+        private List<Tuple<Location, CropCycle, List<Sensor>>> _cache = new List<Tuple<Location, CropCycle, List<Sensor>>>();
 
         /* This data applies to the chosen crop cycle only*/
         private CropCycle _selectedCropCycle; 
@@ -33,8 +34,9 @@ namespace Agronomist.ViewModels
         public GraphingViewModel(){
             _db = new MainDbContext();
 
-            
+
             //LoadData
+            LoadCache(); 
         }
 
         /// <summary>
@@ -45,9 +47,10 @@ namespace Agronomist.ViewModels
             var dbLocations = await _db.Locations
                 .Include(loc => loc.CropCycles)
                 .Include(loc => loc.Devices)
-                .ThenInclude(devList => devList.SelectMany(dev => dev.Sensors))
                 .AsNoTracking().ToListAsync();
 
+            var sensorList = await _db.Sensors.ToListAsync(); 
+            
             List<Tuple<Location, CropCycle, List<Sensor>>> cache = 
                 new List<Tuple<Location, CropCycle, List<Sensor>>>(); 
 
@@ -55,15 +58,23 @@ namespace Agronomist.ViewModels
             {
                 Tuple<Location, CropCycle, List<Sensor>> cacheItem = new Tuple<Location, CropCycle, List<Sensor>>(
                     crop.Location, crop, new List<Sensor>());
-                
-                foreach(Sensor sensor in dbLocations.SelectMany(loc => loc.Devices.SelectMany(dev => dev.Sensors)))
+
+                List<Guid> deviceIDs = crop.Location.Devices.Select(dev => dev.ID).ToList(); 
+                foreach(Sensor sensor in sensorList)
                 {
-                    cacheItem.Item3.Add(sensor); 
+                    if (deviceIDs.Contains(sensor.DeviceID))
+                    {
+                        cacheItem.Item3.Add(sensor);
+                    }
                 }
 
                 cache.Add(cacheItem); 
             }
-
+            if(_selectedCropCycle == null)
+            {
+                _selectedCropCycle = cache.FirstOrDefault().Item2; 
+            }
+            Cache = cache; 
             
         }
 
@@ -78,6 +89,22 @@ namespace Agronomist.ViewModels
             }
         }
 
+        public List<KeyValuePair<CropCycle, string>> CropRunList
+        {
+            get
+            {
+                List<KeyValuePair<CropCycle, string>> result = new List<KeyValuePair<CropCycle, string>>(); 
+                foreach(var tuple in Cache)
+                {
+                    string displayName = $"{tuple.Item1.Name} - {tuple.Item2.CropTypeName}: " 
+                       + $"{tuple.Item2.StartDate.LocalDateTime.Date.ToString("dd MMM")}"
+                       + $"-{tuple.Item2.EndDate?.LocalDateTime.Date.ToString("dd MMM") ?? "Now"}"; 
+                        
+                    result.Add(new KeyValuePair<CropCycle, string>(tuple.Item2, displayName)); 
+                }
+                return result; 
+            }
+        }
 
         public List<Tuple<Location, CropCycle, List<Sensor>>> Cache
         {
@@ -88,12 +115,20 @@ namespace Agronomist.ViewModels
                 else
                 {
                     _cache = value;
+                    if(_selectedCropCycle != null)
                     SelectedCropCycle = _cache.First(l => l.Item2.ID == _selectedCropCycle.ID).Item2; 
 
                     OnPropertyChanged();
+                    OnPropertyChanged("Locations");
+                    OnPropertyChanged("CropRunList");
                 }
 
             }
+        }
+
+        public List<Location> Locations
+        {
+            get { return Cache.DistinctBy(c => c.Item1).Select(tup => tup.Item1).ToList();}
         }
 
         public List<Sensor> Sensors
@@ -106,6 +141,8 @@ namespace Agronomist.ViewModels
                 OnPropertyChanged();
             }
         }
+
+
 
         public CropCycle SelectedCropCycle
         {

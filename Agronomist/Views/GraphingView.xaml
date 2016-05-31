@@ -7,9 +7,22 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
+    
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock Text="{x:Bind ViewModel.SampleProperty}" Visibility="Collapsed" x:Name="text"/>
+        <StackPanel >
+            <Grid>
+                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock x:Name="SensorToggleButton"
+                                       Text="{ Binding Value}"
+                                       Margin="2,2,2,2" >
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            <TextBlock Text="{x:Bind ViewModel.SelectedCropCycle}" />
         </StackPanel>
     </Grid>
 </Page>

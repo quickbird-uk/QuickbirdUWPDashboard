@@ -2,6 +2,8 @@
 {
     using Windows.UI.Xaml.Controls;
     using ViewModels;
+    using System.Collections.Generic;
+    using DatabasePOCOs.User;
 
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
@@ -13,7 +15,14 @@
         public GraphingView()
         {
             InitializeComponent();
-            
+           
+        }
+
+        private void CropCycleSelected(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox box = (ComboBox) sender;            
+            KeyValuePair<CropCycle, string> selection = (KeyValuePair <CropCycle, string>)box.SelectedItem;
+            ViewModel.SelectedCropCycle = selection.Key; 
         }
     }
 }
