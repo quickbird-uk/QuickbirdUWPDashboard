@@ -33,7 +33,7 @@
                     <Button x:Name="RocketButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             BorderBrush="{x:Null}"
-                            Click="rocketButtonClicked">
+                            Click="RocketButtonClicked">
                         <Image Height="44"
                                Margin="32,32,0,32"
                                HorizontalAlignment="Left"
@@ -69,7 +69,8 @@
                                 <Ellipse Grid.Column="0" Fill="Gold"
                                          Margin="24,12,24,12"
                                          Visibility="{Binding IsVisible}" />
-                                <TextBlock Grid.Column="0" Text="{Binding IconLetter}"
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding IconLetter}"
                                            Foreground="#FF515C6B"
                                            Width="20"
                                            Height="40"
@@ -289,7 +290,7 @@
                                 BorderBrush="{x:Null}"
                                 Width="104"
                                 Padding="12"
-                                Click="showAlerts"
+                                Click="ShowAlerts"
                                 RequestedTheme="Light">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
@@ -324,7 +325,7 @@
                            Grid.Column="1"
                            Grid.Row="1"
                            PanePlacement="Right"
-                           PaneClosing="notificationsPaneClosing">
+                           PaneClosing="NotificationsPaneClosing">
                     <SplitView.Pane>
                         <ListView />
                     </SplitView.Pane>
