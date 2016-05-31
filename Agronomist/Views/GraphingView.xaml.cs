@@ -13,6 +13,7 @@
         public GraphingView()
         {
             InitializeComponent();
+            
         }
     }
 }

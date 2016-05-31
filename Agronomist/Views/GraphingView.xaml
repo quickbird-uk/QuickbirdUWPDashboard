@@ -9,7 +9,7 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
-            <TextBlock Text="{x:Bind ViewModel.SampleProperty}" />
+            <TextBlock Text="{x:Bind ViewModel.SampleProperty}" Visibility="Collapsed" x:Name="text"/>
         </StackPanel>
     </Grid>
 </Page>
