@@ -11,7 +11,6 @@
     using DatabasePOCOs.User;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
-    using MoreLinq;
     using NetLib;
     using Newtonsoft.Json;
     using Util;
@@ -272,7 +271,7 @@
                     if (null != existing)
                     {
                         // They are the same primary key so merge them.
-                        oldHist.DeserialiseData(); 
+                        oldHist.DeserialiseData();
                         var merged = SensorHistory.Merge(hist, oldHist);
                         existing = merged as TPoco;
                     }
@@ -347,7 +346,7 @@
                     {
                         // Minor hack, this is existing merged into entry.
                         var hist = entry as SensorHistory;
-                        hist.SerialiseData(); 
+                        hist.SerialiseData();
                         dbSet.Update(entry);
                         // The messenger message is done earlier, no difference between new and update.
                     }
@@ -371,9 +370,6 @@
         /// <summary>
         ///     Posts changes saved in the local DB (excluding histories) to the server.
         /// </summary>
-        /// <param name="creds">Credentials, required to post.</param>
-        /// <param name="lastDatabasePost">The time of the last post, only items modified after this time are posted.</param>
-        /// <returns>List of errors.</returns>
         public async Task<List<string>> PostChanges()
         {
             var settings = new Settings();
@@ -407,10 +403,10 @@
 
 
         /// <summary>
-        /// Posts all new history items since the last time data was posted.
+        ///     Posts all new history items since the last time data was posted.
         /// </summary>
         /// <returns></returns>
-        public  async Task<string> PostHistoryChanges()
+        public async Task<string> PostHistoryChanges()
         {
             var settings = new Settings();
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
@@ -420,15 +416,15 @@
 
             // Get the time just before we raid the database.
             var postTime = DateTimeOffset.Now;
-            var needsPost = SensorsHistory.AsNoTracking().Where(s=>s.TimeStamp > lastSensorDataPost).ToList();
+            var needsPost = SensorsHistory.AsNoTracking().Where(s => s.TimeStamp > lastSensorDataPost).ToList();
             var deserialiseAndSlice = needsPost.Select(sensorHistory =>
             {
                 // All data loaded from the DB must be deserialised to properly populate the poco object.
                 sensorHistory.DeserialiseData();
-                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).UtcDateTime;
+                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
                 // If the last post was halfway though a day that day will need to be sliced.
-                if (sensorHistory.TimeStamp.UtcDateTime <= endOfLastUpdateDay) return sensorHistory;
-                var slice = sensorHistory.Slice(lastSensorDataPost);                                      
+                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
+                var slice = sensorHistory.Slice(lastSensorDataPost);
                 return slice;
             });
 
