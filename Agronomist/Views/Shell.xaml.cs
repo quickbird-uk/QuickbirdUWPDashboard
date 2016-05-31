@@ -5,15 +5,21 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
+    using ViewModels;
 
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class Shell
     {
+        public ShellViewModel ViewModel { get; }
+
         public Shell()
         {
             InitializeComponent();
+            ViewModel = new ShellViewModel(ContentFrame);
+            Bindings.Update();
+
         }
 
         private CropRunInfo SelectedCrop => (CropRunInfo) Menu.SelectedItem;
@@ -69,21 +75,8 @@
                 Navigation.DisplayMode = SplitViewDisplayMode.CompactInline;
             }
         }
-
-        private void ShowAlerts(object sender, RoutedEventArgs e)
-        {
-            Notifications.IsPaneOpen = !Notifications.IsPaneOpen;
-
-            if (Notifications.IsPaneOpen)
-            {
-                AlertsButtonMessage.Text = "Hide \nAlerts";
-            }
-        }
-
-        private void NotificationsPaneClosing(SplitView sender, SplitViewPaneClosingEventArgs args)
-        {
-            AlertsButtonMessage.Text = "Show \nAlerts";
-        }
+        
+    
 
         private void UpdateContentFrame()
         {

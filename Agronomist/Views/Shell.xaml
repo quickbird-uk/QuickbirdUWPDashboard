@@ -11,7 +11,7 @@
 
     <SplitView x:Name="Navigation"
                Style="{ThemeResource NavigationPanel}"
-               IsPaneOpen="True">
+               IsPaneOpen="{x:Bind ViewModel.IsNavOpen, Mode=OneWay}">
 
         <!-- Navigation Menu -->
         <SplitView.Pane>
@@ -30,10 +30,9 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
 
-                    <Button x:Name="RocketButton"
-                            Style="{ThemeResource NoBackgroundDarkTheme}"
+                    <Button Style="{ThemeResource NoBackgroundDarkTheme}"
                             BorderBrush="{x:Null}"
-                            Click="RocketButtonClicked">
+                            Click="{x:Bind ViewModel.ToggleNav}">
                         <Image Height="44"
                                Margin="32,32,0,32"
                                HorizontalAlignment="Left"
@@ -130,7 +129,7 @@
                     <!-- Settings Button -->
                     <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
-                            BorderThickness="0">
+                            BorderThickness="0" Click="{x:Bind ViewModel.NavToGraphingView}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
@@ -285,25 +284,22 @@
                                            TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="ShowAlertsButton"
-                                Style="{ThemeResource NoBackgroundDarkTheme}"
+                        <Button Style="{ThemeResource NoBackgroundDarkTheme}"
                                 BorderBrush="{x:Null}"
                                 Width="104"
-                                Padding="12"
-                                Click="ShowAlerts"
+                                Padding="6, 12"
+                                Click="{x:Bind ViewModel.ToggleNotifications}"
                                 RequestedTheme="Light">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
-                                <TextBlock x:Name="AlertsButtonCount"
-                                           Style="{ThemeResource Icon}"
+                                <TextBlock Style="{ThemeResource Icon}"
                                            FontFamily="Segoe UI Symbol"
                                            FontSize="32"
-                                           Text="4"
+                                           Text="{x:Bind ViewModel.NotificationsCount}"
                                            Margin="0,0,0,4" />
-                                <TextBlock x:Name="AlertsButtonMessage"
-                                           FontSize="16"
+                                <TextBlock FontSize="16"
                                            Foreground="#FF4A90E2"
-                                           Text="Show Alerts"
+                                           Text="{x:Bind ViewModel.NotificationsButtonText, Mode=OneWay}"
                                            TextAlignment="Center"
                                            LineHeight="20"
                                            TextWrapping="WrapWholeWords" />
@@ -318,14 +314,13 @@
                        Grid.ColumnSpan="2" Grid.Column="0" />
 
                 <!-- Notification Panel -->
-                <SplitView x:Name="Notifications"
-                           DisplayMode="Overlay"
+                <SplitView DisplayMode="Overlay"
                            OpenPaneLength="330"
                            PaneBackground="#CC515C6B"
                            Grid.Column="1"
                            Grid.Row="1"
                            PanePlacement="Right"
-                           PaneClosing="NotificationsPaneClosing">
+                           IsPaneOpen="{x:Bind ViewModel.IsNotificationsOpen, Mode=TwoWay}">
                     <SplitView.Pane>
                         <ListView />
                     </SplitView.Pane>
