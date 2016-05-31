@@ -50,7 +50,7 @@
         {
             get
             {
-                return (CropRunInfo) menu.SelectedItem;
+                return (CropRunInfo) Menu.SelectedItem;
             }
         }
 
@@ -95,38 +95,38 @@
                 IsCritical = false
             });
 
-            menu.ItemsSource = CropRuns;
+            Menu.ItemsSource = CropRuns;
 
-            contentFrame.Navigate(typeof(Agronomist.Views.CropRunHome), this);
+            ContentFrame.Navigate(typeof(Agronomist.Views.CropRunHome), this);
         }
 
         private void rocketButtonClicked(object sender, RoutedEventArgs e)
         {
-            navigation.IsPaneOpen = !navigation.IsPaneOpen;
-            if (!navigation.IsPaneOpen)
+            Navigation.IsPaneOpen = !Navigation.IsPaneOpen;
+            if (!Navigation.IsPaneOpen)
             {
-                navigation.DisplayMode = SplitViewDisplayMode.CompactInline;
+                Navigation.DisplayMode = SplitViewDisplayMode.CompactInline;
             }
         }
 
         private void showAlerts(object sender, RoutedEventArgs e)
         {
-            notifications.IsPaneOpen = !notifications.IsPaneOpen;
+            Notifications.IsPaneOpen = !Notifications.IsPaneOpen;
 
-            if (notifications.IsPaneOpen)
+            if (Notifications.IsPaneOpen)
             {
-                alertsButtonMessage.Text = "Hide \nAlerts";
+                AlertsButtonMessage.Text = "Hide \nAlerts";
             }
         }
 
         private void notificationsPaneClosing(SplitView sender, SplitViewPaneClosingEventArgs args)
         {
-            alertsButtonMessage.Text = "Show \nAlerts";
+            AlertsButtonMessage.Text = "Show \nAlerts";
         }
 
         private void UpdateContentFrame()
         {
-            contentFrame.DataContext = selectedCrop;
+            ContentFrame.DataContext = selectedCrop;
         }
 
         private void CropSelected(object sender, SelectionChangedEventArgs e)

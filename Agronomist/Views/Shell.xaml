@@ -9,7 +9,7 @@
     <Page.Resources>
     </Page.Resources>
 
-    <SplitView x:Name="navigation"
+    <SplitView x:Name="Navigation"
                Style="{ThemeResource NavigationPanel}"
                IsPaneOpen="True">
 
@@ -30,7 +30,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
 
-                    <Button x:Name="rocketButton"
+                    <Button x:Name="RocketButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             BorderBrush="{x:Null}"
                             Click="rocketButtonClicked">
@@ -51,7 +51,7 @@
                 </Grid>
 
                 <!-- Pane Body -->
-                <ListView x:Name="menu"
+                <ListView x:Name="Menu"
                           Grid.Row="1"
                           RequestedTheme="Dark"
                           ItemContainerStyle="{ThemeResource MenuItemDark}"
@@ -66,10 +66,10 @@
                                 </Grid.ColumnDefinitions>
                                 <Ellipse Fill="#FFEBEBEB"
                                          Margin="24,12,24,12" />
-                                <Ellipse Fill="Gold"
+                                <Ellipse Grid.Column="0" Fill="Gold"
                                          Margin="24,12,24,12"
                                          Visibility="{Binding IsVisible}" />
-                                <TextBlock Text="{Binding IconLetter}"
+                                <TextBlock Grid.Column="0" Text="{Binding IconLetter}"
                                            Foreground="#FF515C6B"
                                            Width="20"
                                            Height="40"
@@ -93,8 +93,7 @@
                                            FontSize="28"
                                            Foreground="Gold"
                                            Text="⚠"
-                                           Visibility="{Binding IsVisible}">
-                                </TextBlock>
+                                           Visibility="{Binding IsVisible}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -104,7 +103,7 @@
                 <StackPanel Grid.Row="2">
 
                     <!-- Add Crop Button -->
-                    <Button x:Name="addCropButton"
+                    <Button x:Name="AddCropButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             BorderThickness="0,1,0,1"
                             BorderBrush="#66EBEBEB">
@@ -128,7 +127,7 @@
                     </Button>
 
                     <!-- Settings Button -->
-                    <Button x:Name="settingsButton"
+                    <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             BorderThickness="0">
                         <Grid Height="72">
@@ -166,7 +165,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Page Header -->
-                <Grid x:Name="pageHeader"
+                <Grid x:Name="PageHeader"
                       Grid.ColumnSpan="2"
                       Style="{ThemeResource PageHeaderLightTheme}"
                       VerticalAlignment="Stretch"
@@ -190,10 +189,10 @@
                                       BorderThickness="0,0,1,0"
                                       BorderBrush="#4C515C6B">
                             <ScrollViewer.Content>
-                                <StackPanel x:Name="cropInfoPanel"
+                                <StackPanel x:Name="CropInfoPanel"
                                             Orientation="Horizontal"
                                             Padding="0,14,0,14">
-                                    <StackPanel x:Name="cropNameCard"
+                                    <StackPanel x:Name="CropNameCard"
                                                 Margin="48,0,72,0">
                                         <TextBlock FontSize="24"
                                                    Text="Strawberry"
@@ -204,7 +203,7 @@
                                                    Foreground="#FF515C6B" />
 
                                     </StackPanel>
-                                    <StackPanel x:Name="varietyNameCard"
+                                    <StackPanel x:Name="VarietyNameCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
                                                    Text="Sweet Juicy Type"
@@ -215,7 +214,7 @@
                                                    Foreground="#FF515C6B" />
 
                                     </StackPanel>
-                                    <StackPanel x:Name="plantDateCard"
+                                    <StackPanel x:Name="PlantDateCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
                                                    Text="May 19"
@@ -226,7 +225,7 @@
                                                    Foreground="#FF515C6B" />
 
                                     </StackPanel>
-                                    <StackPanel x:Name="yieldCard"
+                                    <StackPanel x:Name="YieldCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
                                                    Text="724 kg"
@@ -243,7 +242,7 @@
                     <StackPanel x:Name="ButtonsPanel"
                                 Orientation="Horizontal"
                                 Grid.Column="1">
-                        <Button x:Name="recordYieldButton"
+                        <Button x:Name="RecordYieldButton"
                                 Style="{ThemeResource NoBackgroundDarkTheme}"
                                 BorderBrush="{x:Null}"
                                 Width="112"
@@ -253,10 +252,10 @@
                                         HorizontalAlignment="Stretch">
                                 <TextBlock Style="{ThemeResource Icon}"
                                            Margin="0,0,0,12">
-                                	<Span FontSize="22"
+                                    <Span FontSize="22"
                                           FontFamily="Segoe MDL2 Assets">
-                                		<Run Text="&#xE109;" />
-                                	</Span>
+                                        <Run Text="&#xE109;" />
+                                    </Span>
                                 </TextBlock>
                                 <TextBlock FontSize="16"
                                            Foreground="#FF4A90E2"
@@ -266,7 +265,7 @@
                                            TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="syncButton"
+                        <Button x:Name="SyncButton"
                                 Style="{ThemeResource NoBackgroundDarkTheme}"
                                 BorderBrush="{x:Null}"
                                 Width="104"
@@ -285,7 +284,7 @@
                                            TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="showAlertsButton"
+                        <Button x:Name="ShowAlertsButton"
                                 Style="{ThemeResource NoBackgroundDarkTheme}"
                                 BorderBrush="{x:Null}"
                                 Width="104"
@@ -294,15 +293,13 @@
                                 RequestedTheme="Light">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
-                                <TextBlock x:Name="alertsButtonCount"
+                                <TextBlock x:Name="AlertsButtonCount"
                                            Style="{ThemeResource Icon}"
                                            FontFamily="Segoe UI Symbol"
                                            FontSize="32"
-                                           Foreground="#FF4A90E2"
-                                           TextAlignment="Center"
                                            Text="4"
                                            Margin="0,0,0,4" />
-                                <TextBlock x:Name="alertsButtonMessage"
+                                <TextBlock x:Name="AlertsButtonMessage"
                                            FontSize="16"
                                            Foreground="#FF4A90E2"
                                            Text="Show Alerts"
@@ -315,16 +312,16 @@
                 </Grid>
 
                 <!-- Content Frame -->
-                <Frame x:Name="contentFrame"
-                       Grid.Row="2"
-                       Grid.ColumnSpan="2" />
+                <Frame x:Name="ContentFrame"
+                       Grid.Row="1"
+                       Grid.ColumnSpan="2" Grid.Column="0" />
 
                 <!-- Notification Panel -->
-                <SplitView x:Name="notifications"
+                <SplitView x:Name="Notifications"
                            DisplayMode="Overlay"
                            OpenPaneLength="330"
                            PaneBackground="#CC515C6B"
-                           Grid.Column="2"
+                           Grid.Column="1"
                            Grid.Row="1"
                            PanePlacement="Right"
                            PaneClosing="notificationsPaneClosing">
