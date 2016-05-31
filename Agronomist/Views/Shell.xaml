@@ -130,7 +130,7 @@
                     <!-- Settings Button -->
                     <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
-                            BorderThickness="0">
+                            BorderThickness="0" Click="{x:Bind ViewModel.NavToGraphingView}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
