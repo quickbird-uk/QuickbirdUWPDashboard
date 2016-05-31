@@ -75,21 +75,8 @@
                 Navigation.DisplayMode = SplitViewDisplayMode.CompactInline;
             }
         }
-
-        private void ShowAlerts(object sender, RoutedEventArgs e)
-        {
-            Notifications.IsPaneOpen = !Notifications.IsPaneOpen;
-
-            if (Notifications.IsPaneOpen)
-            {
-                AlertsButtonMessage.Text = "Hide \nAlerts";
-            }
-        }
-
-        private void NotificationsPaneClosing(SplitView sender, SplitViewPaneClosingEventArgs args)
-        {
-            AlertsButtonMessage.Text = "Show \nAlerts";
-        }
+        
+    
 
         private void UpdateContentFrame()
         {
