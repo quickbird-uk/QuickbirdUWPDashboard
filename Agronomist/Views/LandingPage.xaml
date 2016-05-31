@@ -54,7 +54,7 @@
                            VerticalAlignment="Top"
                            Stretch="UniformToFill"
                            Margin="0,0,16,0" />
-                    <TextBlock Text="Sign in using Microsoft Account"
+                    <TextBlock Text="Sign in using Twitter Account"
                                FontFamily="Segoe UI"
                                FontWeight="Normal"
                                FontSize="18"
@@ -81,8 +81,7 @@
                     <EdgeUIThemeTransition Edge="Bottom" />
                 </TransitionCollection>
             </TextBlock.Transitions>
-            Your Microsoft Account is the account you use to download 
-apps from the Windows Store.
+            Your Twitter Account is used to authenticate you.
         </TextBlock>
     </Grid>
 </Page>
