@@ -8,13 +8,13 @@
     public class RelayHistory : IValidatableObject
     {
         [JsonIgnore]
-        public Relay Relay { get; set; }
+        public virtual Relay Relay { get; set; }
 
         [Required]
         public Guid RelayID { get; set; }
 
         [JsonIgnore]
-        public Location Location { get; set; }
+        public virtual Location Location { get; set; }
 
         public Guid? LocationID { get; set; }
 

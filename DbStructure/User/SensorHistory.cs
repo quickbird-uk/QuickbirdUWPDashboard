@@ -22,7 +22,7 @@
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
         [Required]
-        public List<SensorDatapoint> Data { get; set; }
+        public virtual List<SensorDatapoint> Data { get; set; }
 
         public void SerialiseData()
         {
