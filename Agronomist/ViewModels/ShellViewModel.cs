@@ -7,7 +7,11 @@
 
     public class ShellViewModel : ViewModelBase
     {
+        private Frame _contentFrame;
 
+        public ShellViewModel()
+        {
+        }
 
         private void Update()
         {
@@ -16,9 +20,12 @@
 
         public void NavToGraphingView()
         {
-            
-            ((Frame) Window.Current.Content).Navigate(typeof(GraphingView));
+            _contentFrame.Navigate(typeof(GraphingView));
         }
-        
+
+        public void SetContentFrame(Frame contentFrame)
+        {
+            _contentFrame = contentFrame;
+        }
     }
 }

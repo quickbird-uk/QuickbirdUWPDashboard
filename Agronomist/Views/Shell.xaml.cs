@@ -12,11 +12,14 @@
     /// </summary>
     public sealed partial class Shell
     {
-        public ShellViewModel ViewModel { get; } = new ShellViewModel();
+        public ShellViewModel ViewModel { get; }
 
         public Shell()
         {
+            ViewModel = new ShellViewModel();
             InitializeComponent();
+            ViewModel.SetContentFrame(ContentFrame);
+
         }
 
         private CropRunInfo SelectedCrop => (CropRunInfo) Menu.SelectedItem;
