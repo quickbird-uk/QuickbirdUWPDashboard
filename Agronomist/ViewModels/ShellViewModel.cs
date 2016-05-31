@@ -1,7 +1,13 @@
 ﻿namespace Agronomist.ViewModels
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Linq;
     using Windows.UI.Xaml.Controls;
+    using DatabasePOCOs.User;
+    using Models;
     using Views;
 
     public class ShellViewModel : ViewModelBase
@@ -16,9 +22,69 @@
 
         private string _notificationsCount = "0";
 
+        private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
+       
+        public ObservableCollection<CropRunViewModel> Runs
+        {
+            get { return _runs; }
+            set
+            {
+                if (value == _runs) return;
+                _runs = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ShellViewModel(Frame contentFrame)
         {
             _contentFrame = contentFrame;
+            Update();
+        }
+
+        private void Update()
+        {
+            List<CropCycle> cropRuns = null;
+            using (var db = new MainDbContext())
+            {
+                //TODO: Load cropruns from DB.
+            }
+
+#if DEBUG
+            // Fake data for testing.
+            cropRuns = new List<CropCycle>
+                {
+                    new CropCycle()
+                    {
+                        ID = new Guid(),
+                        CropTypeName = "Sweet",
+                        Name = "Peach",
+                        StartDate = DateTimeOffset.Now,
+                        Location = new Location() {Name = "Ga"}
+                    },
+                    new CropCycle()
+                    {
+                        ID = new Guid(),
+                        CropTypeName = "Mountain",
+                        Name = "Goat",
+                        StartDate = DateTimeOffset.Now,
+                        Location = new Location() {Name = "Site15"}
+                    }
+                };
+
+#endif
+            foreach (var run in cropRuns)
+            {
+                var exisiting = _runs.FirstOrDefault(r => r.CropRunId == run.ID);
+                if (null == exisiting)
+                {
+                    var vm = new CropRunViewModel(run);
+                    _runs.Add(vm);
+                }
+                else
+                {
+                    exisiting.Update(run);
+                }
+            }
         }
 
         public string NotificationsButtonText
@@ -44,6 +110,19 @@
                 {
                     CloseNotifications();
                 }
+                OnPropertyChanged();
+            }
+        }
+
+        private CropRunViewModel _currentCropRun;
+
+        public CropRunViewModel CurrentCropRun
+        {
+            get { return _currentCropRun; }
+            set
+            {
+                if (value == _currentCropRun) return;
+                _currentCropRun = value;
                 OnPropertyChanged();
             }
         }

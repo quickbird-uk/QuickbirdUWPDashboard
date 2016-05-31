@@ -54,7 +54,7 @@
                           Grid.Row="1"
                           RequestedTheme="Dark"
                           ItemContainerStyle="{ThemeResource MenuItemDark}"
-                          SelectionChanged="CropSelected">
+                          ItemsSource="{x:Bind ViewModel.Runs}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>
@@ -67,9 +67,9 @@
                                          Margin="24,12,24,12" />
                                 <Ellipse Grid.Column="0" Fill="Gold"
                                          Margin="24,12,24,12"
-                                         Visibility="{Binding IsVisible}" />
+                                         Visibility="{Binding IsAlerted, Mode=OneWay}" />
                                 <TextBlock Grid.Column="0" 
-                                           Text="{Binding IconLetter}"
+                                           Text="{Binding IconLetter, Mode=OneWay}"
                                            Foreground="#FF515C6B"
                                            Width="20"
                                            Height="40"
@@ -81,9 +81,9 @@
                                     <TextBlock FontFamily="Segoe UI"
                                                FontWeight="Normal"
                                                FontSize="18"
-                                               Text="{Binding CropName}" />
+                                               Text="{Binding CropName, Mode=OneWay}" />
                                     <TextBlock Style="{ThemeResource Subtitle}"
-                                               Text="{Binding BoxName}" />
+                                               Text="{Binding BoxName, Mode=OneWay}" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2"
                                            VerticalAlignment="Center"
@@ -93,7 +93,7 @@
                                            FontSize="28"
                                            Foreground="Gold"
                                            Text="⚠"
-                                           Visibility="{Binding IsVisible}" />
+                                           Visibility="{Binding IsAlerted, Mode=OneWay}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -228,7 +228,7 @@
                                     <StackPanel x:Name="YieldCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="724 kg"
+                                                   Text="{}"
                                                    Foreground="#FF515C6B" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
                                                    Text="Yield So Far"
