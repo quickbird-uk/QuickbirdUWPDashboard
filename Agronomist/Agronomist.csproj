@@ -45,6 +45,7 @@
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />
+    <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
     <Compile Include="ViewModels\SensorViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
@@ -76,6 +77,12 @@
     <Content Include="Assets\BadgeLogo.scale-150.png" />
     <Content Include="Assets\BadgeLogo.scale-200.png" />
     <Content Include="Assets\BadgeLogo.scale-400.png" />
+    <Content Include="Assets\logo-msft.png" />
+    <Content Include="Assets\logo-qb-light-medium.png" />
+    <Content Include="Assets\logo-qb-light-small.png" />
+    <Content Include="Assets\logo-qb-light-tiny.png" />
+    <Content Include="Assets\logo-rocket-light.png" />
+    <Content Include="Assets\logo-twtr.png" />
     <Content Include="Assets\SplashScreen.scale-100.png" />
     <Content Include="Assets\SplashScreen.scale-125.png" />
     <Content Include="Assets\SplashScreen.scale-150.png" />

@@ -10,20 +10,16 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="216" />
         </Grid.RowDefinitions>
-        
+
         <!-- First Row -->
 
-        <Rectangle x:Name="HeroBackground"
-                   Fill="#FF3498DB">
-        </Rectangle>
-        <Image x:Name="Quickbird_Logo"
-               Source="ms-appx:///Assets/logo-qb-light-medium.png"
+        <Rectangle Fill="#FF3498DB" />
+        <Image Grid.Row="0" Source="ms-appx:///Assets/logo-qb-light-medium.png"
                Height="60"
                Width="210"
                Margin="0,56,0,0"
                HorizontalAlignment="Center"
-               VerticalAlignment="Top">
-        </Image>
+               VerticalAlignment="Top" />
 
         <!-- Second Row -->
 
@@ -37,7 +33,7 @@
                 Height="60"
                 Padding="0"
                 Margin="0,56,0,12"
-                Click="Authenticate"
+                Click="{x:Bind ViewModel.Login}"
                 BorderThickness="1">
             <Button.Transitions>
                 <TransitionCollection>
@@ -46,13 +42,12 @@
             </Button.Transitions>
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
-                    <Image x:Name="Microsoft_Logo"
-                           Source="ms-appx:///Assets/logo-msft.png"
+                    <Image Source="ms-appx:///Assets/logo-twtr.png"
                            Height="30"
                            Width="30"
                            HorizontalAlignment="Left"
-                           VerticalAlignment="Top"
-                           Stretch="UniformToFill"
+                           VerticalAlignment="Center"
+                           Stretch="Uniform"
                            Margin="0,0,16,0" />
                     <TextBlock Text="Sign in using Twitter Account"
                                FontFamily="Segoe UI"
