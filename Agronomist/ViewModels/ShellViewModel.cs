@@ -7,10 +7,11 @@
 
     public class ShellViewModel : ViewModelBase
     {
-        private Frame _contentFrame;
+        private readonly Frame _contentFrame;
 
-        public ShellViewModel()
+        public ShellViewModel(Frame contentFrame)
         {
+            _contentFrame = contentFrame;
         }
 
         private void Update()
@@ -21,11 +22,6 @@
         public void NavToGraphingView()
         {
             _contentFrame.Navigate(typeof(GraphingView));
-        }
-
-        public void SetContentFrame(Frame contentFrame)
-        {
-            _contentFrame = contentFrame;
         }
     }
 }

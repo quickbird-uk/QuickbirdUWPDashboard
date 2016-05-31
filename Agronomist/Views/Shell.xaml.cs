@@ -16,9 +16,9 @@
 
         public Shell()
         {
-            ViewModel = new ShellViewModel();
             InitializeComponent();
-            ViewModel.SetContentFrame(ContentFrame);
+            ViewModel = new ShellViewModel(ContentFrame);
+            Bindings.Update();
 
         }
 
