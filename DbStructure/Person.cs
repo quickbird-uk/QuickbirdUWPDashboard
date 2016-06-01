@@ -19,6 +19,6 @@
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
         [JsonIgnore]
-        public List<Location> Locations { get; set; }
+        public virtual List<Location> Locations { get; set; }
     }
 }

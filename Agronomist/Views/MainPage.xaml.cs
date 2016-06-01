@@ -13,5 +13,10 @@
         }
 
         public MainPageViewModel ViewModel { get; set; }
+
+        private void Analytics_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(GraphingView)); 
+        }
     }
 }

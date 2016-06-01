@@ -18,6 +18,7 @@
 
             <Button Click="{x:Bind ViewModel.PostSensorData}" Content="Post Sensor Data" />
             <Button Click="{x:Bind ViewModel.PostDatabase}" Content="Post Database" />
+            <Button x:Name="Analytics" Content="Analytics Mode" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,753,0" Click="Analytics_Click"/>
         </StackPanel>
     </Grid>
 </Page>

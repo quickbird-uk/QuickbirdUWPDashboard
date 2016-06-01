@@ -1,15 +1,82 @@
 ﻿<Page
-    x:Class="Agronomist.Views.GraphingView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Agronomist.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Charts="using:Syncfusion.UI.Xaml.Charts"
+    x:Class="Agronomist.Views.GraphingView"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock Text="{x:Bind ViewModel.SampleProperty}" />
+    <Page.Resources>
+        <CollectionViewSource x:Key="cvsSensors" IsSourceGrouped="True" Source="{x:Bind ViewModel.SensorsGrouped, Mode=OneWay}"/>
+    </Page.Resources>
+    
+    <Grid Background="DimGray">
+        <StackPanel >
+            <!--Define controls that let the user choose crop run and stuff-->
+            <Grid>
+                <TextBlock Text="Select a Crop" Style="{StaticResource ResourceKey=Subtitle}" Height="50" Width="124" HorizontalAlignment="Left" Margin="2,2,0,2" TextAlignment="Center"/>
+                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected" Margin="131,2,0,0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock x:Name="SensorToggleButton"
+                                       Text="{Binding Value}"
+                                       Margin="2,2,2,2" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            <!--Define list of sensors so user can toggle them on and off-->
+            <!-- BEGIN Sensor Grid -->
+            <ListView Height="180"
+                  VerticalAlignment="Top"
+                  Margin="0,120,0,0"
+                  Background="#FF424242"
+                  Foreground="{x:Null}"
+                  Padding="80,0,80,0"
+                  SelectionMode="None"
+                  ItemsSource="{Binding Source={StaticResource cvsSensors}}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ToggleButton x:Name="SensorToggleButton"
+                                  RequestedTheme="Dark"
+                                  Background="#00FFFFFF"
+                                  BorderBrush="#FFE2E2E2"
+                                  BorderThickness="1"
+                                  Height="50"
+                                  Content="{Binding displayName}"
+                                  Margin="0,0,10,10"
+                                  Width="150"
+                                  Checked="OnSensorToggleChecked"
+                                  Unchecked="OnSensorToggleUnchecked" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+                <ListView.GroupStyle>
+                    <GroupStyle HidesIfEmpty="True">
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}" RequestedTheme="Dark" />
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsWrapGrid MaximumRowsOrColumns="2" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+            </ListView>
+
+            <!-- END Sensor Grid -->
+
+            <!--Define the time controls, to scale the span of the graph-->
+
+            <!-- Define the chart for the entire remaining space -->
+            <Charts:SfChart HorizontalAlignment="Left" Margin="0,0,0,0"  VerticalAlignment="Stretch" />
         </StackPanel>
+        
     </Grid>
 </Page>
