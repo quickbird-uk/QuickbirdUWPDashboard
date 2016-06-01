@@ -247,6 +247,8 @@
 
                 var posterrors = string.Join(",", await context.PostChanges());
                 Debug.WriteLine(posterrors);
+
+                Debug.WriteLine(await context.PostHistoryChanges());
             }
         }
     }

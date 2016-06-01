@@ -253,7 +253,7 @@ namespace Agronomist.ViewModels
 
         public class SensorTuple
         {
-            public string displayName;
+            public string displayName { get; set; }
             public Sensor sensor;
             public bool toggled = false;
             /// <summary>

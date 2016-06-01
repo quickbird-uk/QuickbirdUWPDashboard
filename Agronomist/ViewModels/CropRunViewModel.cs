@@ -111,7 +111,7 @@
             CropName = cropRun.CropTypeName;
             VarietyName = "not implemented"; //TODO: cropRun.CropType.Variety;
             PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
-            BoxName = cropRun.Location.Name;
+            BoxName = "NEIN";//cropRun.Location.Name;
             IconLetter = CropName.Substring(0, 1);
             Yield = "not implemeted"; //TODO: cropRun.Yield + cropRun.YieldUnits;
             _isAlerted = false; //TODO: IsAnySensorAlerted();
