@@ -55,15 +55,15 @@
                 {
                     new CropCycle()
                     {
-                        ID = new Guid(),
+                        ID = Guid.NewGuid(),
                         CropTypeName = "Sweet",
                         Name = "Peach",
                         StartDate = DateTimeOffset.Now,
-                        Location = new Location() {Name = "Ga"}
+                        Location = new Location() {Name = "Ga"},
                     },
                     new CropCycle()
                     {
-                        ID = new Guid(),
+                        ID =Guid.NewGuid(),
                         CropTypeName = "Mountain",
                         Name = "Goat",
                         StartDate = DateTimeOffset.Now,

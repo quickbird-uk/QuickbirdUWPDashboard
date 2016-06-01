@@ -82,16 +82,7 @@
             }
         }
 
-        public bool IsAlerted
-        {
-            get { return _isAlerted; }
-            set
-            {
-                if (value == _isAlerted) return;
-                _isAlerted = value;
-                OnPropertyChanged();
-            }
-        }
+        public string IsAlerted => _isAlerted ? "Visible" :  "Collapsed";
 
         public string Yield
         {
@@ -114,7 +105,7 @@
             BoxName = cropRun.Location.Name;
             IconLetter = CropName.Substring(0, 1);
             Yield = "2 bushels";
-            //TODO figure out alerts
+            _isAlerted = false;
         }
     }
 }
