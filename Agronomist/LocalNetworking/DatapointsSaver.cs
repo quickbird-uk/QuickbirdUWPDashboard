@@ -184,7 +184,9 @@ namespace Agronomist.LocalNetworking
 
                     }
                     //this is meant to be fire-forget, that's cool 
-                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true); 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
 
             }); 
