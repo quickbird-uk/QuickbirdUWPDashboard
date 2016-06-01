@@ -7,11 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="DimGray">
         <StackPanel >
             <Grid>
-                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected">
+                <TextBlock Text="Select a Crop" Style="{StaticResource Subtitle}" Height="50" Width="124" HorizontalAlignment="Left" Margin="2,2,0,2" TextAlignment="Center"/>
+                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected" Margin="131,2,0,0">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock x:Name="SensorToggleButton"
@@ -22,7 +23,7 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
-            <TextBlock Text="{x:Bind ViewModel.SelectedCropCycle}" />
+
         </StackPanel>
     </Grid>
 </Page>

@@ -26,15 +26,21 @@ namespace Agronomist.ViewModels
         /* This data applies to the chosen crop cycle only*/
         private CropCycle _selectedCropCycle; 
         private List<Sensor> _sensors;
-        private DateTime _startTime;
-        private DateTime _endTime;
+        private DateTimeOffset _startTime;
+        private DateTimeOffset? _endTime;
         private bool _currentlyRunning = true;
+
+        //Probaablyt don't need this
         private DispatcherTimer _refresher = null; 
+
+        //Other stuff
+        //Hour Long Buffer
+        //Histrotical Buffer 
 
         public GraphingViewModel(){
             _db = new MainDbContext();
 
-
+            
             //LoadData
             LoadCache(); 
         }
@@ -47,14 +53,15 @@ namespace Agronomist.ViewModels
             var dbLocations = await _db.Locations
                 .Include(loc => loc.CropCycles)
                 .Include(loc => loc.Devices)
-                .AsNoTracking().ToListAsync();
+                .ToListAsync();
 
-            var sensorList = await _db.Sensors.ToListAsync(); 
+            var sensorList = await _db.Sensors.ToListAsync(); //Need to edit 
             
             List<Tuple<Location, CropCycle, List<Sensor>>> cache = 
-                new List<Tuple<Location, CropCycle, List<Sensor>>>(); 
+                new List<Tuple<Location, CropCycle, List<Sensor>>>();
 
-            foreach(CropCycle crop in dbLocations.SelectMany(loc => loc.CropCycles))
+
+            foreach (CropCycle crop in dbLocations.SelectMany(loc => loc.CropCycles))
             {
                 Tuple<Location, CropCycle, List<Sensor>> cacheItem = new Tuple<Location, CropCycle, List<Sensor>>(
                     crop.Location, crop, new List<Sensor>());
@@ -153,13 +160,34 @@ namespace Agronomist.ViewModels
                 else
                 {
                     _selectedCropCycle = value;
-                    if(_selectedCropCycle.EndDate == null)
-                    {
-                        _currentlyRunning = true;
-                    }
-                    Sensors = _cache.First(c => c.Item2.ID == value.ID).Item3; 
+                    if (_selectedCropCycle.EndDate == null)
+                    { _currentlyRunning = true;  }
+                    else
+                    { _currentlyRunning = false; }
+                    Sensors = _cache.First(c => c.Item2.ID == value.ID).Item3;
+                    EndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
+                    _endTime = _selectedCropCycle.EndDate;
+                    StartTime = _selectedCropCycle.StartDate; 
+
                     OnPropertyChanged();
                 }
+            }
+        }
+
+        public DateTimeOffset EndTime
+        {
+            get { return _endTime ?? DateTimeOffset.Now; }
+            set{
+                _endTime = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTimeOffset StartTime
+        {
+            get { return _startTime; }
+            set { _startTime = value;
+                OnPropertyChanged(); 
             }
         }
 
