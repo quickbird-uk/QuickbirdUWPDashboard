@@ -47,12 +47,7 @@
                 ReadingUnit = "pH",
                 StatusColor = new SolidColorBrush(Colors.Gold)
             });
-
-            cvsWaterTankReadings.Source = ReadingCards;
-        }
-
-        private void ReadingSelected(object sender, ItemClickEventArgs e)
-        {
+            
         }
     }
 }

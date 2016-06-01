@@ -6,15 +6,6 @@
       xmlns:views="using:Agronomist.Views"
       mc:Ignorable="d">
 
-    <Page.Resources>
-        <CollectionViewSource x:Name="cvsWaterTankReadings"
-                              IsSourceGrouped="False" />
-        <CollectionViewSource x:Name="cvsPlantReadings"
-                              IsSourceGrouped="False" />
-        <CollectionViewSource x:Name="cvsAmbientReadings"
-                              IsSourceGrouped="False" />
-    </Page.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="72" />
