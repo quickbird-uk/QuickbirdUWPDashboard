@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq;
 using MoreLinq;
+using Windows.UI.Xaml.Data;
+using System.Collections.ObjectModel;
 
 namespace Agronomist.ViewModels
 {
@@ -21,13 +23,14 @@ namespace Agronomist.ViewModels
         /// <summary>
         /// Cached Data, of all cropCycles
         /// </summary>
-        private List<Tuple<Location, CropCycle, List<Sensor>>> _cache = new List<Tuple<Location, CropCycle, List<Sensor>>>();
+        private List<CroprunTuple> _cache = new List<CroprunTuple>();
 
         /* This data applies to the chosen crop cycle only*/
         private CropCycle _selectedCropCycle; 
-        private List<Sensor> _sensors;
-        private DateTimeOffset _startTime;
-        private DateTimeOffset? _endTime;
+
+        private IEnumerable<IGrouping<string, SensorTuple>> _sensors;
+        private DateTimeOffset _selectedStartTime;
+        private DateTimeOffset? _selectedEndTime;
         private bool _currentlyRunning = true;
 
         //Probaablyt don't need this
@@ -53,25 +56,29 @@ namespace Agronomist.ViewModels
             var dbLocations = await _db.Locations
                 .Include(loc => loc.CropCycles)
                 .Include(loc => loc.Devices)
-                .ToListAsync();
+                .AsNoTracking().ToListAsync();
 
-            var sensorList = await _db.Sensors.ToListAsync(); //Need to edit 
+            var sensorList = await _db.Sensors
+                .Include(sen => sen.SensorType)
+                .Include(sen => sen.SensorType.Place)
+                .Include(sen => sen.SensorType.Param)
+                .Include(sen => sen.SensorType.Subsystem)
+                .AsNoTracking().ToListAsync(); //Need to edit 
             
-            List<Tuple<Location, CropCycle, List<Sensor>>> cache = 
-                new List<Tuple<Location, CropCycle, List<Sensor>>>();
+            List<CroprunTuple> cache = 
+                new List<CroprunTuple>();
 
 
             foreach (CropCycle crop in dbLocations.SelectMany(loc => loc.CropCycles))
             {
-                Tuple<Location, CropCycle, List<Sensor>> cacheItem = new Tuple<Location, CropCycle, List<Sensor>>(
-                    crop.Location, crop, new List<Sensor>());
+                CroprunTuple cacheItem = new CroprunTuple(crop, crop.Location);
 
                 List<Guid> deviceIDs = crop.Location.Devices.Select(dev => dev.ID).ToList(); 
                 foreach(Sensor sensor in sensorList)
                 {
                     if (deviceIDs.Contains(sensor.DeviceID))
                     {
-                        cacheItem.Item3.Add(sensor);
+                        cacheItem.sensors.Add(sensor);
                     }
                 }
 
@@ -79,7 +86,7 @@ namespace Agronomist.ViewModels
             }
             if(_selectedCropCycle == null)
             {
-                _selectedCropCycle = cache.FirstOrDefault().Item2; 
+                _selectedCropCycle = cache.FirstOrDefault().cropCycle; 
             }
             Cache = cache; 
             
@@ -103,17 +110,17 @@ namespace Agronomist.ViewModels
                 List<KeyValuePair<CropCycle, string>> result = new List<KeyValuePair<CropCycle, string>>(); 
                 foreach(var tuple in Cache)
                 {
-                    string displayName = $"{tuple.Item1.Name} - {tuple.Item2.CropTypeName}: " 
-                       + $"{tuple.Item2.StartDate.LocalDateTime.Date.ToString("dd MMM")}"
-                       + $"-{tuple.Item2.EndDate?.LocalDateTime.Date.ToString("dd MMM") ?? "Now"}"; 
+                    string displayName = $"{tuple.location.Name} - {tuple.cropCycle.CropTypeName}: " 
+                       + $"{tuple.cropCycle.StartDate.LocalDateTime.Date.ToString("dd MMM")}"
+                       + $"-{tuple.cropCycle.EndDate?.LocalDateTime.Date.ToString("dd MMM") ?? "Now"}"; 
                         
-                    result.Add(new KeyValuePair<CropCycle, string>(tuple.Item2, displayName)); 
+                    result.Add(new KeyValuePair<CropCycle, string>(tuple.cropCycle, displayName)); 
                 }
                 return result; 
             }
         }
 
-        public List<Tuple<Location, CropCycle, List<Sensor>>> Cache
+        public List<CroprunTuple> Cache
         {
             get { return _cache; }
             set
@@ -123,7 +130,7 @@ namespace Agronomist.ViewModels
                 {
                     _cache = value;
                     if(_selectedCropCycle != null)
-                    SelectedCropCycle = _cache.First(l => l.Item2.ID == _selectedCropCycle.ID).Item2; 
+                    SelectedCropCycle = _cache.First(l => l.cropCycle.ID == _selectedCropCycle.ID).cropCycle; 
 
                     OnPropertyChanged();
                     OnPropertyChanged("Locations");
@@ -135,10 +142,10 @@ namespace Agronomist.ViewModels
 
         public List<Location> Locations
         {
-            get { return Cache.DistinctBy(c => c.Item1).Select(tup => tup.Item1).ToList();}
+            get { return Cache.DistinctBy(c => c.location).Select(tup => tup.location).ToList();}
         }
 
-        public List<Sensor> Sensors
+        public IEnumerable<IGrouping<string, SensorTuple>> SensorsGrouped //Replace with Igrouping or CollectionViewSource
         {
             get { return _sensors; }
             set
@@ -149,7 +156,7 @@ namespace Agronomist.ViewModels
             }
         }
 
-
+        public ObservableCollection<SensorTuple> SensorsToGraph; 
 
         public CropCycle SelectedCropCycle
         {
@@ -164,9 +171,20 @@ namespace Agronomist.ViewModels
                     { _currentlyRunning = true;  }
                     else
                     { _currentlyRunning = false; }
-                    Sensors = _cache.First(c => c.Item2.ID == value.ID).Item3;
+                    List<Sensor> sensors = _cache.First(c => c.cropCycle.ID == value.ID).sensors;
+                    List<SensorTuple> sensorTuples = new List<SensorTuple>(); 
+                    foreach(var sensor in sensors)
+                    {
+                        sensorTuples.Add(new SensorTuple
+                        {
+                            displayName = sensor.SensorType.Param.Name,
+                            sensor = sensor
+                        });
+                    }
+                    SensorsGrouped = sensorTuples.GroupBy(tup => tup.sensor.SensorType.Subsystem.Name); 
+                    
                     EndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
-                    _endTime = _selectedCropCycle.EndDate;
+                    _selectedEndTime = _selectedCropCycle.EndDate;
                     StartTime = _selectedCropCycle.StartDate; 
 
                     OnPropertyChanged();
@@ -176,17 +194,17 @@ namespace Agronomist.ViewModels
 
         public DateTimeOffset EndTime
         {
-            get { return _endTime ?? DateTimeOffset.Now; }
+            get { return _selectedEndTime ?? DateTimeOffset.Now; }
             set{
-                _endTime = value;
+                _selectedEndTime = value;
                 OnPropertyChanged();
             }
         }
 
         public DateTimeOffset StartTime
         {
-            get { return _startTime; }
-            set { _startTime = value;
+            get { return _selectedStartTime; }
+            set { _selectedStartTime = value;
                 OnPropertyChanged(); 
             }
         }
@@ -204,6 +222,35 @@ namespace Agronomist.ViewModels
 
             }
             
+        }
+
+        public class SensorTuple
+        {
+            public string displayName;
+            public Sensor sensor;
+            public bool toggled = false;
+            /// <summary>
+            /// Updated as soon as possible
+            /// </summary>
+            public ObservableCollection<SensorDatapoint> hourlyDatapoints = new ObservableCollection<SensorDatapoint>();
+
+            /// <summary>
+            /// Only read from the DB, not reloaded in realtime
+            /// </summary>
+            public ObservableCollection<SensorDatapoint> HistoricalDatapoints = new ObservableCollection<SensorDatapoint>(); 
+        }
+
+        public struct CroprunTuple
+        {
+            public CroprunTuple(CropCycle inCropCycle, Location inLocation)
+            {
+                cropCycle = inCropCycle;
+                location = inLocation;
+                sensors = new System.Collections.Generic.List<Sensor>(); 
+            }
+            public CropCycle cropCycle;
+            public Location location;
+            public List<Sensor> sensors; 
         }
     }
 }
