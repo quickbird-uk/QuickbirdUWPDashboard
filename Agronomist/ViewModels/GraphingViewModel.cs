@@ -48,27 +48,33 @@ namespace Agronomist.ViewModels
             Messenger.Instance.HardwareTableChanged.Subscribe(LoadCache);
             Messenger.Instance.UserTablesChanged.Subscribe(LoadCache);
 
+            //Settings settings = new Settings();
+            //settings.UnsetCreds(); 
+
             //LoadData
             LoadCache(); 
         }
 
-        private void LoadCache(string obj)
+        public void LoadCache(string obj)
         {
             LoadCache(); 
         }
 
-        private void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
+        public void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
         {
-            List<SensorTuple> sensorsUngrouped = SensorsGrouped.SelectMany(group => group).ToList();
-            foreach(Messenger.SensorReading reading in readings)
+            if (SensorsGrouped != null)
             {
-                SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId); 
-                if(tuple != null)
+                List<SensorTuple> sensorsUngrouped = SensorsGrouped.SelectMany(group => group).ToList();
+                foreach (Messenger.SensorReading reading in readings)
                 {
-                    if (tuple.hourlyDatapoints.Any(dp => dp.TimeStamp == reading.Timestamp) == false)
+                    SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
+                    if (tuple != null)
                     {
-                        SensorDatapoint datapoint = new SensorDatapoint(reading.Value, reading.Timestamp, reading.Duration);
-                        tuple.hourlyDatapoints.Add(datapoint); 
+                        if (tuple.hourlyDatapoints.Any(dp => dp.TimeStamp == reading.Timestamp) == false)
+                        {
+                            SensorDatapoint datapoint = new SensorDatapoint(reading.Value, reading.Timestamp, reading.Duration);
+                            tuple.hourlyDatapoints.Add(datapoint);
+                        }
                     }
                 }
             }
@@ -77,7 +83,7 @@ namespace Agronomist.ViewModels
         /// <summary>
         /// Refreshed Cache
         /// </summary>
-        public async void LoadCache()
+        private async void LoadCache()
         {
             var dbLocations = await _db.Locations
                 .Include(loc => loc.CropCycles)
