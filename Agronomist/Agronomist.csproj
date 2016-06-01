@@ -178,11 +178,6 @@
       <Name>NetLib</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <SDKReference Include="Syncfusion Controls for UWP XAML, Version=14.1.0.41">
-      <Name>Syncfusion Controls for UWP XAML</Name>
-    </SDKReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>
@@ -220,8 +215,8 @@
     <OutputPath>bin\x86\NATIVE\</OutputPath>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>x86</PlatformTarget>
-    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <Optimize>true</Optimize>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS</DefineConstants>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|ARM'">
     <OutputPath>bin\ARM\NATIVE\</OutputPath>

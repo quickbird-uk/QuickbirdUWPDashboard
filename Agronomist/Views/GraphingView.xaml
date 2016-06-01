@@ -75,7 +75,6 @@
             <!--Define the time controls, to scale the span of the graph-->
 
             <!-- Define the chart for the entire remaining space -->
-            <Charts:SfChart HorizontalAlignment="Left" Margin="0,0,0,0"  VerticalAlignment="Stretch" />
         </StackPanel>
         
     </Grid>
