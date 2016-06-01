@@ -11,6 +11,7 @@ using System.Linq;
 using MoreLinq;
 using Windows.UI.Xaml.Data;
 using System.Collections.ObjectModel;
+using Agronomist.Util;
 
 namespace Agronomist.ViewModels
 {
@@ -43,9 +44,34 @@ namespace Agronomist.ViewModels
         public GraphingViewModel(){
             _db = new MainDbContext();
 
-            
+            Messenger.Instance.NewSensorDataPoint.Subscribe(ReceiveDatapoint);
+            Messenger.Instance.HardwareTableChanged.Subscribe(LoadCache);
+            Messenger.Instance.UserTablesChanged.Subscribe(LoadCache);
+
             //LoadData
             LoadCache(); 
+        }
+
+        private void LoadCache(string obj)
+        {
+            LoadCache(); 
+        }
+
+        private void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
+        {
+            List<SensorTuple> sensorsUngrouped = SensorsGrouped.SelectMany(group => group).ToList();
+            foreach(Messenger.SensorReading reading in readings)
+            {
+                SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId); 
+                if(tuple != null)
+                {
+                    if (tuple.hourlyDatapoints.Any(dp => dp.TimeStamp == reading.Timestamp) == false)
+                    {
+                        SensorDatapoint datapoint = new SensorDatapoint(reading.Value, reading.Timestamp, reading.Duration);
+                        tuple.hourlyDatapoints.Add(datapoint); 
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -145,6 +171,7 @@ namespace Agronomist.ViewModels
             get { return Cache.DistinctBy(c => c.location).Select(tup => tup.location).ToList();}
         }
 
+
         public IEnumerable<IGrouping<string, SensorTuple>> SensorsGrouped //Replace with Igrouping or CollectionViewSource
         {
             get { return _sensors; }
@@ -183,16 +210,16 @@ namespace Agronomist.ViewModels
                     }
                     SensorsGrouped = sensorTuples.GroupBy(tup => tup.sensor.SensorType.Subsystem.Name); 
                     
-                    EndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
+                    SelectedEndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
                     _selectedEndTime = _selectedCropCycle.EndDate;
-                    StartTime = _selectedCropCycle.StartDate; 
+                    SelectedStartTime = _selectedCropCycle.StartDate; 
 
                     OnPropertyChanged();
                 }
             }
         }
 
-        public DateTimeOffset EndTime
+        public DateTimeOffset SelectedEndTime
         {
             get { return _selectedEndTime ?? DateTimeOffset.Now; }
             set{
@@ -201,7 +228,7 @@ namespace Agronomist.ViewModels
             }
         }
 
-        public DateTimeOffset StartTime
+        public DateTimeOffset SelectedStartTime
         {
             get { return _selectedStartTime; }
             set { _selectedStartTime = value;
