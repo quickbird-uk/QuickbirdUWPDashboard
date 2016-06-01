@@ -7,6 +7,7 @@
     using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
+    using Microsoft.Data.Entity;
     using Models;
     using NetLib;
     using Util;
@@ -142,13 +143,12 @@
             List<CropCycle> cropRuns = null;
             using (var db = new MainDbContext())
             {
-                //TODO: Load cropruns from DB.
+                cropRuns = db.CropCycles.ToList();
             }
 
-#if DEBUG
             // Fake data for testing.
-            cropRuns = FakeCropRuns();
-#endif
+            //cropRuns = FakeCropRuns();
+
             foreach (var run in cropRuns)
             {
                 var exisiting = _runs.FirstOrDefault(r => r.CropRunId == run.ID);
