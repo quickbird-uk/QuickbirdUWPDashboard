@@ -54,7 +54,8 @@
                           Grid.Row="1"
                           RequestedTheme="Dark"
                           ItemContainerStyle="{ThemeResource MenuItemDark}"
-                          ItemsSource="{x:Bind ViewModel.Runs}">
+                          ItemsSource="{x:Bind ViewModel.Runs}"
+                          SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>
@@ -69,7 +70,7 @@
                                          Margin="24,12,24,12"
                                          Visibility="{Binding IsAlerted, Mode=OneWay}" />
                                 <TextBlock Grid.Column="0" 
-                                           Text="{Binding IconLetter, Mode=OneWay}"
+                                           Text="{Binding IconLetter, Mode=OneWay, FallbackValue=X}"
                                            Foreground="#FF515C6B"
                                            Width="20"
                                            Height="40"
@@ -81,9 +82,9 @@
                                     <TextBlock FontFamily="Segoe UI"
                                                FontWeight="Normal"
                                                FontSize="18"
-                                               Text="{Binding CropName, Mode=OneWay}" />
+                                               Text="{Binding CropName, Mode=OneWay, FallbackValue=Crop}" />
                                     <TextBlock Style="{ThemeResource Subtitle}"
-                                               Text="{Binding BoxName, Mode=OneWay}" />
+                                               Text="{Binding BoxName, Mode=OneWay, FallbackValue=Location}" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2"
                                            VerticalAlignment="Center"
@@ -93,7 +94,7 @@
                                            FontSize="28"
                                            Foreground="Gold"
                                            Text="⚠"
-                                           Visibility="{Binding IsAlerted, Mode=OneWay}" />
+                                           Visibility="{Binding IsAlerted, Mode=OneWay, FallbackValue=Visible}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -105,6 +106,7 @@
                     <!-- Add Crop Button -->
                     <Button x:Name="AddCropButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
+                            Background="DodgerBlue"
                             BorderThickness="0,1,0,1"
                             BorderBrush="#66EBEBEB">
                         <Grid Height="72">
@@ -189,13 +191,12 @@
                                       BorderThickness="0,0,1,0"
                                       BorderBrush="#4C515C6B">
                             <ScrollViewer.Content>
-                                <StackPanel x:Name="CropInfoPanel"
-                                            Orientation="Horizontal"
+                                <!-- Crop info panel -->
+                                <StackPanel Orientation="Horizontal"
                                             Padding="0,14,0,14">
-                                    <StackPanel x:Name="CropNameCard"
-                                                Margin="48,0,72,0">
+                                    <StackPanel Margin="48,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="Strawberry"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.CropName, Mode=OneWay, FallbackValue=Crop}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Foreground="#FF515C6B" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -203,10 +204,9 @@
                                                    Foreground="#FF515C6B" />
 
                                     </StackPanel>
-                                    <StackPanel x:Name="VarietyNameCard"
-                                                Margin="0,0,72,0">
+                                    <StackPanel Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="Sweet Juicy Type"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.VarietyName, Mode=OneWay, FallbackValue=Unknown}"
                                                    Foreground="#FF515C6B"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -217,7 +217,7 @@
                                     <StackPanel x:Name="PlantDateCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="May 19"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.PlantingDate, Mode=OneWay, FallbackValue=31/12/2000}"
                                                    Foreground="#FF515C6B"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -228,7 +228,7 @@
                                     <StackPanel x:Name="YieldCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="{}"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.Yield, Mode=OneWay, FallbackValue=10 units}"
                                                    Foreground="#FF515C6B" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
                                                    Text="Yield So Far"
@@ -295,11 +295,11 @@
                                 <TextBlock Style="{ThemeResource Icon}"
                                            FontFamily="Segoe UI Symbol"
                                            FontSize="32"
-                                           Text="{x:Bind ViewModel.NotificationsCount}"
+                                           Text="{x:Bind ViewModel.NotificationsCount, Mode=OneWay, FallbackValue=0}"
                                            Margin="0,0,0,4" />
                                 <TextBlock FontSize="16"
                                            Foreground="#FF4A90E2"
-                                           Text="{x:Bind ViewModel.NotificationsButtonText, Mode=OneWay}"
+                                           Text="{x:Bind ViewModel.NotificationsButtonText, Mode=OneWay, FallbackValue=Show Notifications}"
                                            TextAlignment="Center"
                                            LineHeight="20"
                                            TextWrapping="WrapWholeWords" />

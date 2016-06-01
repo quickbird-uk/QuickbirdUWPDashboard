@@ -19,7 +19,10 @@
 
         private string _yield;
 
-
+        /// <summary>
+        ///     Initialises the properties of this viewmodel with data from POCO.
+        /// </summary>
+        /// <param name="cropRun">Requires CropType and Location to be included.</param>
         public CropRunViewModel(CropCycle cropRun)
         {
             Update(cropRun);
@@ -82,7 +85,10 @@
             }
         }
 
-        public string IsAlerted => _isAlerted ? "Visible" :  "Collapsed";
+        /// <summary>
+        /// Used to set alert UI elements to visible or hidden. Change status by modifying backing bool.
+        /// </summary>
+        public string IsAlerted => _isAlerted ? "Visible" : "Collapsed";
 
         public string Yield
         {
@@ -95,17 +101,20 @@
             }
         }
 
-
+        /// <summary>
+        ///     Updates the properties of this viewmodel with data from POCO.
+        /// </summary>
+        /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
         public void Update(CropCycle cropRun)
         {
             CropRunId = cropRun.ID;
-            CropName = cropRun.Name;
-            VarietyName = cropRun.CropTypeName;
+            CropName = cropRun.CropTypeName;
+            VarietyName = "not implemented"; //TODO: cropRun.CropType.Variety;
             PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
             BoxName = cropRun.Location.Name;
             IconLetter = CropName.Substring(0, 1);
-            Yield = "2 bushels";
-            _isAlerted = false;
+            Yield = "not implemeted"; //TODO: cropRun.Yield + cropRun.YieldUnits;
+            _isAlerted = false; //TODO: IsAnySensorAlerted();
         }
     }
 }
