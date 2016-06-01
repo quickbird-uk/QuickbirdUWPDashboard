@@ -8,6 +8,8 @@
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
     using Models;
+    using NetLib;
+    using Util;
     using Views;
 
     public class ShellViewModel : ViewModelBase
@@ -230,6 +232,22 @@
         public void NavToGraphingView()
         {
             _contentFrame.Navigate(typeof(GraphingView));
+        }
+
+        public async void Sync()
+        {
+            using (var context = new MainDbContext())
+            {
+                var settings = new Settings();
+                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+                var now = DateTimeOffset.Now;
+                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
+                settings.LastDatabaseUpdate = now;
+                Debug.WriteLine(errors);
+
+                var posterrors = string.Join(",", await context.PostChanges());
+                Debug.WriteLine(posterrors);
+            }
         }
     }
 }

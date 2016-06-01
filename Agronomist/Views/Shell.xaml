@@ -265,12 +265,12 @@
                                            TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="SyncButton"
-                                Style="{ThemeResource NoBackgroundDarkTheme}"
+                        <Button Style="{ThemeResource NoBackgroundDarkTheme}"
                                 BorderBrush="{x:Null}"
                                 Width="104"
                                 Padding="12"
-                                RequestedTheme="Light">
+                                RequestedTheme="Light"
+                                Click="{x:Bind ViewModel.Sync}">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
                                 <TextBlock Style="{ThemeResource Icon}"
