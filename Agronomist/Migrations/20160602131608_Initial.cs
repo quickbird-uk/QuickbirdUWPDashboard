@@ -186,13 +186,15 @@ namespace Agronomist.Migrations
                     ID = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     CropTypeName = table.Column<string>(nullable: false),
+                    CropVariety = table.Column<string>(nullable: false),
                     Deleted = table.Column<bool>(nullable: false),
                     EndDate = table.Column<DateTimeOffset>(nullable: true),
                     LocationID = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: false),
                     StartDate = table.Column<DateTimeOffset>(nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(nullable: false),
-                    Version = table.Column<byte[]>(nullable: true)
+                    Version = table.Column<byte[]>(nullable: true),
+                    Yield = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -250,6 +252,7 @@ namespace Agronomist.Migrations
                 columns: table => new
                 {
                     ID = table.Column<Guid>(nullable: false),
+                    Alarmed = table.Column<bool>(nullable: false),
                     AlertHigh = table.Column<double>(nullable: true),
                     AlertLow = table.Column<double>(nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),

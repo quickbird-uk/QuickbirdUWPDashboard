@@ -14,6 +14,9 @@
         [Required]
         public double Offset { get; set; } = 0;
 
+        [Required]
+        public bool Alarmed { get; set; } = false;
+
         public double? AlertHigh { get; set; } = null;
 
         public double? AlertLow { get; set; } = null;

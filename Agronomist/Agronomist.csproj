@@ -35,9 +35,9 @@
     </Compile>
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160525145354_Initial.cs" />
-    <Compile Include="Migrations\20160525145354_Initial.designer.cs">
-      <DependentUpon>20160525145354_Initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160602131608_Initial.cs" />
+    <Compile Include="Migrations\20160602131608_Initial.designer.cs">
+      <DependentUpon>20160602131608_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Util\Messenger.cs" />
@@ -178,6 +178,12 @@
       <Name>NetLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <SDKReference Include="Syncfusion Controls for UWP XAML, Version=14.1.0.41">
+      <Name>Syncfusion Controls for UWP XAML</Name>
+    </SDKReference>
+  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>
@@ -216,7 +222,7 @@
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>x86</PlatformTarget>
     <DefineConstants>NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;CODE_ANALYSIS</DefineConstants>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|ARM'">
     <OutputPath>bin\ARM\NATIVE\</OutputPath>
