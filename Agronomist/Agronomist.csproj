@@ -45,9 +45,6 @@
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />
-    <Compile Include="Views\AddNewView.xaml.cs">
-      <DependentUpon>AddNewView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ViewModels\CropRunViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
@@ -142,10 +139,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Views\AddNewView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\CropRunHome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
