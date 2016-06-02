@@ -356,7 +356,7 @@ namespace Agronomist.LocalNetworking
                             _sensorBuffer[i].dataDay.SerialiseData();
 
                         }
-                    }
+                    } //for loop ends 
                     //Once we are done here, mark changes to the db
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data"); 

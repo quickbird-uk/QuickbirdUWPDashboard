@@ -45,6 +45,9 @@
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />
+    <Compile Include="Views\AddNewView.xaml.cs">
+      <DependentUpon>AddNewView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\CropRunViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
@@ -139,6 +142,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Views\AddNewView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\CropRunHome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -177,11 +184,6 @@
       <Project>{ba28c443-0ff2-492f-9351-f1cf4f76bb93}</Project>
       <Name>NetLib</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <SDKReference Include="Syncfusion Controls for UWP XAML, Version=14.1.0.41">
-      <Name>Syncfusion Controls for UWP XAML</Name>
-    </SDKReference>
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">

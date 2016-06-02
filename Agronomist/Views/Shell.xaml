@@ -108,7 +108,7 @@
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             Background="DodgerBlue"
                             BorderThickness="0,1,0,1"
-                            BorderBrush="#66EBEBEB">
+                            BorderBrush="#66EBEBEB" Click="{x:Bind ViewModel.NavToAddNewView}" >
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />

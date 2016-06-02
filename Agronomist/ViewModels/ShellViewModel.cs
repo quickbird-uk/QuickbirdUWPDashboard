@@ -245,6 +245,11 @@
             _contentFrame.Navigate(typeof(GraphingView));
         }
 
+        public void NavToAddNewView()
+        {
+            _contentFrame.Navigate(typeof(AddNewView));
+        }
+
 
         private bool _syncButtonEnabled = true;
 
