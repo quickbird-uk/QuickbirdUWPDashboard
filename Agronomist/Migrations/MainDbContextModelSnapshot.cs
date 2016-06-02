@@ -178,6 +178,8 @@ namespace Agronomist.Migrations
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<bool>("Alarmed");
+
                     b.Property<double?>("AlertHigh");
 
                     b.Property<double?>("AlertLow");
@@ -223,6 +225,9 @@ namespace Agronomist.Migrations
                     b.Property<string>("CropTypeName")
                         .IsRequired();
 
+                    b.Property<string>("CropVariety")
+                        .IsRequired();
+
                     b.Property<bool>("Deleted");
 
                     b.Property<DateTimeOffset?>("EndDate");
@@ -237,6 +242,8 @@ namespace Agronomist.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt");
 
                     b.Property<byte[]>("Version");
+
+                    b.Property<double>("Yield");
 
                     b.HasKey("ID");
 
