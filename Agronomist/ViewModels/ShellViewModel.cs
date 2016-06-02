@@ -235,8 +235,23 @@
             _contentFrame.Navigate(typeof(GraphingView));
         }
 
+
+        private bool _syncButtonEnabled = true;
+
+        public bool SyncButtonEnabled
+        {
+            get { return _syncButtonEnabled; }
+            set
+            {
+                if (value == _syncButtonEnabled) return;
+                _syncButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
         public async void Sync()
         {
+            SyncButtonEnabled = false;
             using (var context = new MainDbContext())
             {
                 var settings = new Settings();
@@ -251,6 +266,7 @@
 
                 Debug.WriteLine(await context.PostHistoryChanges());
             }
+            SyncButtonEnabled = true;
         }
     }
 }
