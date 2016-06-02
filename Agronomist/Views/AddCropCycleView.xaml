@@ -7,7 +7,65 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:Name="MainGrid">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1600" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.Margin" Value="24"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
+                        <Setter Target="FirstGrid.Margin" Value="0 0 6 0"/>
+                        <Setter Target="SecondGrid.Margin" Value="6 0 0 0"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="1"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.Margin" Value="12"/>
+                        <Setter Target="FirstGrid.Margin" Value="0 0 0 6"/>
+                        <Setter Target="SecondGrid.Margin" Value="0 6 0 0"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="0"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="1"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#0078d7">
+            <!--Grid 1 items-->
+            <ListBox >
+                <ListBoxItem>
+                    
+                </ListBoxItem>
+            </ListBox>
+        </Grid>
+        
+        
+        <Grid x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#107C10">
+            <!-- Grid 2 items-->
+            <AutoSuggestBox HorizontalAlignment="Left" Margin="232,397,0,0" VerticalAlignment="Top" Height="54" Width="235" PlaceholderText="Select CropType"/>
+        </Grid>
 
     </Grid>
+            
+
 </Page>

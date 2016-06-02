@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Agronomist.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace Agronomist.Views
     /// </summary>
     public sealed partial class AddCropCycleView : Page
     {
+        public AddCropCycleViewModel ViewModel = new AddCropCycleViewModel();
+
         public AddCropCycleView()
         {
             this.InitializeComponent();

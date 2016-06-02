@@ -45,6 +45,7 @@
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />
+    <Compile Include="ViewModels\AddCropCycleViewModel.cs" />
     <Compile Include="ViewModels\CropRunViewModel.cs" />
     <Compile Include="ViewModels\DashboardViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />
