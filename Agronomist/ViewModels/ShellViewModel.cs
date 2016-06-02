@@ -151,22 +151,34 @@
         private void Update()
         {
             Debug.WriteLine("Shell update triggered");
-            List<CropCycle> cropRuns = null;
+            List<CropCycle> cropRuns;
             using (var db = new MainDbContext())
             {
-                cropRuns = db.CropCycles.Include(cc => cc.Location).Include(cc => cc.CropType).ToList();
+                var now = DateTimeOffset.Now;
+                var allCropRuns = db.CropCycles.Include(cc => cc.Location).Include(cc => cc.CropType).AsNoTracking();
+                var unfinishedCropRuns = allCropRuns.Where(cc=>cc.EndDate == null || cc.EndDate < now).ToList();
+                var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
+                cropRuns = validCropRuns.ToList();
             }
 
             // Fake data for testing.
             //cropRuns = FakeCropRuns();
 
+            // Remove no longer valid items.
+            var invalid = Runs.Where(r => cropRuns.FirstOrDefault(cr => cr.ID == r.CropRunId) == null).ToList();
+            foreach (var invalidRun in invalid)
+            {
+                Runs.Remove(invalidRun);
+            }
+
+            // Update or Add valid items.
             foreach (var run in cropRuns)
             {
                 var exisiting = _runs.FirstOrDefault(r => r.CropRunId == run.ID);
                 if (null == exisiting)
                 {
                     var vm = new CropRunViewModel(run);
-                    _runs.Add(vm);
+                    Runs.Add(vm);
                 }
                 else
                 {
