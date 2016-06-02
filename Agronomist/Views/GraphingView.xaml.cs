@@ -27,6 +27,9 @@
 
         private void CropCycleSelected(object sender, SelectionChangedEventArgs e)
         {
+            // TODO: Kill this and move to Viewmodel.
+            // THis is broken
+            // You should two way bind box.selecteditem to ViewModel.SelectedCropCycle.
             ComboBox box = (ComboBox) sender;            
             KeyValuePair<CropCycle, string> selection = (KeyValuePair <CropCycle, string>)box.SelectedItem;
             ViewModel.SelectedCropCycle = selection.Key; 

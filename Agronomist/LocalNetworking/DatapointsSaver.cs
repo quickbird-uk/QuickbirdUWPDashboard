@@ -84,7 +84,7 @@ namespace Agronomist.LocalNetworking
                 _saveTimer.Start();
 
                 _onHardwareChanged = HardwareChanged; 
-                Messenger.Instance.HardwareTableChanged.Subscribe(_onHardwareChanged); 
+                Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged); 
 
                 _localTask = factory.StartNew(() =>
                {

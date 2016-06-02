@@ -69,7 +69,7 @@
                                 <Ellipse Grid.Column="0" Fill="Gold"
                                          Margin="24,12,24,12"
                                          Visibility="{Binding IsAlerted, Mode=OneWay}" />
-                                <TextBlock Grid.Column="0" 
+                                <TextBlock Grid.Column="0"
                                            Text="{Binding IconLetter, Mode=OneWay, FallbackValue=X}"
                                            Foreground="#FF515C6B"
                                            Width="20"
@@ -270,7 +270,8 @@
                                 Width="104"
                                 Padding="12"
                                 RequestedTheme="Light"
-                                Click="{x:Bind ViewModel.Sync}">
+                                Click="{x:Bind ViewModel.Sync}"
+                                IsEnabled="{x:Bind ViewModel.SyncButtonEnabled, Mode=OneWay}">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
                                 <TextBlock Style="{ThemeResource Icon}"

@@ -18,11 +18,8 @@
 
         public BroadcastMessage<IEnumerable<RelayReading>> NewRelayDataPoint { get; } =
             new BroadcastMessage<IEnumerable<RelayReading>>();
-
-        public BroadcastMessage<string> HardwareTableChanged { get; } =
-            new BroadcastMessage<string>();
-
-        public BroadcastMessage<string> UserTablesChanged { get; } =
+        
+        public BroadcastMessage<string> TablesChanged { get; } =
             new BroadcastMessage<string>();
 
         public struct SensorReading

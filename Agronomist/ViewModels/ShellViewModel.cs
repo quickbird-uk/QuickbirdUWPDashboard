@@ -4,15 +4,14 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Metadata;
     using Models;
     using NetLib;
     using Util;
     using Views;
-    using System.Linq;
 
     public class ShellViewModel : ViewModelBase
     {
@@ -33,17 +32,27 @@
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
 
         /// <summary>
-        /// Initialise the shell. 
+        /// This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
+        /// </summary>
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _updateAction;
+
+        /// <summary>
+        ///     Initialise the shell.
         /// </summary>
         /// <param name="contentFrame">The frame that should be used for navigations.</param>
         public ShellViewModel(Frame contentFrame)
         {
             _contentFrame = contentFrame;
             Update();
+            _updateAction = s => Update();
+
+            Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
+            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
         }
 
         /// <summary>
-        /// The collection of valid running cropruns.
+        ///     The collection of valid running cropruns.
         /// </summary>
         public ObservableCollection<CropRunViewModel> Runs
         {
@@ -57,7 +66,7 @@
         }
 
         /// <summary>
-        /// Text changes when the notifications drawer is opened and closed.
+        ///     Text changes when the notifications drawer is opened and closed.
         /// </summary>
         public string NotificationsButtonText
         {
@@ -71,7 +80,7 @@
         }
 
         /// <summary>
-        /// Bound two way because the notifications drawer closes automatically.
+        ///     Bound two way because the notifications drawer closes automatically.
         /// </summary>
         public bool IsNotificationsOpen
         {
@@ -141,6 +150,7 @@
 
         private void Update()
         {
+            Debug.WriteLine("Shell update triggered");
             List<CropCycle> cropRuns = null;
             using (var db = new MainDbContext())
             {
@@ -235,8 +245,23 @@
             _contentFrame.Navigate(typeof(GraphingView));
         }
 
+
+        private bool _syncButtonEnabled = true;
+
+        public bool SyncButtonEnabled
+        {
+            get { return _syncButtonEnabled; }
+            set
+            {
+                if (value == _syncButtonEnabled) return;
+                _syncButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
         public async void Sync()
         {
+            SyncButtonEnabled = false;
             using (var context = new MainDbContext())
             {
                 var settings = new Settings();
@@ -251,6 +276,7 @@
 
                 Debug.WriteLine(await context.PostHistoryChanges());
             }
+            SyncButtonEnabled = true;
         }
     }
 }

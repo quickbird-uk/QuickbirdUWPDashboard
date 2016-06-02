@@ -93,9 +93,7 @@
 
 
             // Notify the app that the tables have been updated.
-            await Messenger.Instance.UserTablesChanged.Invoke(null);
-
-            await Messenger.Instance.HardwareTableChanged.Invoke(null);
+            await Messenger.Instance.TablesChanged.Invoke(null);
 
             var fails = responses.Where(r => r != null).ToList();
             return fails.Any() ? string.Join(", ", fails) : null;
