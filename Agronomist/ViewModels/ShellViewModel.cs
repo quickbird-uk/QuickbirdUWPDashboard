@@ -4,14 +4,15 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
-    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
-    using Microsoft.Data.Entity;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata;
     using Models;
     using NetLib;
     using Util;
     using Views;
+    using System.Linq;
 
     public class ShellViewModel : ViewModelBase
     {
@@ -144,7 +145,7 @@
             List<CropCycle> cropRuns = null;
             using (var db = new MainDbContext())
             {
-                cropRuns = db.CropCycles.ToList();
+                cropRuns = db.CropCycles.Include(cc => cc.Location).Include(cc => cc.CropType).ToList();
             }
 
             // Fake data for testing.
