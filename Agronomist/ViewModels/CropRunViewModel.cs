@@ -109,11 +109,11 @@
         {
             CropRunId = cropRun.ID;
             CropName = cropRun.CropTypeName;
-            VarietyName = "not implemented"; //TODO: cropRun.CropType.Variety;
+            VarietyName = cropRun.CropVariety;
             PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
             BoxName = cropRun.Location.Name;
             IconLetter = CropName.Substring(0, 1);
-            Yield = "not implemeted"; //TODO: cropRun.Yield + cropRun.YieldUnits;
+            Yield = $"{cropRun.Yield}kg";
             _isAlerted = false; //TODO: IsAnySensorAlerted();
         }
     }
