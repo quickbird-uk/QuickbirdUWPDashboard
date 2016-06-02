@@ -7,8 +7,8 @@
              Height="160"
              Width="306">
 
-    <Grid x:Name="rootGrid"
-          Background="#FF4A90E2">
+    <Grid
+        Background="#FF4A90E2">
 
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -18,7 +18,7 @@
         <StackPanel Grid.Row="1"
                     Background="#E5EBEBEB"
                     Orientation="Horizontal">
-            <ToggleButton x:Name="adjustButton"
+            <ToggleButton x:Name="AdjustButton"
                           Foreground="#FF4A90E2"
                           Width="102"
                           VerticalAlignment="Stretch"
@@ -27,8 +27,7 @@
                           Background="#00000000"
                           BorderBrush="#00000000"
                           RequestedTheme="Light"
-                          Checked="adjustButtonChecked"
-                          Unchecked="adjustButtonUnchecked">
+                          Visibility="{x:Bind ViewModel.PropPanelVisible, Mode=OneWay}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontFamily="Segoe MDL2 Assets"
                                FontSize="14"
@@ -40,15 +39,15 @@
                                VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
-            <ToggleButton x:Name="muteAlertsButton"
-                          Foreground="#FF4A90E2"
-                          Width="102"
-                          VerticalAlignment="Stretch"
-                          VerticalContentAlignment="Center"
-                          HorizontalContentAlignment="Center"
-                          Background="#00000000"
-                          BorderBrush="#00000000"
-                          RequestedTheme="Light">
+            <ToggleButton
+                Foreground="#FF4A90E2"
+                Width="102"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Center"
+                HorizontalContentAlignment="Center"
+                Background="#00000000"
+                BorderBrush="#00000000"
+                RequestedTheme="Light">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontFamily="Segoe MDL2 Assets"
                                FontSize="14"
@@ -60,29 +59,29 @@
                                VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
-            <Button x:Name="removeButton"
-                    Foreground="#FF4A90E2"
-                    Width="102"
-                    VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center"
-                    HorizontalContentAlignment="Center"
-                    Background="#00000000"
-                    BorderBrush="#00000000"
-                    RequestedTheme="Light">
+            <Button
+                Foreground="#FF4A90E2"
+                Width="102"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Center"
+                HorizontalContentAlignment="Center"
+                Background="#00000000"
+                BorderBrush="#00000000"
+                RequestedTheme="Light">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontFamily="Segoe MDL2 Assets"
                                FontSize="14"
-                               Text="&#xE107;"
+                               Text="&#xE769;"
                                VerticalAlignment="Center" />
                     <TextBlock FontSize="14"
-                               Text="Remove"
+                               Text="Pause"
                                Margin="8,0,0,0"
                                VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
         </StackPanel>
 
-        <Pivot x:Name="settingsPanel"
+        <Pivot Grid.Row="0"
                Foreground="#FFEBEBEB"
                Height="116"
                Width="306"
@@ -113,7 +112,7 @@
                 <Grid />
             </PivotItem>
         </Pivot>
-        <StackPanel x:Name="infoPanel"
+        <StackPanel Grid.Row="0" x:Name="InfoPanel"
                     Orientation="Horizontal"
                     Background="#FF4A90E2"
                     Width="306"
@@ -123,23 +122,23 @@
                         VerticalAlignment="Top">
                 <TextBlock FontSize="14"
                            Foreground="#FFEBEBEB"
-                           Text="water conductivity" />
+                           Text="{x:Bind ViewModel.UnitName, Mode=OneWay, FallbackValue=unit type}" />
                 <TextBlock Margin="0,4,0,0"
                            FontSize="24"
                            FontWeight="Bold"
                            Foreground="#FFEBEBEB"
-                           Text="very high" />
+                           Text="{x:Bind ViewModel.Status, Mode=OneWay, FallbackValue=OK}" />
             </StackPanel>
 
             <StackPanel VerticalAlignment="Top">
-                <TextBlock Text="9.9"
+                <TextBlock Text="{x:Bind ViewModel.Value, Mode=OneWay, FallbackValue=0.0}"
                            FontSize="60"
                            FontWeight="Light"
                            Foreground="#FFEBEBEB"
                            HorizontalAlignment="Right"
                            TextAlignment="Right"
                            Margin="0,8,0,0" />
-                <TextBlock Text="mS/cm"
+                <TextBlock Text="{x:Bind ViewModel.Units, Mode=OneWay, FallbackValue=Units}"
                            FontSize="12"
                            FontWeight="Bold"
                            TextAlignment="Center"

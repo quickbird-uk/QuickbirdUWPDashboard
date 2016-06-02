@@ -49,7 +49,7 @@
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
-    <Compile Include="ViewModels\SensorViewModel.cs" />
+    <Compile Include="ViewModels\LiveCardViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\CropRunHome.xaml.cs">
