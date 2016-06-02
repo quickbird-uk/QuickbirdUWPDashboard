@@ -40,9 +40,13 @@
             _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
             _dataUpdater = async readings =>
             {
-                var mostRecent = readings.Where(r => r.SensorId == poco.ID).MaxBy(r => r.Timestamp);
-                var formattedValue = FormatValue(mostRecent.Value);
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Value = formattedValue);
+                var ofThisSensor = readings.Where(r => r.SensorId == poco.ID).ToList();
+                if (ofThisSensor.Any())
+                {
+                    var mostRecent = ofThisSensor.MaxBy(r => r.Timestamp);
+                    var formattedValue = FormatValue(mostRecent.Value);
+                    await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Value = formattedValue);
+                }
             };
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);

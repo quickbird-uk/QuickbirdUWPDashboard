@@ -46,6 +46,7 @@
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />
     <Compile Include="ViewModels\CropRunViewModel.cs" />
+    <Compile Include="ViewModels\DashboardViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />

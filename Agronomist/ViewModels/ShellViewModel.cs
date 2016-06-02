@@ -30,6 +30,7 @@
         private string _notificationsCount = "0";
 
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
+        List<DashboardViewModel> _dashboardViewModels = new List<DashboardViewModel>();
 
         /// <summary>
         /// This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
@@ -49,6 +50,8 @@
 
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+
+            _contentFrame.Navigate(typeof(Dashboard));
         }
 
         /// <summary>
@@ -123,6 +126,8 @@
                 if (value == _currentCropRun) return;
                 _currentCropRun = value;
                 OnPropertyChanged();
+                _contentFrame.Navigate(typeof(Dashboard),
+                    _dashboardViewModels.FirstOrDefault(dvm => dvm.CropID == value.CropRunId));
             }
         }
 
@@ -155,16 +160,47 @@
             using (var db = new MainDbContext())
             {
                 var now = DateTimeOffset.Now;
-                var allCropRuns = db.CropCycles.Include(cc => cc.Location).Include(cc => cc.CropType).AsNoTracking();
+                var allCropRuns = db.CropCycles
+                    .Include(cc => cc.Location)
+                    .Include(cc => cc.CropType)
+                    .Include(cc=>cc.Location).ThenInclude(l=>l.Devices).ThenInclude(d=>d.Sensors).ThenInclude(s=>s.SensorType).ThenInclude(st=>st.Param)
+                    .AsNoTracking();
                 var unfinishedCropRuns = allCropRuns.Where(cc=>cc.EndDate == null || cc.EndDate < now).ToList();
                 var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
                 cropRuns = validCropRuns.ToList();
             }
 
-            // Fake data for testing.
-            //cropRuns = FakeCropRuns();
+            UpdateCropRunVMs(cropRuns);
 
-            // Remove no longer valid items.
+            UpdateDashboardVMs(cropRuns);
+        }
+
+        private void UpdateDashboardVMs(List<CropCycle> cropRuns)
+        {
+            var invalidDashVMs =
+                _dashboardViewModels.Where(dvm => cropRuns.FirstOrDefault(cr => cr.ID == dvm.CropID) == null).ToList();
+            foreach (var invalidDashVm in invalidDashVMs)
+            {
+                _dashboardViewModels.Remove(invalidDashVm);
+            }
+            foreach (var run in cropRuns)
+            {
+                var existing = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropID == run.ID);
+                if (null == existing)
+                {
+                    var dvm = new DashboardViewModel(run);
+                    _dashboardViewModels.Add(dvm);
+                }
+                else
+                {
+                    existing.Update(run);
+                }
+            }
+        }
+
+        private void UpdateCropRunVMs(List<CropCycle> cropRuns)
+        {
+// Remove no longer valid items.
             var invalid = Runs.Where(r => cropRuns.FirstOrDefault(cr => cr.ID == r.CropRunId) == null).ToList();
             foreach (var invalidRun in invalid)
             {
@@ -261,8 +297,7 @@
         {
             _contentFrame.Navigate(typeof(AddCropCycleView));
         }
-
-
+        
         private bool _syncButtonEnabled = true;
 
         public bool SyncButtonEnabled

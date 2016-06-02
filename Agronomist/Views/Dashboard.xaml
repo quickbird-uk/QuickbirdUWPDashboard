@@ -5,22 +5,17 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:views="using:Agronomist.Views"
       mc:Ignorable="d">
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="72" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="72" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="72" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="36" />
-        </Grid.ColumnDefinitions>
-
-        <views:LiveCard Grid.Row="1"
-                        Grid.Column="1"
-                        HorizontalAlignment="Left"/>
-    </Grid>
+    <StackPanel>
+        <TextBlock>hello.</TextBlock>
+        <ListView
+            ItemsSource="{x:Bind ViewModel.Cards, Mode=OneWay}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <views:LiveCard
+                        ViewModel="{Binding}"
+                        Margin="5" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackPanel>
 </Page>
