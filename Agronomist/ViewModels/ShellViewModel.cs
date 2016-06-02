@@ -19,7 +19,14 @@
 
         private readonly Frame _contentFrame;
 
+        /// <summary>
+        ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
+        /// </summary>
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _updateAction;
+
         private CropRunViewModel _currentCropRun;
+        private readonly List<DashboardViewModel> _dashboardViewModels = new List<DashboardViewModel>();
 
         private bool _isNavOpen = true;
 
@@ -30,13 +37,8 @@
         private string _notificationsCount = "0";
 
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
-        List<DashboardViewModel> _dashboardViewModels = new List<DashboardViewModel>();
 
-        /// <summary>
-        /// This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
-        /// </summary>
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<string> _updateAction;
+        private bool _syncButtonEnabled = true;
 
         /// <summary>
         ///     Initialise the shell.
@@ -127,7 +129,7 @@
                 _currentCropRun = value;
                 OnPropertyChanged();
                 _contentFrame.Navigate(typeof(Dashboard),
-                    _dashboardViewModels.FirstOrDefault(dvm => dvm.CropID == value.CropRunId));
+                    _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value.CropRunId));
             }
         }
 
@@ -153,6 +155,17 @@
             }
         }
 
+        public bool SyncButtonEnabled
+        {
+            get { return _syncButtonEnabled; }
+            set
+            {
+                if (value == _syncButtonEnabled) return;
+                _syncButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void Update()
         {
             Debug.WriteLine("Shell update triggered");
@@ -163,9 +176,18 @@
                 var allCropRuns = db.CropCycles
                     .Include(cc => cc.Location)
                     .Include(cc => cc.CropType)
-                    .Include(cc=>cc.Location).ThenInclude(l=>l.Devices).ThenInclude(d=>d.Sensors).ThenInclude(s=>s.SensorType).ThenInclude(st=>st.Param)
+                    .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Param)
+                    .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Place)
                     .AsNoTracking();
-                var unfinishedCropRuns = allCropRuns.Where(cc=>cc.EndDate == null || cc.EndDate < now).ToList();
+                var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate < now).ToList();
                 var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
                 cropRuns = validCropRuns.ToList();
             }
@@ -178,14 +200,14 @@
         private void UpdateDashboardVMs(List<CropCycle> cropRuns)
         {
             var invalidDashVMs =
-                _dashboardViewModels.Where(dvm => cropRuns.FirstOrDefault(cr => cr.ID == dvm.CropID) == null).ToList();
+                _dashboardViewModels.Where(dvm => cropRuns.FirstOrDefault(cr => cr.ID == dvm.CropId) == null).ToList();
             foreach (var invalidDashVm in invalidDashVMs)
             {
                 _dashboardViewModels.Remove(invalidDashVm);
             }
             foreach (var run in cropRuns)
             {
-                var existing = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropID == run.ID);
+                var existing = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == run.ID);
                 if (null == existing)
                 {
                     var dvm = new DashboardViewModel(run);
@@ -296,19 +318,6 @@
         public void NavToAddNewView()
         {
             _contentFrame.Navigate(typeof(AddCropCycleView));
-        }
-        
-        private bool _syncButtonEnabled = true;
-
-        public bool SyncButtonEnabled
-        {
-            get { return _syncButtonEnabled; }
-            set
-            {
-                if (value == _syncButtonEnabled) return;
-                _syncButtonEnabled = value;
-                OnPropertyChanged();
-            }
         }
 
         public async void Sync()

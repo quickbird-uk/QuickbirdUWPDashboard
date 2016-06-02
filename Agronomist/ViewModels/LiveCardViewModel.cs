@@ -17,6 +17,8 @@
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
 
+        private bool _propPanelVisible;
+
         private string _status = "OK";
 
         private string _unitName = "sensor type";
@@ -24,19 +26,11 @@
 
         private string _value = "?";
 
-        private bool _propPanelVisible;
-
-        public string PropPanelVisible => _propPanelVisible ? "Visible" : "Collapsed";
-
-        public void SetPropPanelVisibility(bool isVisible)
-        {
-            _propPanelVisible = isVisible;
-            OnPropertyChanged(nameof(PropPanelVisible));
-        }
-
         public LiveCardViewModel(Sensor poco)
         {
             Id = poco.ID;
+            Placement = poco.SensorType.Place.Name;
+            PlacementId = poco.SensorType.PlaceID;
             _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
             _dataUpdater = async readings =>
             {
@@ -51,6 +45,10 @@
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
         }
+
+        public long PlacementId { get; }
+
+        public string PropPanelVisible => _propPanelVisible ? "Visible" : "Collapsed";
 
         /// <summary>
         ///     Current Sensor Value
@@ -103,6 +101,14 @@
         }
 
         public Guid Id { get; }
+
+        public string Placement { get; }
+
+        public void SetPropPanelVisibility(bool isVisible)
+        {
+            _propPanelVisible = isVisible;
+            OnPropertyChanged(nameof(PropPanelVisible));
+        }
 
         public void Update(Sensor poco)
         {

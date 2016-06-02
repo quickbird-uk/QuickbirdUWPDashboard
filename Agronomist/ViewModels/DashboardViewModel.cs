@@ -8,11 +8,17 @@
 
     public class DashboardViewModel : ViewModelBase
     {
+        private ObservableCollection<LiveCardViewModel> _ambientCards = new ObservableCollection<LiveCardViewModel>();
+
         private ObservableCollection<LiveCardViewModel> _cards = new ObservableCollection<LiveCardViewModel>();
 
-        public DashboardViewModel([NotNull]CropCycle run)
+        private ObservableCollection<LiveCardViewModel> _plantCards = new ObservableCollection<LiveCardViewModel>();
+
+        private ObservableCollection<LiveCardViewModel> _waterCards = new ObservableCollection<LiveCardViewModel>();
+
+        public DashboardViewModel([NotNull] CropCycle run)
         {
-            CropID = run.ID;
+            CropId = run.ID;
             Update(run);
         }
 
@@ -27,7 +33,40 @@
             }
         }
 
-        public Guid CropID { get; }
+        public ObservableCollection<LiveCardViewModel> WaterCards
+        {
+            get { return _waterCards; }
+            set
+            {
+                if (value == _waterCards) return;
+                _waterCards = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<LiveCardViewModel> AmbientCards
+        {
+            get { return _ambientCards; }
+            set
+            {
+                if (value == _ambientCards) return;
+                _ambientCards = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<LiveCardViewModel> PlantCards
+        {
+            get { return _plantCards; }
+            set
+            {
+                if (value == _plantCards) return;
+                _plantCards = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Guid CropId { get; }
 
         /// <summary>
         ///     Updates are externally imposed after a bigger database query.
@@ -36,6 +75,15 @@
         public void Update(CropCycle run)
         {
             var sensors = run.Location.Devices.SelectMany(device => device.Sensors);
+            var missingSensors = _cards.Where(c => sensors.FirstOrDefault(s => s.ID == c.Id) == null).ToList();
+            foreach (var missingSensor in missingSensors)
+            {
+                _cards.Remove(missingSensor);
+                if (PlantCards.Contains(missingSensor)) PlantCards.Remove(missingSensor);
+                if (WaterCards.Contains(missingSensor)) WaterCards.Remove(missingSensor);
+                if (AmbientCards.Contains(missingSensor)) AmbientCards.Remove(missingSensor);
+            }
+
             // Add, remove or update for each sensor.
             foreach (var sensor in sensors)
             {
@@ -56,6 +104,36 @@
                         existing.Update(sensor);
                     }
                 }
+            }
+
+            var plantIds = new long[]
+            {
+                7, 8
+            };
+            var waterIds = new long[]
+            {
+                1, 2, 3, 4, 5, 6, 11
+            };
+            var ambientIds = new long[]
+            {
+                9, 10
+            };
+
+            var plantItems = Cards.Where(c => plantIds.Contains(c.PlacementId));
+            var waterItems = Cards.Where(c => waterIds.Contains(c.PlacementId));
+            var ambientItems = Cards.Where(c => ambientIds.Contains(c.PlacementId));
+
+            foreach (var item in plantItems)
+            {
+                if (!PlantCards.Contains(item)) PlantCards.Add(item);
+            }
+            foreach (var item in waterItems)
+            {
+                if (!WaterCards.Contains(item)) WaterCards.Add(item);
+            }
+            foreach (var item in ambientItems)
+            {
+                if (!AmbientCards.Contains(item)) AmbientCards.Add(item);
             }
         }
     }

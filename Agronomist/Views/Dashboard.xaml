@@ -5,17 +5,60 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:views="using:Agronomist.Views"
       mc:Ignorable="d">
-    <StackPanel>
-        <TextBlock>hello.</TextBlock>
-        <ListView
-            ItemsSource="{x:Bind ViewModel.Cards, Mode=OneWay}">
-            <ListView.ItemTemplate>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <GridView
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            ItemsSource="{x:Bind ViewModel.WaterCards, Mode=OneWay}">
+            <GridView.ItemTemplate>
                 <DataTemplate>
                     <views:LiveCard
                         ViewModel="{Binding}"
                         Margin="5" />
                 </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </StackPanel>
+            </GridView.ItemTemplate>
+        </GridView>
+        <GridView 
+            Grid.Column="2"
+            Grid.ColumnSpan="2"
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            ItemsSource="{x:Bind ViewModel.PlantCards, Mode=OneWay}">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <views:LiveCard
+                        ViewModel="{Binding}"
+                        Margin="5" />
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+        <GridView 
+            Grid.Column="2"
+            Grid.ColumnSpan="2"
+            Grid.Row="2"
+            Grid.RowSpan="2"
+            ItemsSource="{x:Bind ViewModel.AmbientCards, Mode=OneWay}">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <views:LiveCard
+                        ViewModel="{Binding}"
+                        Margin="5" />
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+    </Grid>
 </Page>
