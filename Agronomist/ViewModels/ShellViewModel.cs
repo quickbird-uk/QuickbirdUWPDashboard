@@ -259,7 +259,7 @@
 
         public void NavToAddNewView()
         {
-            _contentFrame.Navigate(typeof(AddNewView));
+            _contentFrame.Navigate(typeof(AddCropCycleView));
         }
 
 
