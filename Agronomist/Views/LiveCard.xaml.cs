@@ -1,25 +1,27 @@
-﻿// The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
-
-namespace Agronomist.Views
+﻿namespace Agronomist.Views
 {
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
+    using ViewModels;
 
     public sealed partial class LiveCard : UserControl
     {
+        public static DependencyProperty ViewModelProperty = DependencyProperty.Register("ViewModel",
+            typeof(LiveCardViewModel), typeof(UserControl), new PropertyMetadata(null));
+
         public LiveCard()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            Bindings.Update();
         }
 
-        private void adjustButtonChecked(object sender, RoutedEventArgs e)
+        /// <summary>
+        ///     Dep prop for setting the ViewModel in an ItemTemplate.
+        /// </summary>
+        public LiveCardViewModel ViewModel
         {
-            infoPanel.Visibility = Visibility.Collapsed;
-        }
-
-        private void adjustButtonUnchecked(object sender, RoutedEventArgs e)
-        {
-            infoPanel.Visibility = Visibility.Visible;
+            get { return (LiveCardViewModel) GetValue(ViewModelProperty); }
+            set { SetValue(ViewModelProperty, value); }
         }
     }
 }

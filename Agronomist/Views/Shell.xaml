@@ -196,7 +196,7 @@
                                             Padding="0,14,0,14">
                                     <StackPanel Margin="48,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.CropName, Mode=OneWay, FallbackValue=Crop}"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.CropName, Mode=OneWay, FallbackValue=--}"
                                                    TextTrimming="CharacterEllipsis"
                                                    Foreground="#FF515C6B" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -206,7 +206,7 @@
                                     </StackPanel>
                                     <StackPanel Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.VarietyName, Mode=OneWay, FallbackValue=Unknown}"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.VarietyName, Mode=OneWay, FallbackValue=--}"
                                                    Foreground="#FF515C6B"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -217,7 +217,7 @@
                                     <StackPanel x:Name="PlantDateCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.PlantingDate, Mode=OneWay, FallbackValue=31/12/2000}"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
                                                    Foreground="#FF515C6B"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
@@ -228,7 +228,7 @@
                                     <StackPanel x:Name="YieldCard"
                                                 Margin="0,0,72,0">
                                         <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.Yield, Mode=OneWay, FallbackValue=10 units}"
+                                                   Text="{x:Bind ViewModel.CurrentCropRun.Yield, Mode=OneWay, FallbackValue=0kg}"
                                                    Foreground="#FF515C6B" />
                                         <TextBlock Style="{ThemeResource Subtitle}"
                                                    Text="Yield So Far"

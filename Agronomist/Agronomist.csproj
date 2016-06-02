@@ -49,11 +49,11 @@
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
-    <Compile Include="ViewModels\SensorViewModel.cs" />
+    <Compile Include="ViewModels\LiveCardViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
-    <Compile Include="Views\CropRunHome.xaml.cs">
-      <DependentUpon>CropRunHome.xaml</DependentUpon>
+    <Compile Include="Views\Dashboard.xaml.cs">
+      <DependentUpon>Dashboard.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\GraphingView.xaml.cs">
       <DependentUpon>GraphingView.xaml</DependentUpon>
@@ -139,7 +139,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Views\CropRunHome.xaml">
+    <Page Include="Views\Dashboard.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
