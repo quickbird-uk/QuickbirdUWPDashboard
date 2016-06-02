@@ -20,6 +20,10 @@ namespace Agronomist.ViewModels
         private string _title = "Graphs";
         private MainDbContext _db = null;
 
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<IEnumerable<Messenger.SensorReading>> _recieveDatapointAction;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _loadCacheAction;
 
         /// <summary>
         /// Cached Data, of all cropCycles
@@ -44,8 +48,10 @@ namespace Agronomist.ViewModels
         public GraphingViewModel(){
             _db = new MainDbContext();
 
-            Messenger.Instance.NewSensorDataPoint.Subscribe(ReceiveDatapoint);
-            Messenger.Instance.TablesChanged.Subscribe(LoadCache);
+            _recieveDatapointAction = ReceiveDatapoint;
+            _loadCacheAction = LoadCache;
+            Messenger.Instance.NewSensorDataPoint.Subscribe(_recieveDatapointAction);
+            Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
 
             //Settings settings = new Settings();
             //settings.UnsetCreds(); 

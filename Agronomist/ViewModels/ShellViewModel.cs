@@ -32,6 +32,12 @@
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
 
         /// <summary>
+        /// This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
+        /// </summary>
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _updateAction;
+
+        /// <summary>
         ///     Initialise the shell.
         /// </summary>
         /// <param name="contentFrame">The frame that should be used for navigations.</param>
@@ -39,7 +45,10 @@
         {
             _contentFrame = contentFrame;
             Update();
-            Messenger.Instance.NewDeviceDetected.Subscribe(s => Update());
+            _updateAction = s => Update();
+
+            Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
+            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
         }
 
         /// <summary>
@@ -141,6 +150,7 @@
 
         private void Update()
         {
+            Debug.WriteLine("Shell update triggered");
             List<CropCycle> cropRuns = null;
             using (var db = new MainDbContext())
             {
