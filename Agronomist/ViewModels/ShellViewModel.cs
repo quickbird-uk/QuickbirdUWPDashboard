@@ -39,6 +39,7 @@
         {
             _contentFrame = contentFrame;
             Update();
+            Messenger.Instance.NewDeviceDetected.Subscribe(s => Update());
         }
 
         /// <summary>

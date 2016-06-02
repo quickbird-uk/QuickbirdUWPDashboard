@@ -45,8 +45,7 @@ namespace Agronomist.ViewModels
             _db = new MainDbContext();
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(ReceiveDatapoint);
-            Messenger.Instance.HardwareTableChanged.Subscribe(LoadCache);
-            Messenger.Instance.UserTablesChanged.Subscribe(LoadCache);
+            Messenger.Instance.TablesChanged.Subscribe(LoadCache);
 
             //LoadData
             LoadCache(); 
