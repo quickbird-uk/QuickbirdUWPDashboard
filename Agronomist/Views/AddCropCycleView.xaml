@@ -55,11 +55,12 @@
                        HorizontalAlignment="Center" Margin="20, 20, 20, 20" 
                        Style="{StaticResource SubheaderTextBlockStyle}"/>
             <ListView  ItemsSource="{x:Bind ViewModel.PlaceList, Mode=OneWay}"
-                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}" >
+                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}">
                 <!--Grid 1 items-->
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}"
+                                   Margin="10, 10, 10, 10" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -77,14 +78,17 @@
                        Style="{StaticResource BodyTextBlockStyle}"/>
             <AutoSuggestBox VerticalAlignment="Top" HorizontalAlignment="Center"
                             Width="500" PlaceholderText="Type in name of the crop..." Background="White"
-                            IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}"/>
+                            IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" AutoMaximizeSuggestionArea="True"
+                            Text="{x:Bind ViewModel.UserCropType, Mode=TwoWay}" 
+                            ItemsSource="{x:Bind ViewModel.SuggestedList, Mode=OneWay}"/>
             <TextBlock Text="Of variety" 
                        HorizontalAlignment="Center" Margin="20, 40, 20, 10" 
                        Style="{StaticResource BodyTextBlockStyle}"/>
             <TextBox IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" Width="500" 
-                     PlaceholderText="Type in the variety..."/>
+                     PlaceholderText="Type in the variety..." MaxLength="20" Text="{x:Bind ViewModel.CropVariety, Mode=TwoWay}"/>
             <Button IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" HorizontalAlignment="Center" 
-                    Margin="0, 40, 0, 200"  Width="200" Height="30" Content="Create a Crop Run"/> 
+                    Margin="0, 40, 0, 200"  Width="200" Height="30" Content="Create a Crop Run" 
+                    Click="{x:Bind ViewModel.CreateNewCropRun}" /> 
         </StackPanel>
 
     </Grid>
