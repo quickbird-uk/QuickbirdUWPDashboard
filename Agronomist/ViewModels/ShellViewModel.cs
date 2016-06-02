@@ -4,15 +4,14 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Metadata;
     using Models;
     using NetLib;
     using Util;
     using Views;
-    using System.Linq;
 
     public class ShellViewModel : ViewModelBase
     {
@@ -33,7 +32,7 @@
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
 
         /// <summary>
-        /// Initialise the shell. 
+        ///     Initialise the shell.
         /// </summary>
         /// <param name="contentFrame">The frame that should be used for navigations.</param>
         public ShellViewModel(Frame contentFrame)
@@ -44,7 +43,7 @@
         }
 
         /// <summary>
-        /// The collection of valid running cropruns.
+        ///     The collection of valid running cropruns.
         /// </summary>
         public ObservableCollection<CropRunViewModel> Runs
         {
@@ -58,7 +57,7 @@
         }
 
         /// <summary>
-        /// Text changes when the notifications drawer is opened and closed.
+        ///     Text changes when the notifications drawer is opened and closed.
         /// </summary>
         public string NotificationsButtonText
         {
@@ -72,7 +71,7 @@
         }
 
         /// <summary>
-        /// Bound two way because the notifications drawer closes automatically.
+        ///     Bound two way because the notifications drawer closes automatically.
         /// </summary>
         public bool IsNotificationsOpen
         {
