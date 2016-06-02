@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:Name="MainGrid">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="Light" x:Name="MainGrid">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="WideState">
@@ -50,22 +50,44 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#0078d7">
-            <!--Grid 1 items-->
-            <ListBox >
-                <ListBoxItem>
-                    
-                </ListBoxItem>
-            </ListBox>
-        </Grid>
-        
-        
-        <Grid x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#107C10">
+        <StackPanel x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#EBEBEB" >
+            <TextBlock Text="Select a box to monitor your new crops" 
+                       HorizontalAlignment="Center" Margin="20, 20, 20, 20" 
+                       Style="{StaticResource SubheaderTextBlockStyle}"/>
+            <ListView  ItemsSource="{x:Bind ViewModel.PlaceList, Mode=OneWay}"
+                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}" >
+                <!--Grid 1 items-->
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
+
+        <StackPanel x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#EBEBEB">
+            
             <!-- Grid 2 items-->
-            <AutoSuggestBox HorizontalAlignment="Left" Margin="232,397,0,0" VerticalAlignment="Top" Height="54" Width="235" PlaceholderText="Select CropType"/>
-        </Grid>
+            <TextBlock Text="You are creating a new Crop Run" 
+                       HorizontalAlignment="Center" Margin="20, 20, 20, 20" 
+                       Style="{StaticResource SubheaderTextBlockStyle}"/>
+            <TextBlock Text="You are planting:" 
+                       HorizontalAlignment="Center" Margin="20, 40, 20, 10" 
+                       Style="{StaticResource BodyTextBlockStyle}"/>
+            <AutoSuggestBox VerticalAlignment="Top" HorizontalAlignment="Center"
+                            Width="500" PlaceholderText="Type in name of the crop..." Background="White"
+                            IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}"/>
+            <TextBlock Text="Of variety" 
+                       HorizontalAlignment="Center" Margin="20, 40, 20, 10" 
+                       Style="{StaticResource BodyTextBlockStyle}"/>
+            <TextBox IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" Width="500" 
+                     PlaceholderText="Type in the variety..."/>
+            <Button IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" HorizontalAlignment="Center" 
+                    Margin="0, 40, 0, 200"  Width="200" Height="30" Content="Create a Crop Run"/> 
+        </StackPanel>
 
     </Grid>
-            
+
 
 </Page>
