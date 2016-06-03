@@ -47,6 +47,7 @@
     <Compile Include="Util\Settings.cs" />
     <Compile Include="ViewModels\AddCropCycleViewModel.cs" />
     <Compile Include="ViewModels\AddYieldViewModel.cs" />
+    <Compile Include="ViewModels\ArchiveViewModel.cs" />
     <Compile Include="ViewModels\CropRunViewModel.cs" />
     <Compile Include="ViewModels\DashboardViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />
@@ -55,6 +56,9 @@
     <Compile Include="ViewModels\LiveCardViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\ArchiveView.xaml.cs">
+      <DependentUpon>ArchiveView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\AddCropCycleView.xaml.cs">
       <DependentUpon>AddCropCycleView.xaml</DependentUpon>
     </Compile>
@@ -148,6 +152,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Views\ArchiveView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\AddCropCycleView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

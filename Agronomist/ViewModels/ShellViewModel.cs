@@ -341,6 +341,14 @@
             _contentFrame.Navigate(typeof(AddCropCycleView));
         }
 
+        
+        public void NavToArchiveView()
+        {
+            _contentFrame.Navigate(typeof(ArchiveView));
+            
+        }
+
+
         public void NavToAddYield()
         {
             if (_currentCropRun != null)
