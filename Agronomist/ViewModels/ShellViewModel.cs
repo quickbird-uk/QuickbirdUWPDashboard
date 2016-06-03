@@ -128,9 +128,15 @@
                 if (value == _currentCropRun) return;
                 _currentCropRun = value;
                 OnPropertyChanged();
+                OnPropertyChanged("IsCropRunSet");
                 _contentFrame.Navigate(typeof(Dashboard),
                     _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value.CropRunId));
             }
+        }
+
+        public bool IsCropRunSet
+        {
+            get { return _currentCropRun != null; }
         }
 
         public string NotificationsCount
@@ -318,6 +324,14 @@
         public void NavToAddNewView()
         {
             _contentFrame.Navigate(typeof(AddCropCycleView));
+        }
+
+        public void NavToAddYield()
+        {
+            if (_currentCropRun != null)
+            {
+                _contentFrame.Navigate(typeof(AddYieldView), _currentCropRun.CropRunId);
+            }
         }
 
         public async void Sync()

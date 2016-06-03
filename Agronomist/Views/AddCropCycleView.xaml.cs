@@ -24,6 +24,7 @@ namespace Agronomist.Views
     public sealed partial class AddCropCycleView : Page
     {
         public AddCropCycleViewModel ViewModel = new AddCropCycleViewModel();
+    
 
         public AddCropCycleView()
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Agronomist.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,9 +23,31 @@ namespace Agronomist.Views
     /// </summary>
     public sealed partial class AddYieldView : Page
     {
+        public AddYieldViewModel ViewModel = null; 
+
         public AddYieldView()
         {
             this.InitializeComponent();
+        }
+
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (e.Parameter is Guid)
+            {
+                ViewModel = new AddYieldViewModel((Guid)e.Parameter);
+            }
+        }
+
+        private void TextBox_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+        {
+            ViewModel.UserEnteredText = sender.Text;
+            
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.GoBack();
         }
     }
 }

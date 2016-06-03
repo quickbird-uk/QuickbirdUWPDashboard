@@ -247,7 +247,9 @@
                                 BorderBrush="{x:Null}"
                                 Width="112"
                                 Padding="18,12,12,12"
-                                RequestedTheme="Light">
+                                RequestedTheme="Light"
+                                Click="{x:Bind ViewModel.NavToAddYield}"
+                                IsEnabled="{x:Bind ViewModel.IsCropRunSet}">
                             <StackPanel VerticalAlignment="Bottom"
                                         HorizontalAlignment="Stretch">
                                 <TextBlock Style="{ThemeResource Icon}"
