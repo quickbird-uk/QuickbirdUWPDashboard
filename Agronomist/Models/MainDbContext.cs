@@ -234,102 +234,104 @@
             InitTableList();
             var dbSet = (DbSet<TPoco>) _tables.First(d => d is DbSet<TPoco>);
             var pocoType = typeof(TPoco);
-            foreach (var entry in updatesFromServer)
+            foreach (var remote in updatesFromServer)
             {
-                TPoco existing = null;
+                TPoco local = null;
+                TPoco merged = null; 
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
-                    existing =
+                    local =
                         await
                             dbSet.Select(a => a)
                                 .AsNoTracking()
-                                .FirstOrDefaultAsync(d => ((IHasId) d).ID == ((IHasId) entry).ID);
+                                .FirstOrDefaultAsync(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
-                    existing =
+                    local =
                         await
                             dbSet.Select(a => a)
                                 .AsNoTracking()
-                                .FirstOrDefaultAsync(d => ((IHasGuid) d).ID == ((IHasGuid) entry).ID);
+                                .FirstOrDefaultAsync(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
-                    var x = entry as CropType;
-                    existing = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
+                    var x = remote as CropType;
+                    local = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
                 }
                 else if (pocoType == typeof(SensorHistory))
                 {
-                    var hist = entry as SensorHistory;
-                    var oldHist =
+                    var remoteSH = remote as SensorHistory;
+                    var localSH =
                         dbSet.OfType<SensorHistory>()
                             .AsNoTracking()
-                            .FirstOrDefault(d => d.SensorID == hist.SensorID && d.TimeStamp == hist.TimeStamp);
-                    existing = oldHist as TPoco;
-                    if (null != existing)
+                            .FirstOrDefault(d => d.SensorID == remoteSH.SensorID && d.TimeStamp == remoteSH.TimeStamp);
+                    local = localSH as TPoco;
+                    if (null != local)
                     {
                         // They are the same primary key so merge them.
-                        oldHist.DeserialiseData();
-                        var merged = SensorHistory.Merge(hist, oldHist);
-                        existing = merged as TPoco;
+                        localSH.DeserialiseData();
+                        var mergedSH = SensorHistory.Merge(remoteSH, localSH);
+                        mergedSH.SerialiseData(); 
+                        merged = mergedSH as TPoco;
                     }
+                    else
+                    { remoteSH.SerialiseData();  }
 
-                    if (hist != null)
+                    if (remoteSH != null)
                     {
-                        var id = hist.SensorID;
+                        var id = remoteSH.SensorID;
                         await Messenger.Instance.NewSensorDataPoint.Invoke(
-                            hist.Data.Select(d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
+                            remoteSH.Data.Select(d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
                     }
                 }
                 else if (pocoType == typeof(RelayHistory))
                 {
-                    var hist = entry as RelayHistory;
+                    var remoteRH = remote as RelayHistory;
                     var oldHist =
                         dbSet.OfType<RelayHistory>()
                             .AsNoTracking()
-                            .FirstOrDefault(d => d.RelayID == hist.RelayID && d.TimeStamp == hist.TimeStamp);
-                    existing = oldHist as TPoco;
-                    if (null != existing)
+                            .FirstOrDefault(d => d.RelayID == remoteRH.RelayID && d.TimeStamp == remoteRH.TimeStamp);
+                    local = oldHist as TPoco;
+                    if (null != local)
                     {
                         // They are the same primary key so merge them.
                         oldHist.DeserialiseData();
-                        var merged = DatabasePOCOs.User.RelayHistory.Merge(hist, oldHist);
-                        existing = merged as TPoco;
+                        var mergedRH = DatabasePOCOs.User.RelayHistory.Merge(remoteRH, oldHist);
+                        mergedRH.SerialiseData();
+                        merged = mergedRH as TPoco; 
+                    }
+                    else
+                    {
+                        remoteRH.SerialiseData();
                     }
 
-                    if (hist != null)
+                    if (remoteRH != null)
                     {
-                        var id = hist.RelayID;
+                        var id = remoteRH.RelayID;
                         await Messenger.Instance.NewRelayDataPoint.Invoke(
-                            hist.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
+                            remoteRH.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration))); 
                     }
                 }
 
-                if (existing == null)
+                //Whatever it is, jsut add record to the DB 
+                if (local == null)
                 {
-                    dbSet.Add(entry);
-
-                    // if (entry is BaseEntity)
-                    // {
-                    //     await Messenger.Instance.UserTablesChanged.Invoke("new");
-                    // }
-                    // else
-                    // {
-                    //     await Messenger.Instance.HardwareTableChanged.Invoke("new");
-                    // }
+                    dbSet.Add(remote);
                 }
                 else
                 {
-                    if (entry is BaseEntity && existing is BaseEntity)
+                    //User Tables
+                    if (remote is BaseEntity && local is BaseEntity)
                     {
                         // These types allow local changes. Check date and don't overwrite unless the server has changed.
-                        var remoteVersion = entry as BaseEntity;
-                        var localVersion = existing as BaseEntity;
+                        var remoteVersion = remote as BaseEntity;
+                        var localVersion = local as BaseEntity;
 
                         if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
                         {
                             // Overwrite local version, with the server's changes.
-                            dbSet.Update(entry);
+                            dbSet.Update(remote);
                             //await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
                         // We are not using this mode where ther server gets to override local changes. Far too confusing.
@@ -342,23 +344,18 @@
                     }
                     else if (typeof(TPoco) == typeof(SensorHistory))
                     {
-                        // Minor hack, this is existing merged into entry.
-                        var hist = entry as SensorHistory;
-                        hist.SerialiseData();
-                        dbSet.Update(entry);
+                        dbSet.Update(merged);
                         // The messenger message is done earlier, no difference between new and update.
                     }
                     else if (typeof(TPoco) == typeof(RelayHistory))
                     {
-                        var hist = entry as RelayHistory;
-                        hist.SerialiseData();
-                        dbSet.Update(entry);
+                        dbSet.Update(merged);
                     }
+                    //RED - Global read-only tables
                     else
                     {
                         // Simply take the changes from the server, there are no valid local changes.
-                        dbSet.Update(entry);
-
+                        dbSet.Update(remote);
                         //await Messenger.Instance.HardwareTableChanged.Invoke("new");
                     }
                 }

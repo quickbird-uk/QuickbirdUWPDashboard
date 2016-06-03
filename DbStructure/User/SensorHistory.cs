@@ -178,6 +178,15 @@
         [Required]
         public readonly TimeSpan Duration;
 
+        //public override bool Equals(object obj)
+        //{
+        //    SensorDatapoint comparand = obj as SensorDatapoint;
+        //    if (comparand == null)
+        //        return false;
+        //    else 
+        //    return base.Equals(obj);
+        //}
+
         public SensorDatapoint(double value, DateTimeOffset timestamp, TimeSpan duration)
         {
             Value = value;

@@ -36,7 +36,7 @@ namespace Agronomist.LocalNetworking
         //private volatile int _pendingLoads= 1;
         private Task _localTask = null;
         private DispatcherTimer _saveTimer;
-        private const int _saveIntervalSeconds = 60;
+        private const int _saveIntervalSeconds = 5;
         private static DatapointsSaver _Instance = null;
         private Action<string> _onHardwareChanged; 
 
@@ -93,7 +93,7 @@ namespace Agronomist.LocalNetworking
             }
             else
             {
-                throw new Exception("You can't initialise mroe than one datapoint Saver");
+                throw new Exception("You can't initialise more than one datapoint Saver");
             }
 
         }
@@ -384,7 +384,7 @@ namespace Agronomist.LocalNetworking
 
 
 
-        private struct SensorBuffer
+        private class SensorBuffer
         {
 
             public SensorBuffer(Sensor assignSensor, SensorHistory inDataDay = null)
