@@ -65,7 +65,7 @@
                                     <ColumnDefinition Width="44" />
                                 </Grid.ColumnDefinitions>
                                 <Ellipse Fill="#FFEBEBEB"
-                                         Margin="24,12,24,12" />
+                                         Margin="24,12,24,12"/>
                                 <Ellipse Grid.Column="0" Fill="Gold"
                                          Margin="24,12,24,12"
                                          Visibility="{Binding IsAlerted, Mode=OneWay}" />

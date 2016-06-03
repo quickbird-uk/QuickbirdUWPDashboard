@@ -135,8 +135,8 @@
                 OnPropertyChanged();
                 OnPropertyChanged("IsCropRunSet");
 
-                var viewModel = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value.CropRunId)
-                    ?? _dashboardViewModels[0];
+                var viewModel = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value?.CropRunId)
+                    ?? _dashboardViewModels.FirstOrDefault();
 
                 if (viewModel != null)
                     _contentFrame.Navigate(typeof(Dashboard), viewModel);
@@ -215,6 +215,12 @@
             UpdateCropRunVMs(cropRuns);
 
             UpdateDashboardVMs(cropRuns);
+
+            //At The end, update CropRun selection
+            if (CurrentCropRun == null)
+            {
+                CurrentCropRun = _runs.FirstOrDefault();
+            }
         }
 
         private void UpdateDashboardVMs(List<CropCycle> cropRuns)
@@ -262,11 +268,6 @@
                 {
                     exisiting.Update(run);
                 }
-            }
-
-            if (CurrentCropRun == null)
-            {
-                CurrentCropRun = _runs.FirstOrDefault();
             }
         }
 
