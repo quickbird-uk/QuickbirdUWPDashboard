@@ -19,7 +19,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="112" />
                     <RowDefinition />
-                    <RowDefinition Height="144" />
+                    <RowDefinition Height="216" />
                 </Grid.RowDefinitions>
 
                 <!-- Pane Header -->
@@ -128,10 +128,37 @@
                         </Grid>
                     </Button>
 
+                    <!-- Archive Button -->
+                    <Button x:Name="ArchiveButton"
+                            Style="{ThemeResource NoBackgroundDarkTheme}"
+                            Background="DodgerBlue"
+                            BorderThickness="0,1,0,1"
+                            BorderBrush="#66EBEBEB" Click="{x:Bind ViewModel.NavToAddNewView}" >
+                        <Grid Height="72">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{ThemeResource Icon}"
+                                       Foreground="#FFEBEBEB"
+                                       FontSize="28"
+                                       Margin="24,0,24,0"
+                                       Text="" />
+                            <TextBlock Grid.Column="1"
+                                       FontFamily="Segoe UI"
+                                       FontWeight="Normal"
+                                       FontSize="20"
+                                       VerticalAlignment="Center"
+                                       Text="Archive" />
+                        </Grid>
+                    </Button>
+
                     <!-- Settings Button -->
                     <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
-                            BorderThickness="0" Click="{x:Bind ViewModel.NavToGraphingView}">
+                            Background="DodgerBlue"
+                            BorderThickness="0,1,0,1"
+                             Click="{x:Bind ViewModel.NavToGraphingView}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />

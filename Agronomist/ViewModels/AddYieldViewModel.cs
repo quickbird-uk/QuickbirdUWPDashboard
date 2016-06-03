@@ -25,7 +25,8 @@ namespace Agronomist.ViewModels
         private string _buttonText = "Add Yield";
         private bool _closeCropRun = false;
         private Action<string> _updateAction;
-        private CropCycle _cropCycle; 
+        private CropCycle _cropCycle;
+        private bool _isLoading = false; 
          
 
         public AddYieldViewModel(Guid CropCycleID)
@@ -42,6 +43,10 @@ namespace Agronomist.ViewModels
         private async void UpdateData(string input)
         {
             _cropCycle = await _db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
+            if(_cropCycle.EndDate != null)
+            {
+                //TODO Close this frame bacuse the crop cycle is already closed! 
+            }
         }
 
         /// <summary>
@@ -103,12 +108,18 @@ namespace Agronomist.ViewModels
         /// <summary>
         /// Runs when the user licks the button
         /// </summary>
-        public async void SaveCropRun()
+        public async Task SaveCropRun()
         {
-            ValidEntry = false; 
-            _cropCycle.Yield += _userEnteredAmount; 
-            
-            //if(_closeCropRun)
+            ValidEntry = false;
+            IsLoading = true; 
+            _cropCycle.Yield += _userEnteredAmount;
+            if (_closeCropRun)
+                _cropCycle.EndDate = DateTimeOffset.Now;
+            _cropCycle.UpdatedAt = DateTimeOffset.Now; 
+            await _db.SaveChangesAsync();
+            _db.Dispose();
+            await Messenger.Instance.TablesChanged.Invoke(string.Empty); 
+            IsLoading = false; 
         }
 
         public string ButtonText
@@ -120,7 +131,20 @@ namespace Agronomist.ViewModels
                 OnPropertyChanged();
             }
         }
-        
+
+        public bool IsLoading
+        {
+            get
+            {
+                return _isLoading;
+            }
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
         /// Goes true when user entered valid input, and lets hium proceed
         /// </summary>

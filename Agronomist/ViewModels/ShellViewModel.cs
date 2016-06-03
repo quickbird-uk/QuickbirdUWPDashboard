@@ -53,7 +53,12 @@
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
 
-            _contentFrame.Navigate(typeof(Dashboard));
+            if (_runs.Count > 0)
+                _contentFrame.Navigate(typeof(Dashboard),
+                    _dashboardViewModels[0]);
+            else
+                //TODO This should navigate to some sort of guidance page, that tells people to add a box, etc. 
+                _contentFrame.Navigate(typeof(Dashboard));
         }
 
         /// <summary>
@@ -129,8 +134,17 @@
                 _currentCropRun = value;
                 OnPropertyChanged();
                 OnPropertyChanged("IsCropRunSet");
-                _contentFrame.Navigate(typeof(Dashboard),
-                    _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value.CropRunId));
+
+                var viewModel = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value.CropRunId)
+                    ?? _dashboardViewModels[0];
+
+                if (viewModel != null)
+                    _contentFrame.Navigate(typeof(Dashboard), viewModel);
+                else
+                    //TODO This should navigate to some sort of guidance page
+                    _contentFrame.Navigate(typeof(Dashboard)); 
+
+
             }
         }
 
@@ -193,7 +207,7 @@
                         .ThenInclude(s => s.SensorType)
                         .ThenInclude(st => st.Place)
                     .AsNoTracking();
-                var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate < now).ToList();
+                var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate > now).ToList();
                 var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
                 cropRuns = validCropRuns.ToList();
             }
