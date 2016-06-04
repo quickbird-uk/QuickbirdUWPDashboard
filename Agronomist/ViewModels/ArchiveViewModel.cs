@@ -1,12 +1,109 @@
-﻿using System;
+﻿using DatabasePOCOs.User;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Agronomist.Models;
+using DatabasePOCOs;
+using Agronomist.Util;
+
 
 namespace Agronomist.ViewModels
 {
-    public class ArchiveViewModel
+    public class ArchiveViewModel : ViewModelBase
     {
+        private Action<string> _updateAction;
+        private CropCyclePresenter _selectedCropCycle; 
+
+        public ArchiveViewModel()
+        {
+            _updateAction = Update; 
+            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            Update(string.Empty); 
+        }
+
+        public async void Update(string input)
+        {
+            MainDbContext db = new MainDbContext();
+            var cropCycles = await db.CropCycles.Include(cc => cc.Location).ToListAsync();
+
+            for(int i=0; i< cropCycles.Count; i++)
+            {
+                bool matchFound = false; 
+                for(int m=0; m < CropCycles.Count; m++)
+                {
+                    if(cropCycles[i].ID == CropCycles[m].CropCycle.ID)
+                    {
+                        matchFound = true;
+                        CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
+                    }
+                }
+                if (matchFound == false)
+                {
+                    CropCycles.Add(new CropCyclePresenter(cropCycles[i]));
+                }
+            }
+            CropCycles.OrderBy(cc => cc.StartDate); 
+            //Group the Crop Cycles
+            OnPropertyChanged("CropCycles");
+        }
+
+        public ObservableCollection<CropCyclePresenter> CropCycles { get; set; } = new ObservableCollection<CropCyclePresenter>();
+
+        public List<int> craps { get; set; } = new List<int>(new[] { 1, 2, 3, 4 }); 
+
+        public object SelectedCropCycle
+        {
+            get
+            {
+                return _selectedCropCycle; 
+            }
+            set
+            {
+                _selectedCropCycle = (CropCyclePresenter)value;
+
+                //Do Stuff
+               // OnPropertyChanged(); 
+            }
+        }
+
+        public class CropCyclePresenter
+        {
+            public CropCyclePresenter(CropCycle inCropCycle)
+            {
+                this.CropCycle = inCropCycle;
+                StartDate = inCropCycle.StartDate.ToString("dd MMM");
+                EndDate = inCropCycle.EndDate?.ToString("dd MMM") ?? "Now";
+               
+                this.CropType = inCropCycle.CropTypeName.Substring(0, Math.Min(10, inCropCycle.CropTypeName.Length));
+                if (inCropCycle.CropTypeName.Length > 13)
+                    this.CropType += "..."; 
+
+                CropVariety = inCropCycle.CropVariety.Substring(0, Math.Min(10, inCropCycle.CropVariety.Length));
+                if (inCropCycle.CropVariety.Length > 10)
+                    this.CropVariety += "...";
+
+                LocationName = inCropCycle.Location.Name.Substring(0, Math.Min(10, inCropCycle.Location.Name.Length));
+                if (inCropCycle.Location.Name.Length > 10)
+                    this.LocationName += "...";
+
+                if (inCropCycle.EndDate != null)
+                    Duration = Math.Round((inCropCycle.EndDate - inCropCycle.StartDate).Value.TotalDays, 0).ToString() + " days";
+                else
+                    Duration = " --- "; 
+            }
+            public CropCycle CropCycle { get; set; }
+
+            public string LocationName { get; set; }
+            public string StartDate { get; set; }
+            public string EndDate { get; set; }
+            public string CropType { get; set; }
+            public string CropVariety { get; set; }
+            public string Duration { get; set; }            
+        }
+
     }
 }

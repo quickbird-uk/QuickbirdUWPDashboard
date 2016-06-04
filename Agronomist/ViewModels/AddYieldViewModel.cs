@@ -32,6 +32,7 @@ namespace Agronomist.ViewModels
         public AddYieldViewModel(Guid CropCycleID)
         {
             _cropCycleID = CropCycleID;
+            _updateAction = UpdateData; 
             Messenger.Instance.TablesChanged.Subscribe(_updateAction); 
             UpdateData(string.Empty); 
         }

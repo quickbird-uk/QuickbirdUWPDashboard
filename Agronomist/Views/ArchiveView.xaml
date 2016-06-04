@@ -54,13 +54,45 @@
             <TextBlock Text="Select a box to monitor your new crops" 
                        HorizontalAlignment="Center" Margin="20, 20, 20, 20" 
                        Style="{StaticResource SubheaderTextBlockStyle}"/>
-            <ListView  ItemsSource="{x:Bind ViewModel.PlaceList, Mode=OneWay}"
-                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}">
+            <!--Start Data Headings! -->
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="160" />
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Box" Style="{StaticResource SubtitleTextBlockStyle}" Margin="30, 0, 0, 0" />
+                <TextBlock Grid.Column="1" Text="Crop" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Text="Variety" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Grid.Column="3" Text="Start Date" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Grid.Column="4" Text="Duration" Style="{StaticResource SubtitleTextBlockStyle}" />
+            </Grid>
+            <!--End Data Headings! -->
+            
+            <!--Data Goes here-->
+            <ListView  ItemsSource="{x:Bind ViewModel.CropCycles, Mode=OneWay}"
+                      SelectedItem="{x:Bind ViewModel.SelectedCropCycle, Mode=TwoWay}"
+                        >
                 <!--Grid 1 items-->
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}"
-                                   Margin="10, 10, 10, 10" />
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding LocationName}" Style="{StaticResource BodyTextBlockStyle}"
+                                       Margin="10, 0, 0, 0" />
+                            <TextBlock Grid.Column="1" Text="{Binding CropType}" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Grid.Column="2" Text="{Binding CropVariety}" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Grid.Column="3" Text="{Binding StartDate}" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Grid.Column="4" Text="{Binding Duration}" Style="{StaticResource BodyTextBlockStyle}" />
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -69,7 +101,7 @@
 
         <StackPanel x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#EBEBEB">
             
-            <!-- Grid 2 items-->
+            <!-- Grid 2 items
             <TextBlock Text="You are creating a new Crop Run" 
                        HorizontalAlignment="Center" Margin="20, 20, 20, 20" 
                        Style="{StaticResource SubheaderTextBlockStyle}"/>
@@ -88,7 +120,7 @@
                      PlaceholderText="Type in the variety..." MaxLength="20" Text="{x:Bind ViewModel.CropVariety, Mode=TwoWay}"/>
             <Button IsEnabled="{x:Bind ViewModel.ChosenIsVacant, Mode=OneWay}" HorizontalAlignment="Center" 
                     Margin="0, 40, 0, 200"  Width="200" Height="30" Content="Create a Crop Run" 
-                    Click="{x:Bind ViewModel.CreateNewCropRun}" /> 
+                    Click="{x:Bind ViewModel.CreateNewCropRun}" />  -->
         </StackPanel>
 
     </Grid>

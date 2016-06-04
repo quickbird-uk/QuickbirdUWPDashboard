@@ -23,7 +23,7 @@ namespace Agronomist.Views
     /// </summary>
     public sealed partial class ArchiveView : Page
     {
-        public AddCropCycleViewModel ViewModel = new AddCropCycleViewModel();
+        public ArchiveViewModel ViewModel = new ArchiveViewModel();
     
 
         public ArchiveView()
