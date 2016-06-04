@@ -5,7 +5,10 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:views="using:Agronomist.Views"
       mc:Ignorable="d">
-    <Grid>
+    
+    
+    <Grid Background="#EBEBEB" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Auto" 
+          ScrollViewer.HorizontalScrollMode="Disabled" >
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -18,7 +21,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <GridView
+        <GridView Background="#D7D7D7" FontSize="36" BorderThickness="5" BorderBrush="#EBEBEB" 
+            ScrollViewer.VerticalScrollMode="Disabled" Foreground="#FF515C6B"
+            Header="Solution"            
+            Padding="10,10,10,10"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Grid.Row="0"
@@ -32,7 +38,10 @@
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
-        <GridView 
+        <GridView Background="#D7D7D7" FontSize="36"  BorderThickness="5" BorderBrush="#EBEBEB"
+            ScrollViewer.VerticalScrollMode="Disabled" Foreground="#FF515C6B"
+            Header="Plants" 
+            Padding="10,10,10,10"
             Grid.Column="2"
             Grid.ColumnSpan="2"
             Grid.Row="0"
@@ -46,7 +55,10 @@
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
-        <GridView 
+        <GridView  Background="#D7D7D7" FontSize="36" BorderThickness="5" BorderBrush="#EBEBEB" 
+            ScrollViewer.VerticalScrollMode="Disabled" Foreground="#FF515C6B"
+            Header="Ambient"
+            Padding="10,10,10,10"
             Grid.Column="2"
             Grid.ColumnSpan="2"
             Grid.Row="2"

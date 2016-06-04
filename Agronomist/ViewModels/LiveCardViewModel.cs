@@ -31,6 +31,8 @@
             Id = poco.ID;
             Placement = poco.SensorType.Place.Name;
             PlacementId = poco.SensorType.PlaceID;
+            ParameterID = poco.SensorType.ParamID;
+            SensorTypeID = poco.SensorTypeID; 
             _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
             _dataUpdater = async readings =>
             {
@@ -47,6 +49,10 @@
         }
 
         public long PlacementId { get; }
+
+        public long SensorTypeID { get; }
+
+        public long ParameterID { get; }
 
         public string PropPanelVisible => _propPanelVisible ? "Visible" : "Collapsed";
 

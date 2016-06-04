@@ -4,11 +4,11 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d">
-
+       
     <!-- Page Resources -->
     <Page.Resources>
     </Page.Resources>
-
+    
     <SplitView x:Name="Navigation"
                Style="{ThemeResource NavigationPanel}"
                IsPaneOpen="{x:Bind ViewModel.IsNavOpen, Mode=OneWay}">
@@ -19,7 +19,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="112" />
                     <RowDefinition />
-                    <RowDefinition Height="216" />
+                    <RowDefinition Height="144" />
                 </Grid.RowDefinitions>
 
                 <!-- Pane Header -->
@@ -154,6 +154,7 @@
                     </Button>
 
                     <!-- Settings Button -->
+                    <!--
                     <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             Background="DodgerBlue"
@@ -175,8 +176,8 @@
                                        FontSize="20"
                                        VerticalAlignment="Center"
                                        Text="Settings" />
-                        </Grid>
-                    </Button>
+                        </Grid> 
+                    </Button> -->
                 </StackPanel>
             </Grid>
         </SplitView.Pane>

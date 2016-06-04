@@ -105,23 +105,23 @@
                     }
                 }
             }
-
+            //WE chose these two sensors for plantID's. The system we have does not have a good selection right now 
             var plantIds = new long[]
             {
-                7, 8
+                11, 8
             };
             var waterIds = new long[]
             {
-                1, 2, 3, 4, 5, 6, 11
+                13, 19, 4, 16
             };
             var ambientIds = new long[]
             {
-                9, 10
+                5, 6
             };
 
-            var plantItems = Cards.Where(c => plantIds.Contains(c.PlacementId));
-            var waterItems = Cards.Where(c => waterIds.Contains(c.PlacementId));
-            var ambientItems = Cards.Where(c => ambientIds.Contains(c.PlacementId));
+            var plantItems = Cards.Where(c => plantIds.Contains(c.SensorTypeID));
+            var waterItems = Cards.Where(c => waterIds.Contains(c.SensorTypeID));
+            var ambientItems = Cards.Where(c => ambientIds.Contains(c.SensorTypeID));
 
             foreach (var item in plantItems)
             {
