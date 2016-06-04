@@ -5,6 +5,8 @@
     using System.Collections.Generic;
     using DatabasePOCOs.User;
     using Windows.UI.Xaml.Navigation;
+    using Windows.UI.Xaml.Controls.Primitives;
+    using DatabasePOCOs;
 
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
@@ -37,12 +39,16 @@
 
         private void OnSensorToggleChecked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-
+            var button = sender as ToggleButton;
+            var tuple = button.DataContext as GraphingViewModel.SensorTuple;
+            ViewModel.SensorsToGraph.Add(tuple);
         }
 
         private void OnSensorToggleUnchecked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-
+            var button = sender as ToggleButton;
+            var tuple = button.DataContext as GraphingViewModel.SensorTuple;
+            ViewModel.SensorsToGraph.Remove(tuple);
         }
     }
 }

@@ -19,7 +19,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="112" />
                     <RowDefinition />
-                    <RowDefinition Height="144" />
+                    <RowDefinition Height="216" />
                 </Grid.RowDefinitions>
 
                 <!-- Pane Header -->
@@ -154,7 +154,7 @@
                     </Button>
 
                     <!-- Settings Button -->
-                    <!--
+
                     <Button x:Name="SettingsButton"
                             Style="{ThemeResource NoBackgroundDarkTheme}"
                             Background="DodgerBlue"
@@ -169,15 +169,15 @@
                                        Foreground="#FFEBEBEB"
                                        FontSize="28"
                                        Margin="24,0,24,0"
-                                       Text="" />
+                                       Text="" />
                             <TextBlock Grid.Column="1"
                                        FontFamily="Segoe UI"
                                        FontWeight="Normal"
                                        FontSize="20"
                                        VerticalAlignment="Center"
-                                       Text="Settings" />
-                        </Grid> 
-                    </Button> -->
+                                       Text="Graphs" />
+                        </Grid>
+                    </Button>
                 </StackPanel>
             </Grid>
         </SplitView.Pane>

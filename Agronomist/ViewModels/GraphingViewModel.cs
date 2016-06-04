@@ -75,7 +75,7 @@ namespace Agronomist.ViewModels
                     SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
                     if (tuple != null)
                     {
-                        if (tuple.hourlyDatapoints.Any(dp => dp.TimeStamp == reading.Timestamp) == false)
+                        if (tuple.hourlyDatapoints.Any(dp => dp == reading.Timestamp) == false)
                         {
                             SensorDatapoint datapoint = new SensorDatapoint(reading.Value, reading.Timestamp, reading.Duration);
                             tuple.hourlyDatapoints.Add(datapoint);
@@ -219,7 +219,7 @@ namespace Agronomist.ViewModels
                             sensor = sensor
                         });
                     }
-                    SensorsGrouped = sensorTuples.GroupBy(tup => tup.sensor.SensorType.Subsystem.Name); 
+                    SensorsGrouped = sensorTuples.GroupBy(tup => tup.sensor.SensorType.Place.Name); 
                     
                     SelectedEndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
                     _selectedEndTime = _selectedCropCycle.EndDate;
@@ -270,12 +270,12 @@ namespace Agronomist.ViewModels
             /// <summary>
             /// Updated as soon as possible
             /// </summary>
-            public ObservableCollection<SensorDatapoint> hourlyDatapoints = new ObservableCollection<SensorDatapoint>();
+            public ObservableCollection<BindableDatapoint> hourlyDatapoints = new ObservableCollection<BindableDatapoint>();
 
             /// <summary>
             /// Only read from the DB, not reloaded in realtime
             /// </summary>
-            public ObservableCollection<SensorDatapoint> HistoricalDatapoints = new ObservableCollection<SensorDatapoint>(); 
+            public ObservableCollection<BindableDatapoint> HistoricalDatapoints = new ObservableCollection<BindableDatapoint>(); 
         }
 
         public struct CroprunTuple
@@ -289,6 +289,17 @@ namespace Agronomist.ViewModels
             public CropCycle cropCycle;
             public Location location;
             public List<Sensor> sensors; 
+        }
+
+        public class BindableDatapoint
+        {
+            public BindableDatapoint(SensorDatapoint datapoint)
+            {
+                timestamp = datapoint.TimeStamp.LocalDateTime;
+                value = datapoint.Value; 
+            }
+            public DateTime timestamp { get; set; }
+            public double value { get; set; }
         }
     }
 }
