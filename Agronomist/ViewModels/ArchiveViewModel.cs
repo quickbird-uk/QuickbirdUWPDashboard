@@ -28,7 +28,7 @@ namespace Agronomist.ViewModels
         public async void Update(string input)
         {
             MainDbContext db = new MainDbContext();
-            var cropCycles = await db.CropCycles.Include(cc => cc.Location).ToListAsync();
+            var cropCycles = await db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate < DateTimeOffset.Now).Include(cc => cc.Location).ToListAsync();
 
             for(int i=0; i< cropCycles.Count; i++)
             {
