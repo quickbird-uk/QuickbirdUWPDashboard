@@ -29,5 +29,10 @@
             // Shell frame shouldn't have any backstack history.
             Frame.BackStack.Clear();
         }
+
+        private void Menu_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            ViewModel.CurrentCropRunAsObject = e.ClickedItem;
+        }
     }
 }

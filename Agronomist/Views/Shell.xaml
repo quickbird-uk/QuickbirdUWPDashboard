@@ -55,7 +55,9 @@
                           RequestedTheme="Dark"
                           ItemContainerStyle="{ThemeResource MenuItemDark}"
                           ItemsSource="{x:Bind ViewModel.Runs}"
-                          SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}">
+                          SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}"
+                          IsItemClickEnabled="True"
+                          ItemClick="Menu_ItemClick">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>

@@ -138,7 +138,6 @@
             get { return _currentCropRun; }
             set
             {
-                if (value == _currentCropRun) return;
                 _currentCropRun = value;
                 OnPropertyChanged();
                 OnPropertyChanged("IsCropRunSet");
