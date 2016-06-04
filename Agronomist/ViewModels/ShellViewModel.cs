@@ -19,6 +19,8 @@
 
         private readonly Frame _contentFrame;
 
+
+
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
         /// </summary>

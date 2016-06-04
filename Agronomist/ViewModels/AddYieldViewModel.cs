@@ -118,8 +118,9 @@ namespace Agronomist.ViewModels
                 _cropCycle.EndDate = DateTimeOffset.Now;
             _cropCycle.UpdatedAt = DateTimeOffset.Now; 
             await _db.SaveChangesAsync();
+            _updateAction = null; 
+            await Messenger.Instance.TablesChanged.Invoke(string.Empty);
             _db.Dispose();
-            await Messenger.Instance.TablesChanged.Invoke(string.Empty); 
             IsLoading = false; 
         }
 

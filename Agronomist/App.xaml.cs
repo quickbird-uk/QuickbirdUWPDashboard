@@ -9,6 +9,7 @@
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
+    using Windows.UI.Core;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
@@ -16,7 +17,9 @@
     sealed partial class App : Application
     {
 
-        private LocalNetworking.Manager _networking; 
+        private LocalNetworking.Manager _networking = null;
+        private bool Startup = true; 
+
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
         ///     executed, and as such is the logical equivalent of main() or WinMain().
@@ -34,24 +37,10 @@
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            using (var db = new MainDbContext())
-            {
-                db.Database.Migrate();
-            }
+           
 
             var rootFrame = Window.Current.Content as Frame;
 
-
-            if (!e.PrelaunchActivated)
-            {
-                // TODO: This is not a prelaunch activation. Perform operations which
-                // assume that the user explicitly launched the app such as updating
-                // the online presence of the user on a social network, updating a
-                // what's new feed, etc.
-                
-            }
-
-            _networking = new LocalNetworking.Manager();
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
@@ -71,8 +60,15 @@
                 Window.Current.Content = rootFrame;
             }
 
+            Window.Current.VisibilityChanged += DoWork; 
+
             if (e.PrelaunchActivated == false)
             {
+                using (var db = new MainDbContext())
+                {
+                    db.Database.Migrate();
+                }
+
                 if (rootFrame.Content == null)
                 {
                     // When the navigation stack isn't restored navigate to the first page,
@@ -94,6 +90,18 @@
                 Window.Current.Activate();
             }
         }
+
+        private void DoWork(object sender, VisibilityChangedEventArgs e)
+        {
+            if(e.Visible && Startup)
+            {
+                //Start Netowrking
+                if (_networking == null)
+                    _networking = new LocalNetworking.Manager();
+            }
+        }
+
+
 
         /// <summary>
         ///     Invoked when Navigation to a certain page fails

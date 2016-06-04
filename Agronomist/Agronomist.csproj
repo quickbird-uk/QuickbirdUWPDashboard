@@ -242,7 +242,7 @@
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <PlatformTarget>x86</PlatformTarget>
     <DefineConstants>NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;CODE_ANALYSIS</DefineConstants>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|ARM'">
     <OutputPath>bin\ARM\NATIVE\</OutputPath>
