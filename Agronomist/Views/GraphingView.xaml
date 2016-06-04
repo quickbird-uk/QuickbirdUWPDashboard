@@ -86,7 +86,7 @@
 
                 <Charts:SfChart.PrimaryAxis>
                     <Charts:DateTimeAxis x:Name="DateAxis"
-                                     FontSize="16" />
+                                     FontSize="16" LabelFormat="{x:Bind ViewModel.TimeLabel, Mode=OneWay}"/>
                 </Charts:SfChart.PrimaryAxis>
 
                 <Charts:SfChart.Legend>
@@ -97,7 +97,8 @@
                                     VerticalAlignment="Center"
                                     DockPosition="Top"
                                     IconVisibility="Visible"
-                                    ItemMargin="10" />
+                                    ItemMargin="10" 
+                                        Foreground="Black"/>
                 </Charts:SfChart.Legend>
             </Charts:SfChart>
         </Border>

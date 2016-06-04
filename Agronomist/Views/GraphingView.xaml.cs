@@ -95,7 +95,18 @@
             lineSeries.XBindingPath = "timestamp";
             lineSeries.YBindingPath = "value";
             tuple.ChartSeries = lineSeries;
-            lineSeries.IsSeriesVisible = false; 
+            lineSeries.IsSeriesVisible = false;
+
+            //This is a string shortener! nothing else
+            var placementNameLength = tuple.sensor.SensorType.Place.Name.Length > 6 ? 6 : tuple.sensor.SensorType.Place.Name.Length;
+            var locationString = tuple.sensor.SensorType.Place.Name.Substring(0, placementNameLength);
+            int spaceLocation = tuple.sensor.SensorType.Place.Name.IndexOf(' ');
+            if (spaceLocation > 0 && tuple.sensor.SensorType.Place.Name.Length > spaceLocation + 1)
+                locationString += tuple.sensor.SensorType.Place.Name.Substring(spaceLocation, 2) + ".";
+
+      
+            lineSeries.Label = tuple.sensor.SensorType.Param.Name + ": " + locationString;
+
             ChartView.Series.Add(lineSeries);
         }
     }

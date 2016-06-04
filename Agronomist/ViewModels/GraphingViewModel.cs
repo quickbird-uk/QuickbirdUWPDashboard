@@ -265,7 +265,9 @@ namespace Agronomist.ViewModels
             get { return _historicalMode; }
             set { _historicalMode = value;
                 OnPropertyChanged("HistControls");
-                foreach(var tuple in SensorsToGraph)
+                TimeLabel = _historicalMode ? "MMM dd" : "HH:mm";
+                OnPropertyChanged("TimeLabel");
+                foreach (var tuple in SensorsToGraph)
                 {
                     tuple.HistoryMode = _historicalMode; 
                 }
@@ -294,6 +296,7 @@ namespace Agronomist.ViewModels
             }
         }
 
+        public string TimeLabel { get; set; } = "HH:mm"; 
 
         //Destructor
         ~GraphingViewModel(){
@@ -325,8 +328,12 @@ namespace Agronomist.ViewModels
                 set
                 {
                     _historyMode = value;
-                    if(ChartSeries != null)
+                    if (ChartSeries != null)
+                    {
                         ChartSeries.ItemsSource = _historyMode ? historicalDatapoints : hourlyDatapoints;
+
+                    }
+
                 }
             }
 
