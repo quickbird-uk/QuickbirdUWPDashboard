@@ -12,6 +12,7 @@
     using NetLib;
     using Util;
     using Views;
+    using Windows.UI.Xaml;
 
     public class ShellViewModel : ViewModelBase
     {
@@ -20,7 +21,7 @@
         private readonly Frame _contentFrame;
 
 
-
+        DispatcherTimer _syncTimer; 
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
         /// </summary>
@@ -54,6 +55,11 @@
 
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+
+            _syncTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+            _syncTimer.Tick += Sync;
+            _syncTimer.Start();
+
 
             if (_runs.Count > 0)
                 _contentFrame.Navigate(typeof(Dashboard),
@@ -357,6 +363,11 @@
             {
                 _contentFrame.Navigate(typeof(AddYieldView), _currentCropRun.CropRunId);
             }
+        }
+
+        public void Sync(object sender, object e)
+        {
+            Sync(); 
         }
 
         public async void Sync()
