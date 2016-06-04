@@ -56,7 +56,7 @@
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
 
-            _syncTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+            _syncTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
             _syncTimer.Tick += Sync;
             _syncTimer.Start();
 
