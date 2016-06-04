@@ -7,6 +7,11 @@
     using Windows.UI.Xaml.Navigation;
     using Windows.UI.Xaml.Controls.Primitives;
     using DatabasePOCOs;
+    using Syncfusion.UI.Xaml.Charts;
+    using System;
+    using System.Collections.Specialized;
+    using Windows.UI.Xaml.Data;
+    using Windows.UI.Xaml;
 
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
@@ -24,8 +29,11 @@
         public GraphingView()
         {
             InitializeComponent();
+            ViewModel.SensorsToGraph.CollectionChanged += EditChart; 
            
         }
+
+
 
         private void CropCycleSelected(object sender, SelectionChangedEventArgs e)
         {
@@ -41,14 +49,55 @@
         {
             var button = sender as ToggleButton;
             var tuple = button.DataContext as GraphingViewModel.SensorTuple;
-            ViewModel.SensorsToGraph.Add(tuple);
+            tuple.visible = true;
         }
 
         private void OnSensorToggleUnchecked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             var button = sender as ToggleButton;
             var tuple = button.DataContext as GraphingViewModel.SensorTuple;
-            ViewModel.SensorsToGraph.Remove(tuple);
+            tuple.visible = false;
+        }
+
+        private void EditChart(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (var item in e.NewItems)
+                {
+                    GraphingViewModel.SensorTuple tuple = item as GraphingViewModel.SensorTuple;
+                    AddToChart(tuple);
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (var item in e.OldItems)
+                {
+                    GraphingViewModel.SensorTuple tuple = item as GraphingViewModel.SensorTuple;
+                    ChartView.Series.Remove(tuple.realtimeChartSeries);
+                    ChartView.Series.Remove(tuple.HistoricalChartSeries);
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Replace
+                || e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                ChartView.Series.Clear();
+                foreach (var sensorTuple in ViewModel.SensorsToGraph)
+                {
+                    AddToChart(sensorTuple);
+                }
+            }
+        }
+
+        private void AddToChart(GraphingViewModel.SensorTuple tuple, bool historical = false)
+        {
+            var lineSeries = new FastLineSeries();
+            lineSeries.ItemsSource = historical? tuple.HistoricalDatapoints : tuple.hourlyDatapoints;
+            lineSeries.XBindingPath = "timestamp";
+            lineSeries.YBindingPath = "value";
+            tuple.realtimeChartSeries = lineSeries;
+            lineSeries.IsSeriesVisible = false; 
+            ChartView.Series.Add(lineSeries);
         }
     }
 }

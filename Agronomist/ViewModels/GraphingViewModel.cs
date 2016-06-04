@@ -38,6 +38,8 @@ namespace Agronomist.ViewModels
         private DateTimeOffset? _selectedEndTime;
         private bool _currentlyRunning = true;
 
+        private bool _historicalMode; 
+
         //Probaablyt don't need this
         private DispatcherTimer _refresher = null; 
 
@@ -75,9 +77,9 @@ namespace Agronomist.ViewModels
                     SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
                     if (tuple != null)
                     {
-                        if (tuple.hourlyDatapoints.Any(dp => dp == reading.Timestamp) == false)
+                        if (tuple.hourlyDatapoints.Any(dp => dp.timestamp == reading.Timestamp.LocalDateTime) == false)
                         {
-                            SensorDatapoint datapoint = new SensorDatapoint(reading.Value, reading.Timestamp, reading.Duration);
+                            BindableDatapoint datapoint = new BindableDatapoint(reading.Timestamp, reading.Value);
                             tuple.hourlyDatapoints.Add(datapoint);
                         }
                     }
@@ -194,7 +196,7 @@ namespace Agronomist.ViewModels
             }
         }
 
-        public ObservableCollection<SensorTuple> SensorsToGraph; 
+        public ObservableCollection<SensorTuple> SensorsToGraph { get; set; } = new ObservableCollection<SensorTuple>();  
 
         public CropCycle SelectedCropCycle
         {
@@ -205,22 +207,25 @@ namespace Agronomist.ViewModels
                 else
                 {
                     _selectedCropCycle = value;
+                    SensorsToGraph.Clear();
+
                     if (_selectedCropCycle.EndDate == null)
                     { _currentlyRunning = true;  }
                     else
                     { _currentlyRunning = false; }
                     List<Sensor> sensors = _cache.First(c => c.cropCycle.ID == value.ID).sensors;
-                    List<SensorTuple> sensorTuples = new List<SensorTuple>(); 
-                    foreach(var sensor in sensors)
+                    
+                    foreach (var sensor in sensors)
                     {
-                        sensorTuples.Add(new SensorTuple
+                        var tuple = new SensorTuple
                         {
                             displayName = sensor.SensorType.Param.Name,
                             sensor = sensor
-                        });
+                        };
+                        SensorsToGraph.Add(tuple);
                     }
-                    SensorsGrouped = sensorTuples.GroupBy(tup => tup.sensor.SensorType.Place.Name); 
-                    
+                    SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Place.Name);
+                                       
                     SelectedEndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
                     _selectedEndTime = _selectedCropCycle.EndDate;
                     SelectedStartTime = _selectedCropCycle.StartDate; 
@@ -228,6 +233,16 @@ namespace Agronomist.ViewModels
                     OnPropertyChanged();
                 }
             }
+        }
+
+        public Visibility HistControls
+        {
+            get { return _historicalMode ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
+        public Visibility RealtimeControls
+        {
+            get { return _historicalMode ? Visibility.Collapsed : Visibility.Visible; }
         }
 
         public DateTimeOffset SelectedEndTime
@@ -262,20 +277,76 @@ namespace Agronomist.ViewModels
             
         }
 
-        public class SensorTuple
+        public class SensorTuple : ViewModelBase
         {
             public string displayName { get; set; }
             public Sensor sensor;
-            public bool toggled = false;
+
+            private bool _visible = false;
+            private bool _historyMode = false; 
+
+            public bool HistoryMode
+            {
+                get { return _historyMode; }
+                set { _historyMode = value;
+                    updateVisibility(); 
+                }
+            }
+
+            public bool visible {
+                get
+                {
+                    return _visible; 
+                }
+                set
+                {
+                    _visible = value;
+                    updateVisibility();
+                }
+            } 
+
+            private void updateVisibility()
+            {
+                if (_historyMode == false)
+                {
+                    if (realtimeChartSeries != null)
+                    {
+                        realtimeChartSeries.IsEnabled = _visible;
+                        realtimeChartSeries.IsSeriesVisible = _visible;          
+                    }
+                    if (HistoricalChartSeries != null)
+                    {
+                        HistoricalChartSeries.IsEnabled = false;
+                        HistoricalChartSeries.IsSeriesVisible = false;
+                    }
+                }
+                else if (_historyMode == true)
+                {
+                    if (HistoricalChartSeries != null)
+                    {
+                        HistoricalChartSeries.IsEnabled = _visible;
+                        HistoricalChartSeries.IsSeriesVisible = _visible;
+                    }
+                    if (realtimeChartSeries != null)
+                    {
+                        realtimeChartSeries.IsEnabled = false;
+                        realtimeChartSeries.IsSeriesVisible = false;
+                    }
+                }
+            }
+
             /// <summary>
             /// Updated as soon as possible
             /// </summary>
-            public ObservableCollection<BindableDatapoint> hourlyDatapoints = new ObservableCollection<BindableDatapoint>();
+            public ObservableCollection<BindableDatapoint> hourlyDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
 
             /// <summary>
             /// Only read from the DB, not reloaded in realtime
             /// </summary>
-            public ObservableCollection<BindableDatapoint> HistoricalDatapoints = new ObservableCollection<BindableDatapoint>(); 
+            public ObservableCollection<BindableDatapoint> HistoricalDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
+
+            public Syncfusion.UI.Xaml.Charts.ChartSeries realtimeChartSeries = null;
+            public Syncfusion.UI.Xaml.Charts.ChartSeries HistoricalChartSeries = null;
         }
 
         public struct CroprunTuple
@@ -297,6 +368,12 @@ namespace Agronomist.ViewModels
             {
                 timestamp = datapoint.TimeStamp.LocalDateTime;
                 value = datapoint.Value; 
+            }
+
+            public BindableDatapoint(DateTimeOffset inTimestamp, double inValue)
+            {
+                timestamp = inTimestamp.LocalDateTime;
+                value = inValue; 
             }
             public DateTime timestamp { get; set; }
             public double value { get; set; }

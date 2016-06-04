@@ -73,10 +73,32 @@
             <!-- END Sensor Grid -->
 
             <!--Define the time controls, to scale the span of the graph-->
-
-            <!-- Define the chart for the entire remaining space -->
-            <Charts:SfChart  VerticalAlignment="Stretch" Background="White" Margin="0, 10, 0, 0"/>
         </StackPanel>
         
+        
+        <!-- Define the chart for the entire remaining space -->
+        <Border Background="White" Margin="0, 300, 0, 0">
+            <Charts:SfChart x:Name="ChartView" VerticalAlignment="Bottom" Background="White" Margin="10, 10, 10, 5" 
+                               HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" >
+
+                <Charts:SfChart.PrimaryAxis>
+                    <Charts:DateTimeAxis x:Name="DateAxis"
+                                     FontSize="16" />
+                </Charts:SfChart.PrimaryAxis>
+
+                <Charts:SfChart.Legend>
+                    <Charts:ChartLegend IconHeight="10"
+                                    IconWidth="10"
+                                    Margin="0,0,0,5"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    DockPosition="Top"
+                                    IconVisibility="Visible"
+                                    ItemMargin="10" />
+                </Charts:SfChart.Legend>
+            </Charts:SfChart>
+        </Border>
+
     </Grid>
 </Page>
