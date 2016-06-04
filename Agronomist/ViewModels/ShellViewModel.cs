@@ -365,12 +365,7 @@
             }
         }
 
-        public void Sync(object sender, object e)
-        {
-            Sync(); 
-        }
-
-        public async void Sync()
+        public async void Sync(object sender, object e)
         {
             SyncButtonEnabled = false;
             using (var context = new MainDbContext())

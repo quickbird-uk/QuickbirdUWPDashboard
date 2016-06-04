@@ -223,8 +223,6 @@ namespace Agronomist.ViewModels
             get { return _selectedCropCycle; }
             set
             {
-                if (value == _selectedCropCycle) return;
-                else
                 {
                     _selectedCropCycle = value;
                     
