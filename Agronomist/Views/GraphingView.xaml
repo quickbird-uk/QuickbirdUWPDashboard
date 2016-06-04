@@ -15,9 +15,9 @@
     <Grid Background="#EBEBEB">
         <StackPanel >
             <!--Define controls that let the user choose crop run and stuff-->
-            <Grid>
-                <TextBlock Text="Select a Crop" Style="{StaticResource ResourceKey=Subtitle}" Height="50" Width="124" HorizontalAlignment="Left" Margin="7,52,0,-12" TextAlignment="Center"/>
-                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected" Margin="131,40,0,0">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Select a Crop" Style="{StaticResource ResourceKey=Subtitle}" Height="50" Width="124" HorizontalAlignment="Left" Margin="10,10,10,12" TextAlignment="Center"/>
+                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected" Margin="10,10,10,10">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock x:Name="SensorToggleButton"
@@ -26,7 +26,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-            </Grid>
+            </StackPanel>
             <!--Define list of sensors so user can toggle them on and off-->
             <!-- BEGIN Sensor Grid -->
             <ListView Height="180"

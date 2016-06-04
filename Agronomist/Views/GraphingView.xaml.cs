@@ -74,8 +74,7 @@
                 foreach (var item in e.OldItems)
                 {
                     GraphingViewModel.SensorTuple tuple = item as GraphingViewModel.SensorTuple;
-                    ChartView.Series.Remove(tuple.realtimeChartSeries);
-                    ChartView.Series.Remove(tuple.HistoricalChartSeries);
+                    ChartView.Series.Remove(tuple.ChartSeries);
                 }
             }
             else if (e.Action == NotifyCollectionChangedAction.Replace
@@ -89,13 +88,13 @@
             }
         }
 
-        private void AddToChart(GraphingViewModel.SensorTuple tuple, bool historical = false)
+        private void AddToChart(GraphingViewModel.SensorTuple tuple)
         {
             var lineSeries = new FastLineSeries();
-            lineSeries.ItemsSource = historical? tuple.HistoricalDatapoints : tuple.hourlyDatapoints;
+            lineSeries.ItemsSource = tuple.DataToGraph;
             lineSeries.XBindingPath = "timestamp";
             lineSeries.YBindingPath = "value";
-            tuple.realtimeChartSeries = lineSeries;
+            tuple.ChartSeries = lineSeries;
             lineSeries.IsSeriesVisible = false; 
             ChartView.Series.Add(lineSeries);
         }

@@ -288,8 +288,10 @@ namespace Agronomist.ViewModels
             public bool HistoryMode
             {
                 get { return _historyMode; }
-                set { _historyMode = value;
-                    updateVisibility(); 
+                set
+                {
+                    _historyMode = value;
+                    OnPropertyChanged("DataToGraph"); 
                 }
             }
 
@@ -301,40 +303,14 @@ namespace Agronomist.ViewModels
                 set
                 {
                     _visible = value;
-                    updateVisibility();
+                    if(DataToGraph != null)
+                    {
+                        ChartSeries.IsEnabled = _visible;
+                        ChartSeries.IsSeriesVisible = _visible;
+                    }
                 }
             } 
-
-            private void updateVisibility()
-            {
-                if (_historyMode == false)
-                {
-                    if (realtimeChartSeries != null)
-                    {
-                        realtimeChartSeries.IsEnabled = _visible;
-                        realtimeChartSeries.IsSeriesVisible = _visible;          
-                    }
-                    if (HistoricalChartSeries != null)
-                    {
-                        HistoricalChartSeries.IsEnabled = false;
-                        HistoricalChartSeries.IsSeriesVisible = false;
-                    }
-                }
-                else if (_historyMode == true)
-                {
-                    if (HistoricalChartSeries != null)
-                    {
-                        HistoricalChartSeries.IsEnabled = _visible;
-                        HistoricalChartSeries.IsSeriesVisible = _visible;
-                    }
-                    if (realtimeChartSeries != null)
-                    {
-                        realtimeChartSeries.IsEnabled = false;
-                        realtimeChartSeries.IsSeriesVisible = false;
-                    }
-                }
-            }
-
+            
             /// <summary>
             /// Updated as soon as possible
             /// </summary>
@@ -343,10 +319,18 @@ namespace Agronomist.ViewModels
             /// <summary>
             /// Only read from the DB, not reloaded in realtime
             /// </summary>
-            public ObservableCollection<BindableDatapoint> HistoricalDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
+            public ObservableCollection<BindableDatapoint> historicalDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
 
-            public Syncfusion.UI.Xaml.Charts.ChartSeries realtimeChartSeries = null;
-            public Syncfusion.UI.Xaml.Charts.ChartSeries HistoricalChartSeries = null;
+            public ObservableCollection<BindableDatapoint> DataToGraph
+            {
+                get { if (HistoryMode)
+                        return historicalDatapoints;
+                    else
+                        return hourlyDatapoints; 
+                }
+            }
+
+            public Syncfusion.UI.Xaml.Charts.ChartSeries ChartSeries = null;
         }
 
         public struct CroprunTuple
