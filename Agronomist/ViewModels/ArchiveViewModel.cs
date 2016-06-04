@@ -64,9 +64,71 @@ namespace Agronomist.ViewModels
             set
             {
                 _selectedCropCycle = (CropCyclePresenter)value;
+                OnPropertyChanged("StartDate");
+                OnPropertyChanged("EndDate");
+                OnPropertyChanged("Duration");
+                OnPropertyChanged("Yield");
+                OnPropertyChanged("Variety");
+                OnPropertyChanged("CropType");
+            }
+        }
 
-                //Do Stuff
-               // OnPropertyChanged(); 
+        public string StartDate
+        {
+            get { if (_selectedCropCycle == null)
+                    return " --- ";
+                else
+                    return _selectedCropCycle.CropCycle.StartDate.ToString("dd MMM yyyy");
+            }
+        }
+
+        public string EndDate
+        {
+            get {
+                if (_selectedCropCycle == null)
+                    return " --- ";
+                else
+                    return _selectedCropCycle.CropCycle.EndDate?.ToString("dd MMM yyyy") ?? "On Going";  }
+        }
+
+        public string Duration
+        {
+            get {
+                if (_selectedCropCycle == null)
+                    return " --- ";
+                else
+                {
+                    TimeSpan result = ((_selectedCropCycle.CropCycle.EndDate ?? DateTimeOffset.Now) -
+                  _selectedCropCycle.CropCycle.StartDate);
+                    return Math.Round(result.TotalDays, 1).ToString() + " days";
+                }
+            }
+        }
+
+        public string Yield
+        {
+            get
+            {
+                if (_selectedCropCycle == null)
+                    return " --- ";
+                else
+                    return _selectedCropCycle.CropCycle.Yield.ToString() + " kg"; 
+            }
+        }
+
+        public string Variety
+        {
+            get
+            {
+                return _selectedCropCycle?.CropCycle.CropVariety ?? " --- ";
+            }
+        }
+
+        public string CropType
+        {
+            get
+            {
+                return _selectedCropCycle?.CropCycle.CropTypeName ?? " --- ";
             }
         }
 
@@ -78,7 +140,7 @@ namespace Agronomist.ViewModels
                 StartDate = inCropCycle.StartDate.ToString("dd MMM");
                 EndDate = inCropCycle.EndDate?.ToString("dd MMM") ?? "Now";
                
-                this.CropType = inCropCycle.CropTypeName.Substring(0, Math.Min(10, inCropCycle.CropTypeName.Length));
+                this.CropType = inCropCycle.CropTypeName.Substring(0, Math.Min(13, inCropCycle.CropTypeName.Length));
                 if (inCropCycle.CropTypeName.Length > 13)
                     this.CropType += "..."; 
 
@@ -90,10 +152,8 @@ namespace Agronomist.ViewModels
                 if (inCropCycle.Location.Name.Length > 10)
                     this.LocationName += "...";
 
-                if (inCropCycle.EndDate != null)
-                    Duration = Math.Round((inCropCycle.EndDate - inCropCycle.StartDate).Value.TotalDays, 0).ToString() + " days";
-                else
-                    Duration = " --- "; 
+
+                Duration = Math.Round(((inCropCycle.EndDate ?? DateTimeOffset.Now) - inCropCycle.StartDate).TotalDays, 0).ToString() + " days";
             }
             public CropCycle CropCycle { get; set; }
 
