@@ -53,7 +53,9 @@ namespace Agronomist.ViewModels
             _recieveDatapointAction = ReceiveDatapoint;
             _loadCacheAction = LoadCache;
             Messenger.Instance.NewSensorDataPoint.Subscribe(_recieveDatapointAction);
-            Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
+
+            //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame. 
+            //Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
 
             //Settings settings = new Settings();
             //settings.UnsetCreds(); 
