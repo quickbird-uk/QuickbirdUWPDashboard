@@ -160,7 +160,7 @@ namespace Agronomist.ViewModels
             CropCycle cropCycle = new CropCycle
             {
                 ID = Guid.NewGuid(),
-                Name = string.Empty,
+                Name = "Unnamed",
                 Yield = 0,
                 CropType = cropType,
                 CropTypeName = cropType.Name,
