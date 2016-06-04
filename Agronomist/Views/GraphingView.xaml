@@ -28,8 +28,9 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <ToggleSwitch IsOn="{x:Bind ViewModel.HistoricalMode, Mode=TwoWay}"  Margin="20,5,10,0" Header="Choose Data"
-                          OnContent="Historical" OffContent="Real-time" FontSize="20" VerticalAlignment="Top" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.RealtimeMode, Mode=TwoWay}"  Margin="20,5,10,0" Header="Choose Data"
+                          OnContent="Real-time" OffContent="Historical" FontSize="20" VerticalAlignment="Top" 
+                              IsEnabled="{x:Bind ViewModel.LiveCropRun, Mode=OneWay}"/>
                 <!-- BEGIN Date Pickers -->
 
                 <CalendarDatePicker x:Name="StartDatePicker"
@@ -128,7 +129,8 @@
 
                 <Charts:SfChart.PrimaryAxis>
                     <Charts:DateTimeAxis x:Name="DateAxis"
-                                     FontSize="16" LabelFormat="{x:Bind ViewModel.TimeLabel, Mode=OneWay}"/>
+                                     FontSize="16" LabelFormat="{x:Bind ViewModel.TimeLabel, Mode=OneWay}"
+                                      />
                 </Charts:SfChart.PrimaryAxis>
 
                 <Charts:SfChart.Legend>

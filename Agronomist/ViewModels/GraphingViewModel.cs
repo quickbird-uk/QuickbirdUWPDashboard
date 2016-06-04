@@ -38,7 +38,7 @@ namespace Agronomist.ViewModels
         private DateTimeOffset? _selectedEndTime;
         private bool _currentlyRunning = true;
 
-        private bool _historicalMode; 
+        private bool _realtimeMode; 
 
         //Probaablyt don't need this
         private DispatcherTimer _refresher = null; 
@@ -93,6 +93,12 @@ namespace Agronomist.ViewModels
                             }
                         } while (period.TotalHours > 1); 
                     }
+                }
+                var tupleForChartUpdate = sensorsUngrouped.FirstOrDefault(); 
+                if (tupleForChartUpdate?.RealtimeMode ?? false)
+                {
+                    tupleForChartUpdate.Axis.Minimum = tupleForChartUpdate.hourlyDatapoints.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
+                    tupleForChartUpdate.Axis.Maximum = tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
                 }
             }
         }
@@ -224,6 +230,11 @@ namespace Agronomist.ViewModels
                     { _currentlyRunning = true;  }
                     else
                     { _currentlyRunning = false; }
+                    RealtimeMode = false;
+                    OnPropertyChanged("RealtimeMode");
+                    OnPropertyChanged("LiveCropRun");
+                   
+
                     List<Sensor> sensors = _cache.First(c => c.cropCycle.ID == value.ID).sensors;
                     
                     foreach (var sensor in sensors)
@@ -270,22 +281,27 @@ namespace Agronomist.ViewModels
             }           
         }
 
-        public bool HistoricalMode
+        public bool LiveCropRun
         {
-            get { return _historicalMode; }
-            set { _historicalMode = value;
+            get {return _currentlyRunning; }
+        }
+
+        public bool RealtimeMode
+        {
+            get { return _realtimeMode; }
+            set { _realtimeMode = value;
                 OnPropertyChanged("HistControls");
-                TimeLabel = _historicalMode ? "MMM dd" : "HH:mm";
+                TimeLabel = _realtimeMode ? "HH:mm": "MMM dd" ;
                 OnPropertyChanged("TimeLabel");
                 foreach (var tuple in SensorsToGraph)
                 {
-                    tuple.HistoryMode = _historicalMode; 
+                    tuple.RealtimeMode = _realtimeMode; 
                 }
             }
         }
         public Visibility HistControls
         {
-            get { return _historicalMode ? Visibility.Visible : Visibility.Collapsed; }
+            get { return _realtimeMode ? Visibility.Collapsed: Visibility.Visible; }
         }
 
         public DateTimeOffset CycleEndTime
@@ -324,19 +340,24 @@ namespace Agronomist.ViewModels
             public Sensor sensor;
 
             private bool _visible = false;
-            private bool _historyMode = false;
+            private bool _realtimeMode = false;
 
             private ObservableCollection<BindableDatapoint> _historicalData = new ObservableCollection<BindableDatapoint>(); 
 
-            public bool HistoryMode
+            public bool RealtimeMode
             {
-                get { return _historyMode; }
+                get { return _realtimeMode; }
                 set
                 {
-                    _historyMode = value;
+                    _realtimeMode = value;
                     if (ChartSeries != null)
                     {
-                        ChartSeries.ItemsSource = _historyMode ? historicalDatapoints : hourlyDatapoints;
+                        ChartSeries.ItemsSource = _realtimeMode ? hourlyDatapoints: historicalDatapoints;
+                        if(_realtimeMode)
+                        {
+                            Axis.Minimum = hourlyDatapoints.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
+                            Axis.Maximum = hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
+                        }
 
                     }
 
@@ -379,6 +400,8 @@ namespace Agronomist.ViewModels
             }
 
             public Syncfusion.UI.Xaml.Charts.ChartSeries ChartSeries = null;
+
+            public Syncfusion.UI.Xaml.Charts.DateTimeAxis Axis = null; 
         }
 
         public struct CroprunTuple

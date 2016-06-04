@@ -12,6 +12,7 @@
     using System.Collections.Specialized;
     using Windows.UI.Xaml.Data;
     using Windows.UI.Xaml;
+    using System.ComponentModel;
 
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
@@ -29,11 +30,8 @@
         public GraphingView()
         {
             InitializeComponent();
-            ViewModel.SensorsToGraph.CollectionChanged += EditChart; 
-           
+            ViewModel.SensorsToGraph.CollectionChanged += EditChart;           
         }
-
-
 
         private void CropCycleSelected(object sender, SelectionChangedEventArgs e)
         {
@@ -91,10 +89,11 @@
         private void AddToChart(GraphingViewModel.SensorTuple tuple)
         {
             var lineSeries = new FastLineSeries();
-            lineSeries.ItemsSource = tuple.hourlyDatapoints;
+            lineSeries.ItemsSource = tuple.historicalDatapoints;
             lineSeries.XBindingPath = "timestamp";
             lineSeries.YBindingPath = "value";
             tuple.ChartSeries = lineSeries;
+            tuple.Axis = DateAxis; 
             lineSeries.IsSeriesVisible = false;
 
             //This is a string shortener! nothing else
