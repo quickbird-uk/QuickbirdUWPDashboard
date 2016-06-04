@@ -207,6 +207,7 @@ namespace Agronomist.ViewModels
                 else
                 {
                     _selectedCropCycle = value;
+                    
                     SensorsToGraph.Clear();
 
                     if (_selectedCropCycle.EndDate == null)
@@ -225,7 +226,7 @@ namespace Agronomist.ViewModels
                         SensorsToGraph.Add(tuple);
                     }
                     SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Place.Name);
-                                       
+                    LoadHistoricalData(); 
                     SelectedEndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
                     _selectedEndTime = _selectedCropCycle.EndDate;
                     SelectedStartTime = _selectedCropCycle.StartDate; 
@@ -233,6 +234,30 @@ namespace Agronomist.ViewModels
                     OnPropertyChanged();
                 }
             }
+        }
+
+        private async void LoadHistoricalData()
+        {
+            DateTimeOffset endDate = _selectedCropCycle.EndDate?.AddDays(1) ?? DateTimeOffset.Now.AddDays(1); 
+            var sensorsHistories = await _db.SensorsHistory.Where(sh => sh.LocationID == _selectedCropCycle.LocationID
+                    && sh.TimeStamp > _selectedCropCycle.StartDate &&
+                    sh.TimeStamp < endDate).ToListAsync();
+
+            foreach (SensorTuple tuple in SensorsToGraph)
+            {
+                var shCollection = sensorsHistories.Where(sh => sh.SensorID == tuple.sensor.ID);
+                List<BindableDatapoint> datapointCollection = new List<BindableDatapoint>(); 
+                foreach (SensorHistory sh in shCollection)
+                {
+                    sh.DeserialiseData(); 
+                    foreach(SensorDatapoint dp in sh.Data)
+                    {
+                        var bindable = new BindableDatapoint(dp);
+                        datapointCollection.Add(bindable); 
+                    }
+                }
+                tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(datapointCollection); 
+            }           
         }
 
         public bool HistoricalMode
@@ -292,6 +317,8 @@ namespace Agronomist.ViewModels
             private bool _visible = false;
             private bool _historyMode = false;
 
+            private ObservableCollection<BindableDatapoint> _historicalData = new ObservableCollection<BindableDatapoint>(); 
+
             public bool HistoryMode
             {
                 get { return _historyMode; }
@@ -327,7 +354,16 @@ namespace Agronomist.ViewModels
             /// <summary>
             /// Only read from the DB, not reloaded in realtime
             /// </summary>
-            public ObservableCollection<BindableDatapoint> historicalDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
+            public ObservableCollection<BindableDatapoint> historicalDatapoints
+            {
+                get
+                { return _historicalData; }
+                set
+                {
+                    _historicalData = value;
+                    OnPropertyChanged();
+                }
+            }
 
             public Syncfusion.UI.Xaml.Charts.ChartSeries ChartSeries = null;
         }
