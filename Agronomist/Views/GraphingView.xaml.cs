@@ -109,5 +109,17 @@
 
             ChartView.Series.Add(lineSeries);
         }
+
+        private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+        {
+            if(args.NewDate.HasValue)
+                DateAxis.Maximum = args.NewDate.Value.LocalDateTime; 
+        }
+
+        private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+        {
+            if (args.NewDate.HasValue)
+                DateAxis.Minimum = args.NewDate.Value.LocalDateTime;
+        }
     }
 }

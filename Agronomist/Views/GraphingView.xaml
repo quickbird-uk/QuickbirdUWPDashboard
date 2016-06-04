@@ -12,12 +12,14 @@
         <CollectionViewSource x:Key="cvsSensors" IsSourceGrouped="True" Source="{x:Bind ViewModel.SensorsGrouped, Mode=OneWay}"/>
     </Page.Resources>
 
-    <Grid Background="#EBEBEB">
-        <StackPanel >
+    <Grid Background="#EBEBEB" >
+        <StackPanel x:Name="topStack" >
             <!--Define controls that let the user choose crop run and stuff-->
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Select a Crop" Style="{StaticResource ResourceKey=Subtitle}" Height="50" Width="124" HorizontalAlignment="Left" Margin="10,20,10,10" TextAlignment="Center"/>
-                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Height="50" Width="350" SelectionChanged="CropCycleSelected" Margin="10,10,10,10">
+            <Rectangle StrokeThickness="2" Stroke="#FF424242" VerticalAlignment="Top" Height="1"
+                        Width="{Binding ActualWidth, ElementName=topStack}"/>
+            <StackPanel Orientation="Horizontal" >                
+                <ComboBox ItemsSource="{x:Bind ViewModel.CropRunList, Mode=OneWay}" Width="350" 
+                          SelectionChanged="CropCycleSelected" Margin="20,5,10,10" Header="Select Crop Run" FontSize="20">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock x:Name="SensorToggleButton"
@@ -26,14 +28,54 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <ToggleSwitch IsOn="{x:Bind ViewModel.HistoricalMode, Mode=TwoWay}"  Margin="15,0,0,0"
-                          OnContent="Historical Data" OffContent="Recent Data" FontSize="20" VerticalAlignment="Center"/>
-            </StackPanel>
+                <ToggleSwitch IsOn="{x:Bind ViewModel.HistoricalMode, Mode=TwoWay}"  Margin="20,5,10,0" Header="Choose Data"
+                          OnContent="Historical" OffContent="Real-time" FontSize="20" VerticalAlignment="Top" />
+                <!-- BEGIN Date Pickers -->
+
+                <CalendarDatePicker x:Name="StartDatePicker"
+                            VerticalAlignment="Top"
+                            RequestedTheme="Light"
+                            Width="165" 
+                            DateChanged="StartDatePicker_DateChanged"
+                            MinDate ="{x:Bind ViewModel.CycleStartTime, Mode=OneWay}"
+                            MaxDate ="{x:Bind ViewModel.CycleEndTime, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.HistControls, Mode=OneWay}"
+                            Margin="10,5,5,5">
+                    <CalendarDatePicker.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="Start Date"
+                               Style="{StaticResource SubtitleTextBlockStyle}" />
+                        </DataTemplate>
+                    </CalendarDatePicker.HeaderTemplate>
+                </CalendarDatePicker>
+
+                <CalendarDatePicker x:Name="EndDatePicker"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Width="165"
+                            DateChanged="EndDatePicker_DateChanged" 
+                            MinDate ="{x:Bind ViewModel.CycleStartTime, Mode=OneWay}"
+                            MaxDate ="{x:Bind ViewModel.CycleEndTime, Mode=OneWay}"  
+                            Visibility="{x:Bind ViewModel.HistControls, Mode=OneWay}"
+                            Margin="15,5,5,5">
+                    
+                    <CalendarDatePicker.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="End Date"
+                               Style="{StaticResource SubtitleTextBlockStyle}" />
+                        </DataTemplate>
+                    </CalendarDatePicker.HeaderTemplate>
+                </CalendarDatePicker>
+
+                <!-- END Date Pickers -->
+
+            </StackPanel>          
+            
             <!--Define list of sensors so user can toggle them on and off-->
             <!-- BEGIN Sensor Grid -->
             <ListView Height="180"
                   VerticalAlignment="Top"
-                  Margin="0,30,0,0"
+                  Margin="0,0,0,0"
                   Background="#FF424242"
                   Foreground="{x:Null}"
                   Padding="80,0,80,0"
@@ -79,7 +121,7 @@
         
         
         <!-- Define the chart for the entire remaining space -->
-        <Border Background="White" Margin="0, 300, 0, 0">
+        <Border Background="White" Margin="0, 270, 0, 0">
             <Charts:SfChart x:Name="ChartView" VerticalAlignment="Bottom" Background="White" Margin="10, 10, 10, 5" 
                                HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch" >

@@ -82,6 +82,16 @@ namespace Agronomist.ViewModels
                             BindableDatapoint datapoint = new BindableDatapoint(reading.Timestamp, reading.Value);
                             tuple.hourlyDatapoints.Add(datapoint);
                         }
+                        //Remove datapoints if we are storing more than an hour of them
+                        TimeSpan period;
+                        do
+                        {
+                            period = tuple.historicalDatapoints[0].timestamp - tuple.historicalDatapoints.Last().timestamp;
+                            if (period.TotalHours > 1)
+                            {
+                                tuple.historicalDatapoints.RemoveAt(0);
+                            }
+                        } while (period.TotalHours > 1); 
                     }
                 }
             }
@@ -227,11 +237,11 @@ namespace Agronomist.ViewModels
                     }
                     SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Place.Name);
                     LoadHistoricalData(); 
-                    SelectedEndTime = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
                     _selectedEndTime = _selectedCropCycle.EndDate;
-                    SelectedStartTime = _selectedCropCycle.StartDate; 
 
                     OnPropertyChanged();
+                    OnPropertyChanged("CycleEndTime");
+                    OnPropertyChanged("CycleStartTime");
                 }
             }
         }
@@ -278,23 +288,19 @@ namespace Agronomist.ViewModels
             get { return _historicalMode ? Visibility.Visible : Visibility.Collapsed; }
         }
 
-
-        public DateTimeOffset SelectedEndTime
+        public DateTimeOffset CycleEndTime
         {
-            get { return _selectedEndTime ?? DateTimeOffset.Now; }
-            set{
-                _selectedEndTime = value;
-                OnPropertyChanged();
-            }
+            get { return _selectedCropCycle?.EndDate ?? DateTimeOffset.Now; }
+        }
+        
+
+        public DateTimeOffset CycleStartTime
+        {
+            get { return _selectedCropCycle?.StartDate ?? DateTimeOffset.Now.AddDays(-1); }
         }
 
-        public DateTimeOffset SelectedStartTime
-        {
-            get { return _selectedStartTime; }
-            set { _selectedStartTime = value;
-                OnPropertyChanged(); 
-            }
-        }
+
+
 
         public string TimeLabel { get; set; } = "HH:mm"; 
 
