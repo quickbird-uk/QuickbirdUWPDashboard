@@ -31,8 +31,7 @@ namespace Agronomist.ViewModels
         private List<CroprunTuple> _cache = new List<CroprunTuple>();
 
         /* This data applies to the chosen crop cycle only*/
-        private CropCycle _selectedCropCycle; 
-
+        private CropCycle _selectedCropCycle;
         private IEnumerable<IGrouping<string, SensorTuple>> _sensors;
         private DateTimeOffset _selectedStartTime;
         private DateTimeOffset? _selectedEndTime;
@@ -71,36 +70,36 @@ namespace Agronomist.ViewModels
 
         public void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
         {
-            if (SensorsGrouped != null)
+            if (SensorsToGraph != null)
             {
-                List<SensorTuple> sensorsUngrouped = SensorsGrouped.SelectMany(group => group).ToList();
+                bool Added = false; 
                 foreach (Messenger.SensorReading reading in readings)
                 {
-                    SensorTuple tuple = sensorsUngrouped.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
+                    SensorTuple tuple = SensorsToGraph.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
                     if (tuple != null)
                     {
-                        if (tuple.hourlyDatapoints.Any(dp => dp.timestamp == reading.Timestamp.LocalDateTime) == false)
+                        if (tuple.hourlyDatapoints.Count == 0 || 
+                            tuple.hourlyDatapoints.LastOrDefault().timestamp < reading.Timestamp.LocalDateTime)
                         {
+                            Added = true; 
                             BindableDatapoint datapoint = new BindableDatapoint(reading.Timestamp, reading.Value);
                             tuple.hourlyDatapoints.Add(datapoint);
-                        }
-                        //Remove datapoints if we are storing more than an hour of them
-                        TimeSpan period;
-                        do
-                        {
-                            period = tuple.historicalDatapoints[0].timestamp - tuple.historicalDatapoints.Last().timestamp;
-                            if (period.TotalHours > 1)
-                            {
+
+                            //Remove datapoints if we are storing more than an hour of them
+                            if (tuple.historicalDatapoints.Count > 3000)
                                 tuple.historicalDatapoints.RemoveAt(0);
-                            }
-                        } while (period.TotalHours > 1); 
+                        }
+
                     }
                 }
-                var tupleForChartUpdate = sensorsUngrouped.FirstOrDefault(); 
-                if (tupleForChartUpdate?.RealtimeMode ?? false)
+                if (Added)
                 {
-                    tupleForChartUpdate.Axis.Minimum = tupleForChartUpdate.hourlyDatapoints.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
-                    tupleForChartUpdate.Axis.Maximum = tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
+                    var tupleForChartUpdate = SensorsToGraph.FirstOrDefault();
+                    if (tupleForChartUpdate?.RealtimeMode ?? false)
+                    {
+                        tupleForChartUpdate.Axis.Minimum = tupleForChartUpdate.hourlyDatapoints.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
+                        tupleForChartUpdate.Axis.Maximum = tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
+                    }
                 }
             }
         }
@@ -216,6 +215,9 @@ namespace Agronomist.ViewModels
 
         public ObservableCollection<SensorTuple> SensorsToGraph { get; set; } = new ObservableCollection<SensorTuple>();  
 
+        /// <summary>
+        /// One of the main method, when user selects crop cycle, this sets up al lthe variables 
+        /// </summary>
         public CropCycle SelectedCropCycle
         {
             get { return _selectedCropCycle; }
@@ -232,11 +234,7 @@ namespace Agronomist.ViewModels
                     { _currentlyRunning = true;  }
                     else
                     { _currentlyRunning = false; }
-                    RealtimeMode = false;
-                    OnPropertyChanged("RealtimeMode");
-                    OnPropertyChanged("LiveCropRun");
-                   
-
+       
                     List<Sensor> sensors = _cache.First(c => c.cropCycle.ID == value.ID).sensors;
                     
                     foreach (var sensor in sensors)
@@ -252,7 +250,10 @@ namespace Agronomist.ViewModels
                     LoadHistoricalData(); 
                     _selectedEndTime = _selectedCropCycle.EndDate;
 
+                    RealtimeMode = false;
                     OnPropertyChanged();
+                    OnPropertyChanged("RealtimeMode");
+                    OnPropertyChanged("LiveCropRun");
                     OnPropertyChanged("CycleEndTime");
                     OnPropertyChanged("CycleStartTime");
                 }
@@ -279,7 +280,8 @@ namespace Agronomist.ViewModels
                         datapointCollection.Add(bindable); 
                     }
                 }
-                tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(datapointCollection); 
+                var ordered = datapointCollection.OrderBy(dp => dp.timestamp); 
+                tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(ordered); 
             }           
         }
 
@@ -354,13 +356,10 @@ namespace Agronomist.ViewModels
                     _realtimeMode = value;
                     if (ChartSeries != null)
                     {
-                        ChartSeries.ItemsSource = _realtimeMode ? hourlyDatapoints: historicalDatapoints;
-                        if(_realtimeMode)
-                        {
-                            Axis.Minimum = hourlyDatapoints.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
-                            Axis.Maximum = hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
-                        }
-
+                        var source = _realtimeMode ? hourlyDatapoints : historicalDatapoints;
+                        ChartSeries.ItemsSource = source;
+                        Axis.Minimum = source.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
+                        Axis.Maximum = source.LastOrDefault()?.timestamp ?? DateTime.Now;
                     }
 
                 }
