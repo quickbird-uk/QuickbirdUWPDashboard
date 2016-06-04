@@ -91,7 +91,7 @@
         private void AddToChart(GraphingViewModel.SensorTuple tuple)
         {
             var lineSeries = new FastLineSeries();
-            lineSeries.ItemsSource = tuple.DataToGraph;
+            lineSeries.ItemsSource = tuple.hourlyDatapoints;
             lineSeries.XBindingPath = "timestamp";
             lineSeries.YBindingPath = "value";
             tuple.ChartSeries = lineSeries;

@@ -235,15 +235,22 @@ namespace Agronomist.ViewModels
             }
         }
 
+        public bool HistoricalMode
+        {
+            get { return _historicalMode; }
+            set { _historicalMode = value;
+                OnPropertyChanged("HistControls");
+                foreach(var tuple in SensorsToGraph)
+                {
+                    tuple.HistoryMode = _historicalMode; 
+                }
+            }
+        }
         public Visibility HistControls
         {
             get { return _historicalMode ? Visibility.Visible : Visibility.Collapsed; }
         }
 
-        public Visibility RealtimeControls
-        {
-            get { return _historicalMode ? Visibility.Collapsed : Visibility.Visible; }
-        }
 
         public DateTimeOffset SelectedEndTime
         {
@@ -283,7 +290,7 @@ namespace Agronomist.ViewModels
             public Sensor sensor;
 
             private bool _visible = false;
-            private bool _historyMode = false; 
+            private bool _historyMode = false;
 
             public bool HistoryMode
             {
@@ -291,7 +298,8 @@ namespace Agronomist.ViewModels
                 set
                 {
                     _historyMode = value;
-                    OnPropertyChanged("DataToGraph"); 
+                    if(ChartSeries != null)
+                        ChartSeries.ItemsSource = _historyMode ? historicalDatapoints : hourlyDatapoints;
                 }
             }
 
@@ -303,7 +311,7 @@ namespace Agronomist.ViewModels
                 set
                 {
                     _visible = value;
-                    if(DataToGraph != null)
+                    if(ChartSeries != null)
                     {
                         ChartSeries.IsEnabled = _visible;
                         ChartSeries.IsSeriesVisible = _visible;
@@ -320,15 +328,6 @@ namespace Agronomist.ViewModels
             /// Only read from the DB, not reloaded in realtime
             /// </summary>
             public ObservableCollection<BindableDatapoint> historicalDatapoints { get; set; } = new ObservableCollection<BindableDatapoint>();
-
-            public ObservableCollection<BindableDatapoint> DataToGraph
-            {
-                get { if (HistoryMode)
-                        return historicalDatapoints;
-                    else
-                        return hourlyDatapoints; 
-                }
-            }
 
             public Syncfusion.UI.Xaml.Charts.ChartSeries ChartSeries = null;
         }
