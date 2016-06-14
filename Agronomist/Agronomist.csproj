@@ -204,9 +204,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Syncfusion.SfChart.UWP, Version=14.1460.0.41, Culture=neutral, PublicKeyToken=3d67ed1f87d44c89, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files (x86)\Syncfusion\Essential Studio\14.1.0.41\Assemblies for Universal Windows\10.0\Syncfusion.SfChart.UWP.dll</HintPath>
+    <Reference Include="Syncfusion.SfChart.UWP">
+      <HintPath>libs\Syncfusion.SfChart.UWP.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
