@@ -13,7 +13,7 @@
 
     public static class Request
     {
-        private const int DefaultTimeout = 10;
+        private const int DefaultTimeout = 30;
 
         /// <summary>
         ///     Fetches a table, catches errors either returns the resonse or a message starting with "Error".
