@@ -8,20 +8,20 @@
     RequestedTheme="Dark"
     mc:Ignorable="d">
 
+    <!--  Everything grid  -->
     <Grid Background="#FF4A90E2">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="35" />
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+        <Grid Visibility="{x:Bind ViewModel.SettingSideVisible, Mode=OneWay}">
+            <!--  The settings page, hides behind the main bit.  -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition />
+                <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="10" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition />
@@ -31,7 +31,7 @@
                 <RowDefinition Height="5" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Column="0"
-                Grid.ColumnSpan="7"
+                Grid.ColumnSpan="9"
                 HorizontalAlignment="Center"
                 Style="{StaticResource TitleTextBlockStyle}"
                 Text="Alert Threshold Settings" />
@@ -42,10 +42,12 @@
             <TextBox Grid.Row="1"
                 Grid.Column="3"
                 VerticalAlignment="Center"
-                IsEnabled="{x:Bind HighEnable.IsEnabled}"/>
+                IsEnabled="{x:Bind HighEnable.IsOn, Mode=OneWay}" />
             <ToggleSwitch x:Name="HighEnable"
                 Grid.Row="1"
                 Grid.Column="5"
+                Grid.ColumnSpan="3"
+                IsOn="{x:Bind ViewModel.HighAlertIsEnabled, Mode=TwoWay}"
                 OffContent="Enable"
                 OnContent="Disable" />
             <TextBlock Grid.Row="2"
@@ -55,31 +57,42 @@
             <TextBox Grid.Row="2"
                 Grid.Column="3"
                 VerticalAlignment="Center"
-                IsEnabled="{x:Bind LowEnable.IsEnabled}" />
+                IsEnabled="{x:Bind LowEnable.IsOn, Mode=OneWay}" />
             <ToggleSwitch x:Name="LowEnable"
                 Grid.Row="2"
                 Grid.Column="5"
+                Grid.ColumnSpan="3"
+                IsOn="{x:Bind ViewModel.LowAlertIsEnabled, Mode=TwoWay}"
                 OffContent="Enable"
                 OnContent="Disable" />
-
+            <Button Grid.Row="3"
+                Grid.Column="1"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Stretch"
+                Click="{x:Bind ViewModel.SaveSettingsChanges}"
+                Content="Save" />
+            <Button Grid.Row="3"
+                Grid.Column="5"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Stretch"
+                Click="{x:Bind ViewModel.CancelSettingsChanges}"
+                Content="Cancel" />
         </Grid>
 
         <!--  Main dash readings front.  -->
-        <Grid Grid.Row="0"
-            d:IsHidden="True"
-            Background="{x:Bind ViewModel.CardBackColour, FallbackValue=#FF4A90E2}"
-            RequestedTheme="Dark"
-            Visibility="{x:Bind MainVisibility}">
+        <Grid Background="{x:Bind ViewModel.CardBackColour, FallbackValue=#FF4A90E2}" Visibility="{x:Bind ViewModel.ReadingSideVisible, Mode=OneWay}">
             <Grid.RowDefinitions>
+                <!--  0 - Margin  -->
                 <RowDefinition Height="5" />
-                <!--  Name of sensor  -->
+                <!--  1 - Name of sensor  -->
                 <RowDefinition Height="*" />
-                <!--  Reading and units 2 rows  -->
+                <!--  2,3 Alert symbol, reading and units  -->
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
-                <!--  Status  -->
+                <!--  4- Bottom button panel  -->
                 <RowDefinition Height="10" />
-                <RowDefinition Height="5" />
+                <!--  5- Unused margin placeholder  -->
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -116,47 +129,49 @@
                     Style="{StaticResource BaseTextBlockStyle}"
                     Text="{x:Bind ViewModel.Units, Mode=OneWay, FallbackValue=units}" />
             </StackPanel>
-        </Grid>
 
-        <!--  The bottom button panel.  -->
-        <Grid Grid.Row="1" Background="#E5EBEBEB">
-            <Grid.Resources>
-                <Style TargetType="ToggleButton">
-                    <Setter Property="HorizontalAlignment" Value="Stretch" />
-                    <Setter Property="VerticalAlignment" Value="Stretch" />
-                    <Setter Property="Background" Value="#FFFFFF" />
-                    <Setter Property="Foreground" Value="#FF4A90E2" />
-                    <Setter Property="Padding" Value="0" />
-                    <Setter Property="RequestedTheme" Value="Light" />
-                </Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="VerticalAlignment" Value="Center" />
-                </Style>
-            </Grid.Resources>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <ToggleButton Grid.Column="0" IsChecked="{x:Bind AlertsToggle, Mode=TwoWay}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" />
-                    <TextBlock Margin="8,0,0,2" Text="Alerts" />
-                </StackPanel>
-            </ToggleButton>
-            <ToggleButton Grid.Column="1">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C9;" />
-                    <TextBlock Margin="8,0,0,2" Text="Ignore" />
-                </StackPanel>
-            </ToggleButton>
-            <ToggleButton Grid.Column="2">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8D8;" />
-                    <TextBlock Margin="8,0,0,2" Text="Pause" />
-                </StackPanel>
-            </ToggleButton>
+            <!--  The bottom button panel.  -->
+            <Grid Grid.Row="5"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Background="#E5EBEBEB">
+                <Grid.Resources>
+                    <Style TargetType="ToggleButton">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        <Setter Property="VerticalAlignment" Value="Stretch" />
+                        <Setter Property="Background" Value="#FFFFFF" />
+                        <Setter Property="Foreground" Value="#FF4A90E2" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="RequestedTheme" Value="Light" />
+                    </Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton Grid.Column="0" IsChecked="{x:Bind ViewModel.ShowSettingsToggleChecked, Mode=TwoWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" />
+                        <TextBlock Margin="8,0,0,2" Text="Alerts" />
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton Grid.Column="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C9;" />
+                        <TextBlock Margin="8,0,0,2" Text="Ignore" />
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton Grid.Column="2">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8D8;" />
+                        <TextBlock Margin="8,0,0,2" Text="Pause" />
+                    </StackPanel>
+                </ToggleButton>
+            </Grid>
         </Grid>
-
     </Grid>
 </UserControl>

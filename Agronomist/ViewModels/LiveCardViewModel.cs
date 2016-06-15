@@ -20,11 +20,24 @@
         public const string NormalCardColour = "#FF4A90E2";
         public const string WarnCardColour = "#FFFFFF00";
         public const string ErrorCardColour = "#FFFF0000";
+        private const string Visible = "Visible";
+        private const string Collapsed = "Collapsed";
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
-        
+
+        private string _cardBackColour = NormalCardColour;
+
+        private bool _highAlertIsEnabled;
+
+        private bool _lowAlertIsEnabled;
+
+        private string _readingSideVisible = Visible;
+        private string _settingSideVisible = Collapsed;
+
+        private bool _showSettingsToggleChecked;
+
         private string _statusSymbol = Tick;
         private string _unitName = "sensor type";
         private string _units = "Units";
@@ -85,7 +98,7 @@
                 OnPropertyChanged();
             }
         }
-        
+
         public string StatusSymbol
         {
             get { return _statusSymbol; }
@@ -108,8 +121,6 @@
             }
         }
 
-        private string _cardBackColour = NormalCardColour;
-
         public string CardBackColour
         {
             get { return _cardBackColour; }
@@ -121,15 +132,102 @@
             }
         }
 
+        public string ReadingSideVisible
+        {
+            get { return _readingSideVisible; }
+            private set
+            {
+                if (value == _readingSideVisible) return;
+                _readingSideVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SettingSideVisible
+        {
+            get { return _settingSideVisible; }
+            private set
+            {
+                if (value == _settingSideVisible) return;
+                _settingSideVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
         public Guid Id { get; }
 
         public string Placement { get; }
+
+        public bool? ShowSettingsToggleChecked
+        {
+            get { return _showSettingsToggleChecked; }
+            set
+            {
+                if (value == _showSettingsToggleChecked) return;
+                _showSettingsToggleChecked = value ?? false;
+                if (_showSettingsToggleChecked)
+                {
+                    DisplaySettingsPage();
+                }
+                OnPropertyChanged();
+            }
+        }
+
+        public bool HighAlertIsEnabled
+        {
+            get { return _highAlertIsEnabled; }
+            set
+            {
+                if (value == _highAlertIsEnabled) return;
+                _highAlertIsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LowAlertIsEnabled
+        {
+            get { return _lowAlertIsEnabled; }
+            set
+            {
+                if (value == _lowAlertIsEnabled) return;
+                _lowAlertIsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
 
         public void Update(Sensor poco)
         {
             Units = poco.SensorType.Param.Unit;
             UnitName = poco.SensorType.Param.Name;
             //TODO: Status = poco.AlertStatus
+        }
+
+        private void DisplaySettingsPage()
+        {
+            SettingSideVisible = Visible;
+            ReadingSideVisible = Collapsed;
+
+            //TODO: Get the high and low alert numbers.
+            //TODO: Get high and low alert enabled vars.
+            //TODO: Set the fetched values on the settings page.
+        }
+
+        public void SaveSettingsChanges()
+        {
+            //TODO: Save settings.
+
+            // Now hide the settings page.
+            CancelSettingsChanges();
+        }
+
+        /// <summary>
+        /// Hides the settings page.
+        /// </summary>
+        public void CancelSettingsChanges()
+        {
+            ReadingSideVisible = Visible;
+            SettingSideVisible = Collapsed;
+            ShowSettingsToggleChecked = false;
         }
 
         /// <summary>
