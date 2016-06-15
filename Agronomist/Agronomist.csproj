@@ -221,6 +221,7 @@
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <PlatformTarget>x86</PlatformTarget>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <OutputPath>bin\ARM\Debug\</OutputPath>

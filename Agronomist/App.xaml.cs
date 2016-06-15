@@ -10,6 +10,7 @@
     using Models;
     using Util;
     using Windows.UI.Core;
+    using Windows.ApplicationModel.ExtendedExecution;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
@@ -18,6 +19,7 @@
     {
 
         private LocalNetworking.Manager _networking = null;
+        ExtendedExecutionSession session; 
         private bool Startup = true; 
 
         /// <summary>
@@ -120,11 +122,28 @@
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: Save application state and stop any background activity
-            deferral.Complete();
+            if (session != null)
+                session.Dispose(); 
+            session = new ExtendedExecutionSession();
+            
+            session.Reason = ExtendedExecutionReason.LocationTracking;
+            session.Description = "Recording datapoints from sensors";
+
+            //session.Revoked += Messenger.AppSusspending;
+
+            var result = await session.RequestExtensionAsync();
+            if (result == ExtendedExecutionResult.Denied)
+            {
+                //TODO: Messenger.AsppSuspending 
+            }
+            // Do Navigation
+                
+            
+            //var deferral = e.SuspendingOperation.GetDeferral();
+            ////TODO: Save application state and stop any background activity
+            //deferral.Complete();
         }
     }
 }
