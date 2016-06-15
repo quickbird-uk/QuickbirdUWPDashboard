@@ -5,15 +5,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:Agronomist.Views"
     mc:Ignorable="d">
-
-
     <Grid Background="#EBEBEB"
         ScrollViewer.HorizontalScrollMode="Disabled"
         ScrollViewer.VerticalScrollBarVisibility="Auto"
         ScrollViewer.VerticalScrollMode="Auto">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -27,74 +25,21 @@
             Grid.RowSpan="4"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Background="#D7D7D7"
-            BorderBrush="#EBEBEB"
-            BorderThickness="5"
-            FontSize="36"
-            Foreground="#FF515C6B"
-            Header="Solution"
-            ItemsSource="{x:Bind ViewModel.WaterCards, Mode=OneWay}"
-            Padding="10,5,10,10"
-            ScrollViewer.VerticalScrollMode="Disabled">
+            ItemsSource="{x:Bind ViewModel.MainCards, Mode=OneWay}">
             <GridView.ItemTemplate>
                 <DataTemplate>
-                    <views:LiveCard Margin="5" ViewModel="{Binding}">
-                        <views:LiveCard.RenderTransform>
-                            <ScaleTransform x:Name="ScaleWater"
-                                ScaleX="1"
-                                ScaleY="1" />
-                        </views:LiveCard.RenderTransform>
-                    </views:LiveCard>
+                    <views:LiveCard Margin="5" ViewModel="{Binding}" />
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
         <GridView Grid.Row="0"
-            Grid.RowSpan="2"
+            Grid.RowSpan="4"
             Grid.Column="2"
             Grid.ColumnSpan="2"
-            Background="#D7D7D7"
-            BorderBrush="#EBEBEB"
-            BorderThickness="5"
-            FontSize="36"
-            Foreground="#FF515C6B"
-            Header="Plants"
-            ItemsSource="{x:Bind ViewModel.PlantCards, Mode=OneWay}"
-            Padding="10,5,10,10"
-            ScrollViewer.VerticalScrollMode="Disabled">
+            ItemsSource="{x:Bind ViewModel.AmbientCards, Mode=OneWay}">
             <GridView.ItemTemplate>
                 <DataTemplate>
-                    <views:LiveCard Margin="5" ViewModel="{Binding}">
-                        <views:LiveCard.RenderTransform>
-                            <ScaleTransform x:Name="ScalePlant"
-                                ScaleX="1"
-                                ScaleY="1" />
-                        </views:LiveCard.RenderTransform>
-                    </views:LiveCard>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
-        <GridView Grid.Row="2"
-            Grid.RowSpan="2"
-            Grid.Column="2"
-            Grid.ColumnSpan="2"
-            Background="#D7D7D7"
-            BorderBrush="#EBEBEB"
-            BorderThickness="5"
-            FontSize="36"
-            Foreground="#FF515C6B"
-            Header="Ambient"
-            ItemsSource="{x:Bind ViewModel.AmbientCards, Mode=OneWay}"
-            Padding="10,5,10,10"
-            ScrollViewer.VerticalScrollMode="Disabled">
-            <GridView.ItemTemplate>
-                <DataTemplate>
-                    <views:LiveCard Margin="5" ViewModel="{Binding}">
-                        <views:LiveCard.RenderTransform>
-                            <ScaleTransform x:Name="ScaleAmbient"
-                                ScaleX="1"
-                                ScaleY="1" />
-                        </views:LiveCard.RenderTransform>
-                    </views:LiveCard>
+                    <views:LiveCard Margin="5" ViewModel="{Binding}" />
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>

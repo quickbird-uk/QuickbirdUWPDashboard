@@ -12,9 +12,7 @@
 
         private ObservableCollection<LiveCardViewModel> _cards = new ObservableCollection<LiveCardViewModel>();
 
-        private ObservableCollection<LiveCardViewModel> _plantCards = new ObservableCollection<LiveCardViewModel>();
-
-        private ObservableCollection<LiveCardViewModel> _waterCards = new ObservableCollection<LiveCardViewModel>();
+        private ObservableCollection<LiveCardViewModel> _mainCards = new ObservableCollection<LiveCardViewModel>();
 
         public DashboardViewModel([NotNull] CropCycle run)
         {
@@ -32,18 +30,7 @@
                 OnPropertyChanged();
             }
         }
-
-        public ObservableCollection<LiveCardViewModel> WaterCards
-        {
-            get { return _waterCards; }
-            set
-            {
-                if (value == _waterCards) return;
-                _waterCards = value;
-                OnPropertyChanged();
-            }
-        }
-
+      
         public ObservableCollection<LiveCardViewModel> AmbientCards
         {
             get { return _ambientCards; }
@@ -55,13 +42,13 @@
             }
         }
 
-        public ObservableCollection<LiveCardViewModel> PlantCards
+        public ObservableCollection<LiveCardViewModel> MainCards
         {
-            get { return _plantCards; }
+            get { return _mainCards; }
             set
             {
-                if (value == _plantCards) return;
-                _plantCards = value;
+                if (value == _mainCards) return;
+                _mainCards = value;
                 OnPropertyChanged();
             }
         }
@@ -79,8 +66,7 @@
             foreach (var missingSensor in missingSensors)
             {
                 _cards.Remove(missingSensor);
-                if (PlantCards.Contains(missingSensor)) PlantCards.Remove(missingSensor);
-                if (WaterCards.Contains(missingSensor)) WaterCards.Remove(missingSensor);
+                if (MainCards.Contains(missingSensor)) MainCards.Remove(missingSensor);
                 if (AmbientCards.Contains(missingSensor)) AmbientCards.Remove(missingSensor);
             }
 
@@ -106,30 +92,22 @@
                 }
             }
             //WE chose these two sensors for plantID's. The system we have does not have a good selection right now 
-            var plantIds = new long[]
+            var mainIds = new long[]
             {
-                11, 8
-            };
-            var waterIds = new long[]
-            {
+                8,
                 13, 19, 4, 16
             };
             var ambientIds = new long[]
             {
-                5, 6
+                5, 6, 11
             };
 
-            var plantItems = Cards.Where(c => plantIds.Contains(c.SensorTypeID));
-            var waterItems = Cards.Where(c => waterIds.Contains(c.SensorTypeID));
+            var mainItems = Cards.Where(c => mainIds.Contains(c.SensorTypeID));
             var ambientItems = Cards.Where(c => ambientIds.Contains(c.SensorTypeID));
 
-            foreach (var item in plantItems)
+            foreach (var item in mainItems)
             {
-                if (!PlantCards.Contains(item)) PlantCards.Add(item);
-            }
-            foreach (var item in waterItems)
-            {
-                if (!WaterCards.Contains(item)) WaterCards.Add(item);
+                if (!MainCards.Contains(item)) MainCards.Add(item);
             }
             foreach (var item in ambientItems)
             {

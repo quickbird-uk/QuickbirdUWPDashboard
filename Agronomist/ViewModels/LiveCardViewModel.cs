@@ -11,19 +11,23 @@
 
     public class LiveCardViewModel : ViewModelBase
     {
-        private const string Play = "&#xE768";
-        private const string Pause = "&#xE769";
+        public const string Play = "\xE768";
+        public const string Pause = "\xE769";
+        public const string Warn = "\xE8C9";
+        public const string Tick = "\xE8FB";
+        public const string Up = "\xE898";
+        public const string Down = "\xE896";
+        public const string NormalCardColour = "#FF4A90E2";
+        public const string WarnCardColour = "#FFFFFF00";
+        public const string ErrorCardColour = "#FFFF0000";
+
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
-
-        private bool _propPanelVisible;
-
-        private string _status = "OK";
-
+        
+        private string _statusSymbol = Tick;
         private string _unitName = "sensor type";
         private string _units = "Units";
-
         private string _value = "?";
 
         public LiveCardViewModel(Sensor poco)
@@ -32,7 +36,7 @@
             Placement = poco.SensorType.Place.Name;
             PlacementId = poco.SensorType.PlaceID;
             ParameterID = poco.SensorType.ParamID;
-            SensorTypeID = poco.SensorTypeID; 
+            SensorTypeID = poco.SensorTypeID;
             _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
             _dataUpdater = async readings =>
             {
@@ -53,8 +57,6 @@
         public long SensorTypeID { get; }
 
         public long ParameterID { get; }
-
-        public string PropPanelVisible => _propPanelVisible ? "Visible" : "Collapsed";
 
         /// <summary>
         ///     Current Sensor Value
@@ -83,14 +85,14 @@
                 OnPropertyChanged();
             }
         }
-
-        public string Status
+        
+        public string StatusSymbol
         {
-            get { return _status; }
+            get { return _statusSymbol; }
             set
             {
-                if (value == _status) return;
-                _status = value;
+                if (value == _statusSymbol) return;
+                _statusSymbol = value;
                 OnPropertyChanged();
             }
         }
@@ -106,15 +108,22 @@
             }
         }
 
+        private string _cardBackColour = NormalCardColour;
+
+        public string CardBackColour
+        {
+            get { return _cardBackColour; }
+            set
+            {
+                if (value == _cardBackColour) return;
+                _cardBackColour = value;
+                OnPropertyChanged();
+            }
+        }
+
         public Guid Id { get; }
 
         public string Placement { get; }
-
-        public void SetPropPanelVisibility(bool isVisible)
-        {
-            _propPanelVisible = isVisible;
-            OnPropertyChanged(nameof(PropPanelVisible));
-        }
 
         public void Update(Sensor poco)
         {
