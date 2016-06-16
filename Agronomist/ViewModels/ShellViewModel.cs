@@ -5,6 +5,7 @@
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
     using Microsoft.EntityFrameworkCore;
@@ -12,16 +13,12 @@
     using NetLib;
     using Util;
     using Views;
-    using Windows.UI.Xaml;
 
     public class ShellViewModel : ViewModelBase
     {
-        private const string ShowNotificationsString = "Show Notifications";
-
         private readonly Frame _contentFrame;
+        private readonly List<DashboardViewModel> _dashboardViewModels = new List<DashboardViewModel>();
 
-
-        DispatcherTimer _syncTimer; 
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
         /// </summary>
@@ -29,19 +26,11 @@
         private readonly Action<string> _updateAction;
 
         private CropRunViewModel _currentCropRun;
-        private readonly List<DashboardViewModel> _dashboardViewModels = new List<DashboardViewModel>();
 
         private bool _isNavOpen = true;
 
-        private bool _isNotificationsOpen;
-
-        private string _notificationsButtonText = ShowNotificationsString;
-
-        private string _notificationsCount = "0";
-
         private ObservableCollection<CropRunViewModel> _runs = new ObservableCollection<CropRunViewModel>();
 
-        private bool _syncButtonEnabled = true;
 
         /// <summary>
         ///     Initialise the shell.
@@ -56,16 +45,11 @@
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
 
-            _syncTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
-            _syncTimer.Tick += Sync;
-            _syncTimer.Start();
-
-
             if (_runs.Count > 0)
                 _contentFrame.Navigate(typeof(Dashboard),
                     _dashboardViewModels[0]);
             else
-                //TODO This should navigate to some sort of guidance page, that tells people to add a box, etc. 
+            //TODO This should navigate to some sort of guidance page, that tells people to add a box, etc. 
                 _contentFrame.Navigate(typeof(Dashboard));
         }
 
@@ -83,38 +67,6 @@
             }
         }
 
-        /// <summary>
-        ///     Text changes when the notifications drawer is opened and closed.
-        /// </summary>
-        public string NotificationsButtonText
-        {
-            get { return _notificationsButtonText; }
-            set
-            {
-                if (value == _notificationsButtonText) return;
-                _notificationsButtonText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     Bound two way because the notifications drawer closes automatically.
-        /// </summary>
-        public bool IsNotificationsOpen
-        {
-            get { return _isNotificationsOpen; }
-            set
-            {
-                if (value == _isNotificationsOpen) return;
-                _isNotificationsOpen = value;
-                // Notifcations closing is an automatic popup event, so we need to handle it here.
-                if (value == false)
-                {
-                    CloseNotifications();
-                }
-                OnPropertyChanged();
-            }
-        }
 
         /// <summary>
         ///     Needs to be an opbjects to allow two-way binding with the ListView.
@@ -130,6 +82,8 @@
             }
         }
 
+        public bool IsCropRunSet => _currentCropRun != null;
+
         /// <summary>
         ///     The current selected crop run.
         /// </summary>
@@ -140,34 +94,16 @@
             {
                 _currentCropRun = value;
                 OnPropertyChanged();
-                OnPropertyChanged("IsCropRunSet");
+                OnPropertyChanged(nameof(IsCropRunSet));
 
                 var viewModel = _dashboardViewModels.FirstOrDefault(dvm => dvm.CropId == value?.CropRunId)
-                    ?? _dashboardViewModels.FirstOrDefault();
+                                ?? _dashboardViewModels.FirstOrDefault();
 
                 if (viewModel != null)
                     _contentFrame.Navigate(typeof(Dashboard), viewModel);
                 else
-                    //TODO This should navigate to some sort of guidance page
-                    _contentFrame.Navigate(typeof(Dashboard)); 
-
-
-            }
-        }
-
-        public bool IsCropRunSet
-        {
-            get { return _currentCropRun != null; }
-        }
-
-        public string NotificationsCount
-        {
-            get { return _notificationsCount; }
-            set
-            {
-                if (value == _notificationsCount) return;
-                _notificationsCount = value;
-                OnPropertyChanged();
+                //TODO This should navigate to some sort of guidance page
+                    _contentFrame.Navigate(typeof(Dashboard));
             }
         }
 
@@ -178,17 +114,6 @@
             {
                 if (value == _isNavOpen) return;
                 _isNavOpen = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool SyncButtonEnabled
-        {
-            get { return _syncButtonEnabled; }
-            set
-            {
-                if (value == _syncButtonEnabled) return;
-                _syncButtonEnabled = value;
                 OnPropertyChanged();
             }
         }
@@ -204,15 +129,15 @@
                     .Include(cc => cc.Location)
                     .Include(cc => cc.CropType)
                     .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Param)
+                    .ThenInclude(l => l.Devices)
+                    .ThenInclude(d => d.Sensors)
+                    .ThenInclude(s => s.SensorType)
+                    .ThenInclude(st => st.Param)
                     .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Place)
+                    .ThenInclude(l => l.Devices)
+                    .ThenInclude(d => d.Sensors)
+                    .ThenInclude(s => s.SensorType)
+                    .ThenInclude(st => st.Place)
                     .AsNoTracking();
                 var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate > now).ToList();
                 var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
@@ -278,51 +203,6 @@
             }
         }
 
-        private static List<CropCycle> FakeCropRuns()
-        {
-            return new List<CropCycle>
-            {
-                new CropCycle
-                {
-                    ID = Guid.NewGuid(),
-                    CropTypeName = "Cheese",
-                    StartDate = DateTimeOffset.Now,
-                    Location = new Location {Name = "Ga"}
-                },
-                new CropCycle
-                {
-                    ID = Guid.NewGuid(),
-                    CropTypeName = "Goat",
-                    StartDate = DateTimeOffset.Now,
-                    Location = new Location {Name = "Site15"}
-                }
-            };
-        }
-
-        public void ToggleNotifications()
-        {
-            if (IsNotificationsOpen)
-            {
-                CloseNotifications();
-            }
-            else
-            {
-                OpenNotifications();
-            }
-        }
-
-        private void OpenNotifications()
-        {
-            IsNotificationsOpen = true;
-            NotificationsButtonText = "Hide Notifications";
-        }
-
-        private void CloseNotifications()
-        {
-            IsNotificationsOpen = false;
-            NotificationsButtonText = ShowNotificationsString;
-        }
-
         public void ToggleNav()
         {
             Debug.WriteLine("Toggle Nav.");
@@ -348,40 +228,10 @@
             _contentFrame.Navigate(typeof(AddCropCycleView));
         }
 
-        
+
         public void NavToArchiveView()
         {
             _contentFrame.Navigate(typeof(ArchiveView));
-            
-        }
-
-
-        public void NavToAddYield()
-        {
-            if (_currentCropRun != null)
-            {
-                _contentFrame.Navigate(typeof(AddYieldView), _currentCropRun.CropRunId);
-            }
-        }
-
-        public async void Sync(object sender, object e)
-        {
-            SyncButtonEnabled = false;
-            using (var context = new MainDbContext())
-            {
-                var settings = new Settings();
-                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-                var now = DateTimeOffset.Now;
-                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
-                settings.LastDatabaseUpdate = now;
-                Debug.WriteLine(errors);
-
-                var posterrors = string.Join(",", await context.PostChanges());
-                Debug.WriteLine(posterrors);
-
-                Debug.WriteLine(await context.PostHistoryChanges());
-            }
-            SyncButtonEnabled = true;
         }
     }
 }
