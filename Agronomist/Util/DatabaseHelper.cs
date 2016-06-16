@@ -75,15 +75,6 @@ namespace Agronomist.Util
             }); 
         }
 
-        public List<CropCycle> GetDatatree()
-        {
-            return _localTask.ContinueWith((Task previous) =>
-            {
-                var result = _GetDatatree();
-                return result;
-            }).Result; 
-        }
-
         private List<KeyValuePair<Guid, List<SensorHistory>>> _GetDataReadings(List<Guid> SensorIDs, DateTimeOffset start, DateTimeOffset end)
         {
             DateTimeOffset trueStartDate = start.AddDays(-1); //Because of the way we put timestamps on days, we need to subtracks one
@@ -117,13 +108,5 @@ namespace Agronomist.Util
             });
         }
 
-        public List<KeyValuePair<Guid, List<SensorHistory>>> GetDataReading(List<Guid> SensorIDs, DateTimeOffset start, DateTimeOffset end)
-        {
-            return _localTask.ContinueWith((Task previous) =>
-            {
-                var result = _GetDataReadings(SensorIDs, start, end);
-                return result;
-            }).Result;
-        }
     }
 }
