@@ -3,7 +3,7 @@
     using System;
     using DatabasePOCOs.User;
 
-    public class CropRunViewModel : ViewModelBase
+    public class SharedCropRunViewModel : ViewModelBase
     {
         private string _boxName;
 
@@ -23,7 +23,7 @@
         ///     Initialises the properties of this viewmodel with data from POCO.
         /// </summary>
         /// <param name="cropRun">Requires CropType and Location to be included.</param>
-        public CropRunViewModel(CropCycle cropRun)
+        public SharedCropRunViewModel(CropCycle cropRun)
         {
             Update(cropRun);
         }

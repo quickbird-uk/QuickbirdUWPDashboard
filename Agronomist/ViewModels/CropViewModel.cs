@@ -3,19 +3,32 @@
     using System;
     using System.Diagnostics;
     using Windows.UI.Xaml.Controls;
-    using Models;
-    using NetLib;
-    using Util;
     using Views;
 
     public class CropViewModel : ViewModelBase
     {
         private const string ShowNotificationsString = "Show Notifications";
 
-        private readonly Frame _contentFrame;
+        private readonly Frame _cropContentFrame;
 
-        private CropRunViewModel _currentCropRun;
+        private SharedCropRunViewModel _sharedCropRunViewModel;
+        private DashboardViewModel _dashboardViewModel;
+
+        private bool _isNotificationsOpen;
+        private string _notificationsButtonText = ShowNotificationsString;
+        private string _notificationsCount = "0";
+
         private bool _syncButtonEnabled = true;
+        private string _test = "test";
+
+        public CropViewModel(Frame cropContentFrame, SharedCropRunViewModel sharedCropRunViewModel)
+        {
+            _cropContentFrame = cropContentFrame;
+            _sharedCropRunViewModel = sharedCropRunViewModel;
+            _dashboardViewModel = new DashboardViewModel();
+            _cropContentFrame.Navigate(typeof(Dashboard), sharedCropRunViewModel);
+        }
+
         public bool SyncButtonEnabled
         {
             get { return _syncButtonEnabled; }
@@ -25,17 +38,6 @@
                 _syncButtonEnabled = value;
                 OnPropertyChanged();
             }
-        }
-
-        private bool _isNotificationsOpen;
-        private string _notificationsButtonText = ShowNotificationsString;
-        private string _notificationsCount = "0";
-        private string _test = "test";
-
-        public CropViewModel(Frame contentFrame)
-        {
-            _contentFrame = contentFrame;
-            Update();
         }
 
         public string Test
@@ -49,13 +51,13 @@
             }
         }
 
-        public CropRunViewModel CurrentCropRun
+        public SharedCropRunViewModel SharedCropRunViewModel
         {
-            get { return _currentCropRun; }
+            get { return _sharedCropRunViewModel; }
             set
             {
-                if (value == _currentCropRun) return;
-                _currentCropRun = value;
+                if (value == _sharedCropRunViewModel) return;
+                _sharedCropRunViewModel = value;
                 OnPropertyChanged();
             }
         }
@@ -71,8 +73,6 @@
                 OnPropertyChanged();
             }
         }
-
-        public bool IsCropRunSet => _currentCropRun != null;
 
         /// <summary>
         ///     Text changes when the notifications drawer is opened and closed.
@@ -106,17 +106,12 @@
                 OnPropertyChanged();
             }
         }
-
-        private void Update()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void NavToAddYield()
         {
-            if (_currentCropRun != null)
+            if (_sharedCropRunViewModel != null)
             {
-                _contentFrame.Navigate(typeof(AddYieldView), _currentCropRun.CropRunId);
+                _cropContentFrame.Navigate(typeof(AddYieldView), _sharedCropRunViewModel.CropRunId);
             }
         }
 
@@ -145,24 +140,10 @@
             NotificationsButtonText = ShowNotificationsString;
         }
 
-        public async void Sync(object sender, object e)
+        public void Sync(object sender, object e)
         {
-            SyncButtonEnabled = false;
-            using (var context = new MainDbContext())
-            {
-                var settings = Settings.Instance;
-                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-                var now = DateTimeOffset.Now;
-                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
-                settings.LastDatabaseUpdate = now;
-                Debug.WriteLine(errors);
-
-                var posterrors = string.Join(",", await context.PostChanges());
-                Debug.WriteLine(posterrors);
-
-                Debug.WriteLine(await context.PostHistoryChanges());
-            }
-            SyncButtonEnabled = true;
+            //TODO: Implement sync.
+            Debug.WriteLine("Sync clicked, not implemented.");
         }
     }
 }

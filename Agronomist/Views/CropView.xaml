@@ -49,7 +49,7 @@
                                 <StackPanel Margin="48,0,72,0">
                                     <TextBlock FontSize="24"
                                         Foreground="#FF515C6B"
-                                        Text="{x:Bind ViewModel.CurrentCropRun.CropName, Mode=OneWay, FallbackValue=--}"
+                                        Text="{x:Bind ViewModel.SharedCropRunViewModel.CropName, Mode=OneWay, FallbackValue=--}"
                                         TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
                                         Style="{ThemeResource Subtitle}"
@@ -59,7 +59,7 @@
                                 <StackPanel Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
                                         Foreground="#FF515C6B"
-                                        Text="{x:Bind ViewModel.CurrentCropRun.VarietyName, Mode=OneWay, FallbackValue=--}"
+                                        Text="{x:Bind ViewModel.SharedCropRunViewModel.VarietyName, Mode=OneWay, FallbackValue=--}"
                                         TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
                                         Style="{ThemeResource Subtitle}"
@@ -69,7 +69,7 @@
                                 <StackPanel x:Name="PlantDateCard" Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
                                         Foreground="#FF515C6B"
-                                        Text="{x:Bind ViewModel.CurrentCropRun.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
+                                        Text="{x:Bind ViewModel.SharedCropRunViewModel.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
                                         TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
                                         Style="{ThemeResource Subtitle}"
@@ -79,7 +79,7 @@
                                 <StackPanel x:Name="YieldCard" Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
                                         Foreground="#FF515C6B"
-                                        Text="{x:Bind ViewModel.CurrentCropRun.Yield, Mode=OneWay, FallbackValue=0kg}" />
+                                        Text="{x:Bind ViewModel.SharedCropRunViewModel.Yield, Mode=OneWay, FallbackValue=0kg}" />
                                     <TextBlock Foreground="#FF515C6B"
                                         Style="{ThemeResource Subtitle}"
                                         Text="Yield So Far" />
@@ -96,7 +96,6 @@
                         Width="112"
                         BorderBrush="{x:Null}"
                         Click="{x:Bind ViewModel.NavToAddYield}"
-                        IsEnabled="{x:Bind ViewModel.IsCropRunSet}"
                         Padding="18,12,12,12"
                         RequestedTheme="Light"
                         Style="{ThemeResource NoBackgroundDarkTheme}">

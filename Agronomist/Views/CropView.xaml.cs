@@ -16,8 +16,8 @@
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            var vm = e.Parameter as CropViewModel;
-            ViewModel = vm;
+            var sharedViewModel = e.Parameter as SharedCropRunViewModel;
+            ViewModel = new CropViewModel(ContentFrame, sharedViewModel);
             Bindings.Update();
         }
     }
