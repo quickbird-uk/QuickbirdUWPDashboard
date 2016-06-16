@@ -367,7 +367,7 @@
         /// </summary>
         public async Task<List<string>> PostChanges()
         {
-            var settings = new Settings();
+            var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
             var lastDatabasePost = settings.LastDatabasePost;
 
@@ -403,7 +403,7 @@
         /// <returns></returns>
         public async Task<string> PostHistoryChanges()
         {
-            var settings = new Settings();
+            var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
             var lastSensorDataPost = settings.LastSensorDataPost;
 

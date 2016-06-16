@@ -25,7 +25,7 @@
 
         private void UpdateCredsAndTokens()
         {
-            var settings = new Settings();
+            var settings = Settings.Instance;
             Debug.WriteLine(settings.CredToken ?? "No saved auth.");
         }
 
@@ -47,7 +47,7 @@
                 return;
             }
 
-            var settings = new Settings();
+            var settings = Settings.Instance;
             settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0, 4)));
 
             UpdateCredsAndTokens();

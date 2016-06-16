@@ -7,7 +7,7 @@
     using JetBrains.Annotations;
 
     /// <summary>
-    ///     A class to create settings properties in.
+    ///     A singleton to create settings properties in.
     ///     Local and roaming are hard coded into individual properties.
     /// </summary>
     internal class Settings : INotifyPropertyChanged
@@ -27,11 +27,16 @@
         /// <summary>
         ///     Creata a new settings obbject that gives acces to local and roaming settings.
         /// </summary>
-        public Settings()
+        private Settings()
         {
             _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
         }
+
+        /// <summary>
+        ///     Singleton instance accessor.
+        /// </summary>
+        public static Settings Instance { get; } = new Settings();
 
         public bool CredsSet
         {
@@ -83,24 +88,6 @@
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void SetNewCreds(string token, string userId, Guid stableSid)
-        {
-            CredToken = token;
-            CredUserId = userId;
-            CredStableSid = stableSid;
-            CredsSet = true;
-        }
-
-        public void UnsetCreds()
-        {
-            CredsSet = false;
-            Delete(nameof(CredToken), SettingsType.Roaming);
-            Delete(nameof(CredUserId), SettingsType.Roaming);
-            Delete(nameof(CredStableSid), SettingsType.Roaming);
-        }
-
         public DateTimeOffset LastDatabaseUpdate
         {
             get { return Get(_localSettings, default(DateTimeOffset)); }
@@ -122,6 +109,7 @@
                 OnPropertyChanged();
             }
         }
+
         public DateTimeOffset LastDatabasePost
         {
             get { return Get(_localSettings, default(DateTimeOffset)); }
@@ -131,6 +119,24 @@
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void SetNewCreds(string token, string userId, Guid stableSid)
+        {
+            CredToken = token;
+            CredUserId = userId;
+            CredStableSid = stableSid;
+            CredsSet = true;
+        }
+
+        public void UnsetCreds()
+        {
+            CredsSet = false;
+            Delete(nameof(CredToken), SettingsType.Roaming);
+            Delete(nameof(CredUserId), SettingsType.Roaming);
+            Delete(nameof(CredStableSid), SettingsType.Roaming);
         }
 
         /// <summary>

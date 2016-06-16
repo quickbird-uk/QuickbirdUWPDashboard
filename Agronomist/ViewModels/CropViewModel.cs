@@ -150,7 +150,7 @@
             SyncButtonEnabled = false;
             using (var context = new MainDbContext())
             {
-                var settings = new Settings();
+                var settings = Settings.Instance;
                 var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
                 var now = DateTimeOffset.Now;
                 var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);

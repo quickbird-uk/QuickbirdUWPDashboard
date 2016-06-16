@@ -148,7 +148,7 @@ namespace Agronomist.ViewModels
         public async void CreateNewCropRun()
         {
             ChosenIsVacant = false; 
-            Settings settings = new Settings();
+            Settings settings = Settings.Instance;
             CropType cropType = _CropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value
                 ?? new CropType
                 {
