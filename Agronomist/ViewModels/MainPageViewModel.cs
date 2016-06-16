@@ -53,7 +53,7 @@
 
         private void UpdateCredsAndTokens()
         {
-            var settings = new Settings();
+            var settings = Settings.Instance;
             Token = settings.CredToken ?? "No saved auth.";
         }
 
@@ -74,7 +74,7 @@
                 return;
             }
 
-            var settings = new Settings();
+            var settings = Settings.Instance;
             settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0,4)));
 
             UpdateCredsAndTokens();
@@ -84,7 +84,7 @@
 
         public void DeleteCreds()
         {
-            new Settings().UnsetCreds();
+            Settings.Instance.UnsetCreds();
             UpdateCredsAndTokens();
         }
 
@@ -92,7 +92,7 @@
         {
             using (var context = new MainDbContext())
             {
-                var settings = new Settings();
+                var settings = Settings.Instance;
                 var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
                 var now = DateTimeOffset.Now;
                 var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);

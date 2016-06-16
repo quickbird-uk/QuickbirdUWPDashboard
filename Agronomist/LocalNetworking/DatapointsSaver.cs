@@ -200,7 +200,7 @@ namespace Agronomist.LocalNetworking
         {
             //Make sure that if fired several times, the constraints are maintained
 
-            Settings settings = new Settings();
+            Settings settings = Settings.Instance;
 
             if (settings.CredsSet && 
                 settings.LastDatabaseUpdate != default(DateTimeOffset) && _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
@@ -280,7 +280,7 @@ namespace Agronomist.LocalNetworking
         {
             _localTask.ContinueWith((Task previous) =>
             {
-                Settings settings = new Settings();
+                Settings settings = Settings.Instance;
 
                 if (settings.LastDatabaseUpdate != default(DateTimeOffset))
                 {

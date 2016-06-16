@@ -1,19 +1,18 @@
 ﻿<Page x:Class="Agronomist.Views.Shell"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      mc:Ignorable="d">
-       
-    <!-- Page Resources -->
-    <Page.Resources>
-    </Page.Resources>
-    
-    <SplitView x:Name="Navigation"
-               Style="{ThemeResource NavigationPanel}"
-               IsPaneOpen="{x:Bind ViewModel.IsNavOpen, Mode=OneWay}">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
 
-        <!-- Navigation Menu -->
+    <!--  Page Resources  -->
+    <Page.Resources />
+
+    <SplitView x:Name="Navigation"
+        IsPaneOpen="{x:Bind ViewModel.IsNavOpen, Mode=OneWay}"
+        Style="{ThemeResource NavigationPanel}">
+
+        <!--  Navigation Menu  -->
         <SplitView.Pane>
             <Grid>
                 <Grid.RowDefinitions>
@@ -22,42 +21,41 @@
                     <RowDefinition Height="216" />
                 </Grid.RowDefinitions>
 
-                <!-- Pane Header -->
-                <Grid BorderBrush="#66EBEBEB"
-                      BorderThickness="0,0,0,1">
+                <!--  Pane Header  -->
+                <Grid BorderBrush="#66EBEBEB" BorderThickness="0,0,0,1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="96" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
 
-                    <Button Style="{ThemeResource NoBackgroundDarkTheme}"
-                            BorderBrush="{x:Null}"
-                            Click="{x:Bind ViewModel.ToggleNav}">
+                    <Button BorderBrush="{x:Null}"
+                        Click="{x:Bind ViewModel.ToggleNav}"
+                        Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Image Height="44"
-                               Margin="32,32,0,32"
-                               HorizontalAlignment="Left"
-                               Stretch="Uniform"
-                               Opacity="0.95"
-                               Source="ms-appx:///Assets/logo-rocket-light.png" />
+                            Margin="32,32,0,32"
+                            HorizontalAlignment="Left"
+                            Opacity="0.95"
+                            Source="ms-appx:///Assets/logo-rocket-light.png"
+                            Stretch="Uniform" />
                     </Button>
                     <TextBlock Grid.Column="1"
-                               FontFamily="Segoe UI"
-                               FontWeight="Normal"
-                               Foreground="#FFEBEBEB"
-                               FontSize="24"
-                               Text="Quickbird"
-                               Margin="0,40" />
+                        Margin="0,40"
+                        FontFamily="Segoe UI"
+                        FontSize="24"
+                        FontWeight="Normal"
+                        Foreground="#FFEBEBEB"
+                        Text="Quickbird" />
                 </Grid>
 
-                <!-- Pane Body -->
+                <!--  Pane Body  -->
                 <ListView x:Name="Menu"
-                          Grid.Row="1"
-                          RequestedTheme="Dark"
-                          ItemContainerStyle="{ThemeResource MenuItemDark}"
-                          ItemsSource="{x:Bind ViewModel.Runs}"
-                          SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}"
-                          IsItemClickEnabled="True"
-                          ItemClick="Menu_ItemClick">
+                    Grid.Row="1"
+                    IsItemClickEnabled="True"
+                    ItemClick="Menu_ItemClick"
+                    ItemContainerStyle="{ThemeResource MenuItemDark}"
+                    ItemsSource="{x:Bind ViewModel.Runs}"
+                    RequestedTheme="Dark"
+                    SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>
@@ -66,118 +64,125 @@
                                     <ColumnDefinition />
                                     <ColumnDefinition Width="44" />
                                 </Grid.ColumnDefinitions>
-                                <Ellipse Fill="#FFEBEBEB"
-                                         Margin="24,12,24,12"/>
-                                <Ellipse Grid.Column="0" Fill="Gold"
-                                         Margin="24,12,24,12"
-                                         Visibility="{Binding IsAlerted, Mode=OneWay}" />
+                                <Ellipse Margin="24,12,24,12" Fill="#FFEBEBEB" />
+                                <Ellipse Grid.Column="0"
+                                    Margin="24,12,24,12"
+                                    Fill="Gold"
+                                    Visibility="{Binding IsAlerted,
+                                                         Mode=OneWay}" />
                                 <TextBlock Grid.Column="0"
-                                           Text="{Binding IconLetter, Mode=OneWay, FallbackValue=X}"
-                                           Foreground="#FF515C6B"
-                                           Width="20"
-                                           Height="40"
-                                           FontSize="30"
-                                           TextAlignment="Center"
-                                           Margin="38,14,38,17" />
-                                <StackPanel Grid.Column="1"
-                                            Margin="0,12,0,12">
+                                    Width="20"
+                                    Height="40"
+                                    Margin="38,14,38,17"
+                                    FontSize="30"
+                                    Foreground="#FF515C6B"
+                                    Text="{Binding IconLetter,
+                                                   Mode=OneWay,
+                                                   FallbackValue=X}"
+                                    TextAlignment="Center" />
+                                <StackPanel Grid.Column="1" Margin="0,12,0,12">
                                     <TextBlock FontFamily="Segoe UI"
-                                               FontWeight="Normal"
-                                               FontSize="18"
-                                               Text="{Binding CropName, Mode=OneWay, FallbackValue=Crop}" />
-                                    <TextBlock Style="{ThemeResource Subtitle}"
-                                               Text="{Binding BoxName, Mode=OneWay, FallbackValue=Location}" />
+                                        FontSize="18"
+                                        FontWeight="Normal"
+                                        Text="{Binding CropName,
+                                                       Mode=OneWay,
+                                                       FallbackValue=Crop}" />
+                                    <TextBlock Style="{ThemeResource Subtitle}" Text="{Binding BoxName, Mode=OneWay, FallbackValue=Location}" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"
-                                           Margin="0,0,12,4"
-                                           FontFamily="Segoe UI Symbol"
-                                           FontSize="28"
-                                           Foreground="Gold"
-                                           Text="⚠"
-                                           Visibility="{Binding IsAlerted, Mode=OneWay, FallbackValue=Visible}" />
+                                    Margin="0,0,12,4"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe UI Symbol"
+                                    FontSize="28"
+                                    Foreground="Gold"
+                                    Text="⚠"
+                                    Visibility="{Binding IsAlerted,
+                                                         Mode=OneWay,
+                                                         FallbackValue=Visible}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
 
-                <!-- Pane Footer -->
+                <!--  Pane Footer  -->
                 <StackPanel Grid.Row="2">
 
-                    <!-- Add Crop Button -->
+                    <!--  Add Crop Button  -->
                     <Button x:Name="AddCropButton"
-                            Style="{ThemeResource NoBackgroundDarkTheme}"
-                            Background="DodgerBlue"
-                            BorderThickness="0,1,0,1"
-                            BorderBrush="#66EBEBEB" Click="{x:Bind ViewModel.NavToAddNewView}" >
+                        Background="DodgerBlue"
+                        BorderBrush="#66EBEBEB"
+                        BorderThickness="0,1,0,1"
+                        Click="{x:Bind ViewModel.NavToAddNewView}"
+                        Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Style="{ThemeResource Icon}"
-                                       Foreground="#FFEBEBEB"
-                                       FontSize="28"
-                                       Margin="24,0,24,0"
-                                       Text="" />
+                            <TextBlock Margin="24,0,24,0"
+                                FontSize="28"
+                                Foreground="#FFEBEBEB"
+                                Style="{ThemeResource Icon}"
+                                Text="" />
                             <TextBlock Grid.Column="1"
-                                       FontFamily="Segoe UI"
-                                       FontWeight="Normal"
-                                       FontSize="20"
-                                       VerticalAlignment="Center"
-                                       Text="Add Crop" />
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe UI"
+                                FontSize="20"
+                                FontWeight="Normal"
+                                Text="Add Crop" />
                         </Grid>
                     </Button>
 
-                    <!-- Archive Button -->
+                    <!--  Archive Button  -->
                     <Button x:Name="ArchiveButton"
-                            Style="{ThemeResource NoBackgroundDarkTheme}"
-                            Background="DodgerBlue"
-                            BorderThickness="0,1,0,1"
-                            BorderBrush="#66EBEBEB" Click="{x:Bind ViewModel.NavToArchiveView}" >
+                        Background="DodgerBlue"
+                        BorderBrush="#66EBEBEB"
+                        BorderThickness="0,1,0,1"
+                        Click="{x:Bind ViewModel.NavToArchiveView}"
+                        Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Style="{ThemeResource Icon}"
-                                       Foreground="#FFEBEBEB"
-                                       FontSize="28"
-                                       Margin="24,0,24,0"
-                                       Text="" />
+                            <TextBlock Margin="24,0,24,0"
+                                FontSize="28"
+                                Foreground="#FFEBEBEB"
+                                Style="{ThemeResource Icon}"
+                                Text="" />
                             <TextBlock Grid.Column="1"
-                                       FontFamily="Segoe UI"
-                                       FontWeight="Normal"
-                                       FontSize="20"
-                                       VerticalAlignment="Center"
-                                       Text="Archive" />
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe UI"
+                                FontSize="20"
+                                FontWeight="Normal"
+                                Text="Archive" />
                         </Grid>
                     </Button>
 
-                    <!-- Settings Button -->
+                    <!--  Settings Button  -->
 
                     <Button x:Name="SettingsButton"
-                            Style="{ThemeResource NoBackgroundDarkTheme}"
-                            Background="DodgerBlue"
-                            BorderThickness="0,1,0,1"
-                             Click="{x:Bind ViewModel.NavToGraphingView}">
+                        Background="DodgerBlue"
+                        BorderThickness="0,1,0,1"
+                        Click="{x:Bind ViewModel.NavToGraphingView}"
+                        Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="72">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Style="{ThemeResource Icon}"
-                                       Foreground="#FFEBEBEB"
-                                       FontSize="28"
-                                       Margin="24,0,24,0"
-                                       Text="" />
+                            <TextBlock Margin="24,0,24,0"
+                                FontSize="28"
+                                Foreground="#FFEBEBEB"
+                                Style="{ThemeResource Icon}"
+                                Text="" />
                             <TextBlock Grid.Column="1"
-                                       FontFamily="Segoe UI"
-                                       FontWeight="Normal"
-                                       FontSize="20"
-                                       VerticalAlignment="Center"
-                                       Text="Graphs" />
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe UI"
+                                FontSize="20"
+                                FontWeight="Normal"
+                                Text="Graphs" />
                         </Grid>
                     </Button>
                 </StackPanel>
@@ -185,181 +190,11 @@
         </SplitView.Pane>
 
         <SplitView.Content>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="112" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="330" />
-                </Grid.ColumnDefinitions>
-
-                <!-- Page Header -->
-                <Grid x:Name="PageHeader"
-                      Grid.ColumnSpan="2"
-                      Style="{ThemeResource PageHeaderLightTheme}"
-                      VerticalAlignment="Stretch"
-                      d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="330" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Crop Run Info -->
-                    <RelativePanel Margin="0"
-                                   HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Stretch">
-                        <ScrollViewer Margin="0,14,0,14"
-                                      VerticalScrollMode="Disabled"
-                                      VerticalScrollBarVisibility="Hidden"
-                                      HorizontalScrollMode="Enabled"
-                                      HorizontalScrollBarVisibility="Auto"
-                                      RelativePanel.AlignLeftWithPanel="True"
-                                      RelativePanel.AlignRightWithPanel="True"
-                                      BorderThickness="0,0,1,0"
-                                      BorderBrush="#4C515C6B">
-                            <ScrollViewer.Content>
-                                <!-- Crop info panel -->
-                                <StackPanel Orientation="Horizontal"
-                                            Padding="0,14,0,14">
-                                    <StackPanel Margin="48,0,72,0">
-                                        <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.CropName, Mode=OneWay, FallbackValue=--}"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="#FF515C6B" />
-                                        <TextBlock Style="{ThemeResource Subtitle}"
-                                                   Text="Crop"
-                                                   Foreground="#FF515C6B" />
-
-                                    </StackPanel>
-                                    <StackPanel Margin="0,0,72,0">
-                                        <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.VarietyName, Mode=OneWay, FallbackValue=--}"
-                                                   Foreground="#FF515C6B"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{ThemeResource Subtitle}"
-                                                   Text="Variety"
-                                                   Foreground="#FF515C6B" />
-
-                                    </StackPanel>
-                                    <StackPanel x:Name="PlantDateCard"
-                                                Margin="0,0,72,0">
-                                        <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
-                                                   Foreground="#FF515C6B"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{ThemeResource Subtitle}"
-                                                   Text="Planted"
-                                                   Foreground="#FF515C6B" />
-
-                                    </StackPanel>
-                                    <StackPanel x:Name="YieldCard"
-                                                Margin="0,0,72,0">
-                                        <TextBlock FontSize="24"
-                                                   Text="{x:Bind ViewModel.CurrentCropRun.Yield, Mode=OneWay, FallbackValue=0kg}"
-                                                   Foreground="#FF515C6B" />
-                                        <TextBlock Style="{ThemeResource Subtitle}"
-                                                   Text="Yield So Far"
-                                                   Foreground="#FF515C6B" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </ScrollViewer.Content>
-                        </ScrollViewer>
-                    </RelativePanel>
-
-                    <StackPanel x:Name="ButtonsPanel"
-                                Orientation="Horizontal"
-                                Grid.Column="1">
-                        <Button x:Name="RecordYieldButton"
-                                Style="{ThemeResource NoBackgroundDarkTheme}"
-                                BorderBrush="{x:Null}"
-                                Width="112"
-                                Padding="18,12,12,12"
-                                RequestedTheme="Light"
-                                Click="{x:Bind ViewModel.NavToAddYield}"
-                                IsEnabled="{x:Bind ViewModel.IsCropRunSet}">
-                            <StackPanel VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Stretch">
-                                <TextBlock Style="{ThemeResource Icon}"
-                                           Margin="0,0,0,12">
-                                    <Span FontSize="22"
-                                          FontFamily="Segoe MDL2 Assets">
-                                        <Run Text="&#xE109;" />
-                                    </Span>
-                                </TextBlock>
-                                <TextBlock FontSize="16"
-                                           Foreground="#FF4A90E2"
-                                           Text="Record Yield"
-                                           TextAlignment="Center"
-                                           LineHeight="20"
-                                           TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                        </Button>
-                        <Button Style="{ThemeResource NoBackgroundDarkTheme}"
-                                BorderBrush="{x:Null}"
-                                Width="104"
-                                Padding="12"
-                                RequestedTheme="Light"
-                                Click="{x:Bind ViewModel.Sync}"
-                                IsEnabled="{x:Bind ViewModel.SyncButtonEnabled, Mode=OneWay}">
-                            <StackPanel VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Stretch">
-                                <TextBlock Style="{ThemeResource Icon}"
-                                           Text=""
-                                           Margin="0,0,0,12" />
-                                <TextBlock FontSize="16"
-                                           Foreground="#FF4A90E2"
-                                           Text="Refresh Now"
-                                           TextAlignment="Center"
-                                           LineHeight="20"
-                                           TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                        </Button>
-                        <Button Style="{ThemeResource NoBackgroundDarkTheme}"
-                                BorderBrush="{x:Null}"
-                                Width="104"
-                                Padding="6, 12"
-                                Click="{x:Bind ViewModel.ToggleNotifications}"
-                                RequestedTheme="Light">
-                            <StackPanel VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Stretch">
-                                <TextBlock Style="{ThemeResource Icon}"
-                                           FontFamily="Segoe UI Symbol"
-                                           FontSize="32"
-                                           Text="{x:Bind ViewModel.NotificationsCount, Mode=OneWay, FallbackValue=0}"
-                                           Margin="0,0,0,4" />
-                                <TextBlock FontSize="16"
-                                           Foreground="#FF4A90E2"
-                                           Text="{x:Bind ViewModel.NotificationsButtonText, Mode=OneWay, FallbackValue=Show Notifications}"
-                                           TextAlignment="Center"
-                                           LineHeight="20"
-                                           TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Content Frame -->
-                <Frame x:Name="ContentFrame"
-                       Grid.Row="1"
-                       Grid.ColumnSpan="2" Grid.Column="0" />
-
-                <!-- Notification Panel -->
-                <SplitView DisplayMode="Overlay"
-                           OpenPaneLength="330"
-                           PaneBackground="#CC515C6B"
-                           Grid.Column="1"
-                           Grid.Row="1"
-                           PanePlacement="Right"
-                           IsPaneOpen="{x:Bind ViewModel.IsNotificationsOpen, Mode=TwoWay}">
-                    <SplitView.Pane>
-                        <ListView />
-                    </SplitView.Pane>
-                </SplitView>
-
-            </Grid>
+            <!--  Content Frame  -->
+            <Frame x:Name="ContentFrame"
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2" />
         </SplitView.Content>
     </SplitView>
 </Page>
