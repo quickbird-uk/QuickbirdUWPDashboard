@@ -34,6 +34,10 @@
         private bool _lowAlertIsEnabled;
 
         private string _readingSideVisible = Visible;
+
+        private double _scaleX = 300;
+
+        private double _scaleY = 260;
         private string _settingSideVisible = Collapsed;
 
         private bool _showSettingsToggleChecked;
@@ -195,6 +199,26 @@
             }
         }
 
+        public double ScaleX
+        {
+            get { return _scaleX; }
+            set
+            {
+                _scaleX = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double ScaleY
+        {
+            get { return _scaleY; }
+            set
+            {
+                _scaleY = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void Update(Sensor poco)
         {
             Units = poco.SensorType.Param.Unit;
@@ -206,6 +230,8 @@
         {
             SettingSideVisible = Visible;
             ReadingSideVisible = Collapsed;
+            ScaleX = 300;
+            ScaleY = 400;
 
             //TODO: Get the high and low alert numbers.
             //TODO: Get high and low alert enabled vars.
@@ -221,12 +247,14 @@
         }
 
         /// <summary>
-        /// Hides the settings page.
+        ///     Hides the settings page.
         /// </summary>
         public void CancelSettingsChanges()
         {
             ReadingSideVisible = Visible;
             SettingSideVisible = Collapsed;
+            ScaleX = 300;
+            ScaleY = 260;
             ShowSettingsToggleChecked = false;
         }
 

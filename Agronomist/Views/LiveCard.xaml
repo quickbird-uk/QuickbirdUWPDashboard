@@ -3,11 +3,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Width="300"
-    Height="160"
+    Width="{x:Bind ViewModel.ScaleX, Mode=OneWay}"
+    Height="{x:Bind ViewModel.ScaleY, Mode=OneWay}"
     RequestedTheme="Dark"
     mc:Ignorable="d">
-
     <!--  Everything grid  -->
     <Grid Background="#FF4A90E2">
         <Grid Visibility="{x:Bind ViewModel.SettingSideVisible, Mode=OneWay}">
