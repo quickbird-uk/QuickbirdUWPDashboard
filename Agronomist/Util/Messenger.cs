@@ -11,6 +11,8 @@
     /// </summary>
     public class Messenger
     {
+        
+
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
         public BroadcastMessage<IEnumerable<SensorReading>> NewSensorDataPoint { get; } =

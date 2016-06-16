@@ -196,28 +196,10 @@
         private void Update()
         {
             Debug.WriteLine("Shell update triggered");
-            List<CropCycle> cropRuns;
-            using (var db = new MainDbContext())
-            {
-                var now = DateTimeOffset.Now;
-                var allCropRuns = db.CropCycles
-                    .Include(cc => cc.Location)
-                    .Include(cc => cc.CropType)
-                    .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Param)
-                    .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Place)
-                    .AsNoTracking();
-                var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate > now).ToList();
-                var validCropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false);
-                cropRuns = validCropRuns.ToList();
-            }
+            var now = DateTimeOffset.Now;
+            List<CropCycle> allCropRuns = DatabaseHelper.Instance.GetDatatree();
+            var unfinishedCropRuns = allCropRuns.Where(cc => cc.EndDate == null || cc.EndDate > now).ToList();
+            var cropRuns = unfinishedCropRuns.Where(cc => cc.Deleted == false).ToList();
 
             UpdateCropRunVMs(cropRuns);
 
