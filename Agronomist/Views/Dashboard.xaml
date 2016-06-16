@@ -5,43 +5,76 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:Agronomist.Views"
     mc:Ignorable="d">
-    <Grid Background="#EBEBEB"
-        ScrollViewer.HorizontalScrollMode="Disabled"
-        ScrollViewer.VerticalScrollBarVisibility="Auto"
-        ScrollViewer.VerticalScrollMode="Auto">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <GridView Grid.Row="0"
-            Grid.RowSpan="4"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            ItemsSource="{x:Bind ViewModel.MainCards, Mode=OneWay}">
-            <GridView.ItemTemplate>
-                <DataTemplate>
-                    <views:LiveCard Margin="5" ViewModel="{Binding}" />
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
-        <GridView Grid.Row="0"
-            Grid.RowSpan="4"
-            Grid.Column="2"
-            Grid.ColumnSpan="2"
-            ItemsSource="{x:Bind ViewModel.AmbientCards, Mode=OneWay}">
-            <GridView.ItemTemplate>
-                <DataTemplate>
-                    <views:LiveCard Margin="5" ViewModel="{Binding}" />
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
-    </Grid>
+
+    
+    <ScrollViewer VerticalScrollMode="Auto" HorizontalScrollMode="Disabled">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1400" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridView1.Margin" Value="72, 72, 36, 0"/>
+                        <Setter Target="GridView2.Margin" Value="36, 72, 36, 0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridView1.Margin" Value="12, 12, 12, 0"/>
+                        <Setter Target="GridView2.Margin" Value="12, 12, 12, 0"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid  Background="#EBEBEB" 
+            ScrollViewer.HorizontalScrollMode="Disabled"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            ScrollViewer.VerticalScrollMode="Auto">
+
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <GridView x:Name="GridView1"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                ItemsSource="{x:Bind ViewModel.MainCards, Mode=OneWay}">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <views:LiveCard Margin="6" ViewModel="{Binding}" />
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+            <GridView x:Name="GridView2"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Grid.Column="2"
+                Grid.ColumnSpan="2"
+                ItemsSource="{x:Bind ViewModel.AmbientCards, Mode=OneWay}">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <views:LiveCard Margin="6" ViewModel="{Binding}" />
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </Grid>
+    </ScrollViewer>
 </Page>

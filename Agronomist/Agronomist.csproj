@@ -40,7 +40,7 @@
       <DependentUpon>20160602131608_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
-    <Compile Include="Models\IDataHelper.cs" />
+    <Compile Include="Util\DatabaseHelper.cs" />
     <Compile Include="Util\Messenger.cs" />
     <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />

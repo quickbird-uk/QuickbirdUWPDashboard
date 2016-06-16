@@ -230,8 +230,6 @@
         {
             SettingSideVisible = Visible;
             ReadingSideVisible = Collapsed;
-            ScaleX = 300;
-            ScaleY = 400;
 
             //TODO: Get the high and low alert numbers.
             //TODO: Get high and low alert enabled vars.
@@ -253,8 +251,6 @@
         {
             ReadingSideVisible = Visible;
             SettingSideVisible = Collapsed;
-            ScaleX = 300;
-            ScaleY = 260;
             ShowSettingsToggleChecked = false;
         }
 
