@@ -49,7 +49,7 @@
     <Compile Include="ViewModels\AddCropCycleViewModel.cs" />
     <Compile Include="ViewModels\AddYieldViewModel.cs" />
     <Compile Include="ViewModels\ArchiveViewModel.cs" />
-    <Compile Include="ViewModels\SharedCropRunViewModel.cs" />
+    <Compile Include="ViewModels\ShellListViewModel.cs" />
     <Compile Include="ViewModels\CropViewModel.cs" />
     <Compile Include="ViewModels\DashboardViewModel.cs" />
     <Compile Include="ViewModels\GraphingViewModel.cs" />

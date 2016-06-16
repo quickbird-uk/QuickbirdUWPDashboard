@@ -51,11 +51,10 @@
                 <ListView x:Name="Menu"
                     Grid.Row="1"
                     IsItemClickEnabled="True"
-                    ItemClick="Menu_ItemClick"
                     ItemContainerStyle="{ThemeResource MenuItemDark}"
-                    ItemsSource="{x:Bind ViewModel.SharedCropRunViewModels}"
+                    ItemsSource="{x:Bind ViewModel.ShellListViewModels}"
                     RequestedTheme="Dark"
-                    SelectedItem="{x:Bind ViewModel.CurrentCropRunAsObject, Mode=TwoWay}">
+                    SelectedItem="{x:Bind ViewModel.SelectedShellListViewModel, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>

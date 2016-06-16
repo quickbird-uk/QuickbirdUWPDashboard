@@ -1,9 +1,10 @@
 ﻿namespace Agronomist.Views
 {
+    using System;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using ViewModels;
-    
+
     public sealed partial class CropView : Page
     {
         public CropViewModel ViewModel;
@@ -16,8 +17,10 @@
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            var sharedViewModel = e.Parameter as SharedCropRunViewModel;
-            ViewModel = new CropViewModel(ContentFrame, sharedViewModel);
+            ViewModel = e.Parameter as CropViewModel;
+            if (null == ViewModel)
+                throw new ArgumentException("Tried to navigate to CropView without sending a ViewModel.");
+            ViewModel.SetContentFrame(ContentFrame);
             Bindings.Update();
         }
     }

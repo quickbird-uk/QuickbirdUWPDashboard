@@ -3,30 +3,92 @@
     using System;
     using System.Diagnostics;
     using Windows.UI.Xaml.Controls;
+    using DatabasePOCOs.User;
     using Views;
 
     public class CropViewModel : ViewModelBase
     {
         private const string ShowNotificationsString = "Show Notifications";
 
-        private readonly Frame _cropContentFrame;
+        private readonly Guid _id;
 
-        private SharedCropRunViewModel _sharedCropRunViewModel;
-        private DashboardViewModel _dashboardViewModel;
+        private string _boxName;
+
+        private Frame _cropContentFrame;
+        private string _cropName;
+        private readonly DashboardViewModel _dashboardViewModel;
 
         private bool _isNotificationsOpen;
         private string _notificationsButtonText = ShowNotificationsString;
         private string _notificationsCount = "0";
+        private string _plantingDate;
 
         private bool _syncButtonEnabled = true;
-        private string _test = "test";
+        private string _varietyName;
+        private string _yield;
 
-        public CropViewModel(Frame cropContentFrame, SharedCropRunViewModel sharedCropRunViewModel)
+        public CropViewModel(CropCycle cropCycle)
         {
-            _cropContentFrame = cropContentFrame;
-            _sharedCropRunViewModel = sharedCropRunViewModel;
-            _dashboardViewModel = new DashboardViewModel();
-            _cropContentFrame.Navigate(typeof(Dashboard), sharedCropRunViewModel);
+            _id = cropCycle.ID;
+            _dashboardViewModel = new DashboardViewModel(cropCycle);
+            Update(cropCycle);
+        }
+
+        public Guid CropRunId { get; set; }
+
+        public string CropName
+        {
+            get { return _cropName; }
+            set
+            {
+                if (value == _cropName) return;
+                _cropName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string VarietyName
+        {
+            get { return _varietyName; }
+            set
+            {
+                if (value == _varietyName) return;
+                _varietyName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string BoxName
+        {
+            get { return _boxName; }
+            set
+            {
+                if (value == _boxName) return;
+                _boxName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string PlantingDate
+        {
+            get { return _plantingDate; }
+            set
+            {
+                if (value == _plantingDate) return;
+                _plantingDate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Yield
+        {
+            get { return _yield; }
+            set
+            {
+                if (value == _yield) return;
+                _yield = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool SyncButtonEnabled
@@ -39,29 +101,6 @@
                 OnPropertyChanged();
             }
         }
-
-        public string Test
-        {
-            get { return _test; }
-            set
-            {
-                if (value == _test) return;
-                _test = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public SharedCropRunViewModel SharedCropRunViewModel
-        {
-            get { return _sharedCropRunViewModel; }
-            set
-            {
-                if (value == _sharedCropRunViewModel) return;
-                _sharedCropRunViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-
 
         public string NotificationsCount
         {
@@ -106,15 +145,31 @@
                 OnPropertyChanged();
             }
         }
-        
-        public void NavToAddYield()
+
+        public void SetContentFrame(Frame contentFrame)
         {
-            if (_sharedCropRunViewModel != null)
-            {
-                _cropContentFrame.Navigate(typeof(AddYieldView), _sharedCropRunViewModel.CropRunId);
-            }
+            _cropContentFrame = contentFrame;
         }
 
+        /// <summary>
+        ///     Updates the properties of this viewmodel with data from POCO.
+        /// </summary>
+        /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
+        public void Update(CropCycle cropRun)
+        {
+            CropRunId = cropRun.ID;
+            CropName = cropRun.CropTypeName;
+            VarietyName = cropRun.CropVariety;
+            PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
+            BoxName = cropRun.Location.Name;
+            Yield = $"{cropRun.Yield}kg";
+            _dashboardViewModel.Update(cropRun);
+        }
+
+        public void NavToAddYield()
+        {
+            _cropContentFrame?.Navigate(typeof(AddYieldView), _id);
+        }
 
         public void ToggleNotifications()
         {
