@@ -18,15 +18,29 @@
                     <VisualState.Setters>
                         <Setter Target="GridView1.Margin" Value="72, 72, 36, 0"/>
                         <Setter Target="GridView2.Margin" Value="36, 72, 36, 0"/>
+
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="NarrowState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
+                        <AdaptiveTrigger MinWindowWidth="1200" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="GridView1.Margin" Value="12, 12, 12, 0"/>
                         <Setter Target="GridView2.Margin" Value="12, 12, 12, 0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Narrowest">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridView1.(Grid.RowSpan)" Value="2"/>
+                        <Setter Target="GridView2.(Grid.Column)" Value="0"/>
+                        <Setter Target="GridView2.(Grid.Row)" Value="2"/>
+                        <Setter Target="GridView2.(Grid.RowSpan)" Value="2"/>
+                        <Setter Target="GridView1.(Grid.ColumnSpan)" Value="4"/>
+                        <Setter Target="GridView2.(Grid.ColumnSpan)" Value="4"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -40,7 +54,7 @@
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="1.9*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
