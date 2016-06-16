@@ -149,6 +149,7 @@
         public void SetContentFrame(Frame contentFrame)
         {
             _cropContentFrame = contentFrame;
+            _cropContentFrame.Navigate(typeof(Dashboard), _dashboardViewModel);
         }
 
         /// <summary>

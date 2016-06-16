@@ -6,9 +6,15 @@
 
     public class ShellListViewModel : ViewModelBase
     {
+        public const string Visible = "Visible";
+        public const string Collapsed = "Collapsed";
         private string _boxName;
         private string _cropName;
+
+        private CropViewModel _cropViewModel;
         private string _iconLetter;
+
+        private string _isAlerted;
 
         public ShellListViewModel(CropCycle cropCycle)
         {
@@ -54,11 +60,6 @@
             }
         }
 
-        private string _isAlerted;
-
-        public const string Visible = "Visible";
-        public const string Collapsed = "Collapsed";
-
         public string IsAlerted
         {
             get { return _isAlerted; }
@@ -69,8 +70,6 @@
                 OnPropertyChanged();
             }
         }
-
-        private CropViewModel _cropViewModel;
 
         public CropViewModel CropViewModel
         {
@@ -83,13 +82,14 @@
             }
         }
 
-        private void Update(CropCycle cropCycle)
+        public void Update(CropCycle cropCycle)
         {
             CropName = cropCycle.CropTypeName;
             BoxName = cropCycle.Location.Name;
             IconLetter = CropName.Substring(0, 1);
             CropViewModel.Update(cropCycle);
-            if(cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed))
+
+            if (cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed))
             {
                 IsAlerted = Visible;
             }
@@ -97,6 +97,8 @@
             {
                 IsAlerted = Collapsed;
             }
+
+            _cropViewModel.Update(cropCycle);
         }
     }
 }

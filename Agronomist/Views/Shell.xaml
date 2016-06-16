@@ -51,10 +51,12 @@
                 <ListView x:Name="Menu"
                     Grid.Row="1"
                     IsItemClickEnabled="True"
+                    ItemClick="{x:Bind ViewModel.ListItemClickedOrChanged}"
                     ItemContainerStyle="{ThemeResource MenuItemDark}"
                     ItemsSource="{x:Bind ViewModel.ShellListViewModels}"
                     RequestedTheme="Dark"
-                    SelectedItem="{x:Bind ViewModel.SelectedShellListViewModel, Mode=TwoWay}">
+                    SelectedItem="{x:Bind ViewModel.SelectedShellListViewModel, Mode=TwoWay}"
+                    SelectionChanged="{x:Bind ViewModel.ListItemClickedOrChanged}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>

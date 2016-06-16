@@ -3,6 +3,8 @@
     using System;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Linq;
+    using System.Threading.Tasks;
     using Windows.UI.Xaml.Controls;
     using Util;
     using Views;
@@ -19,6 +21,8 @@
 
         private bool _isNavOpen = true;
 
+        private object _selectedShellListViewModel;
+
         /// <summary>
         ///     Initialise the shell.
         /// </summary>
@@ -26,16 +30,13 @@
         public ShellViewModel(Frame contentFrame)
         {
             _contentFrame = contentFrame;
-            Update();
-            _updateAction = s => Update();
+
+            FirstUpdate();
+
+            _updateAction = async s => await Update();
 
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
-
-            if (ShellListViewModels.Count > 0)
-                _contentFrame.Navigate(typeof(CropView), ShellListViewModels[0].CropViewModel);
-            else
-                _contentFrame.Navigate(typeof(AddCropCycleView));
         }
 
         public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
@@ -52,19 +53,6 @@
             }
         }
 
-        private void Update()
-        {
-            Debug.WriteLine("Shell update triggered");
-            //TODO: Get data from abstraction
-
-            foreach (var shellListViewModel in ShellListViewModels)
-            {
-                
-            }
-        }
-
-        private object _selectedShellListViewModel;
-
         public object SelectedShellListViewModel
         {
             get { return _selectedShellListViewModel; }
@@ -73,6 +61,64 @@
                 if (value == _selectedShellListViewModel) return;
                 _selectedShellListViewModel = value;
                 OnPropertyChanged();
+            }
+        }
+
+        public void ListItemClickedOrChanged()
+        {
+            var item = SelectedShellListViewModel as ShellListViewModel;
+            if (item == null)
+            {
+                _contentFrame.Navigate(typeof(AddCropCycleView));
+            }
+            else
+            {
+                _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
+            }
+        }
+
+        private async void FirstUpdate()
+        {
+            Debug.WriteLine("Running First Update");
+
+            await Update();
+
+            if (ShellListViewModels.Count > 0)
+            {
+                var item = ShellListViewModels[0].CropViewModel;
+                _contentFrame.Navigate(typeof(CropView), item);
+                SelectedShellListViewModel = item;
+            }
+            else
+                _contentFrame.Navigate(typeof(AddCropCycleView));
+        }
+
+        private async Task Update()
+        {
+            Debug.WriteLine("Shell update triggered");
+
+            var cropCycles = await DatabaseHelper.Instance.GetDatatreeAsync();
+
+            // Remove items that no longer exist.
+            var validIds = cropCycles.Select(cc => cc.ID).ToList();
+            var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
+            foreach (var invalidItem in toRemove)
+            {
+                ShellListViewModels.Remove(invalidItem);
+            }
+
+            // Add new items, update existing.
+            foreach (var cropCycle in cropCycles)
+            {
+                var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
+                if (null == item)
+                {
+                    ShellListViewModels.Add(new ShellListViewModel(cropCycle));
+                }
+                else
+                {
+                    item.Update(cropCycle);
+                }
             }
         }
 
