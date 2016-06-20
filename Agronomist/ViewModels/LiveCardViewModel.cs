@@ -222,7 +222,7 @@
         public void Update(Sensor poco)
         {
             Units = poco.SensorType.Param.Unit;
-            UnitName = poco.SensorType.Param.Name;
+            UnitName = poco.SensorType.Place.Name + " " + poco.SensorType.Param.Name;
             //TODO: Status = poco.AlertStatus
         }
 
