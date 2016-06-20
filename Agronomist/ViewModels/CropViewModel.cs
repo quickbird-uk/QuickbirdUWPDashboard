@@ -4,6 +4,9 @@
     using System.Diagnostics;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
+    using Models;
+    using NetLib;
+    using Util;
     using Views;
 
     public class CropViewModel : ViewModelBase
@@ -196,10 +199,24 @@
             NotificationsButtonText = ShowNotificationsString;
         }
 
-        public void Sync(object sender, object e)
+        public async void Sync(object sender, object e)
         {
-            //TODO: Implement sync.
-            Debug.WriteLine("Sync clicked, not implemented.");
+            SyncButtonEnabled = false;
+            using (var context = new MainDbContext())
+            {
+                var settings = Settings.Instance;
+                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+                var now = DateTimeOffset.Now;
+                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
+                settings.LastDatabaseUpdate = now;
+                Debug.WriteLine(errors);
+
+                var posterrors = string.Join(",", await context.PostChanges());
+                Debug.WriteLine(posterrors);
+
+                Debug.WriteLine(await context.PostHistoryChanges());
+            }
+            SyncButtonEnabled = true;
         }
     }
 }
