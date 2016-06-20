@@ -1,30 +1,54 @@
-﻿<Page
-    x:Class="Agronomist.Views.AddYieldView"
+﻿<Page x:Class="Agronomist.Views.AddYieldView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Agronomist.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Agronomist.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Grid>
-        <StackPanel Background="#EBEBEB" RequestedTheme="Light" Padding="30, 30, 20, 20">
-            <TextBox PlaceholderText="over 9,000 kg" Text="{x:Bind ViewModel.UserEnteredText, Mode=TwoWay}" 
-                 Background="{x:Bind ViewModel.TextBoxColour, Mode=OneWay}" InputScope="Number"
-                 Margin="10,10,10,10" Header="Today you harvested" MaxLength="10" TextChanging="TextBox_TextChanging"
-                 FontSize="20"/>
-            <TextBlock Text="Your input is not a valid number." Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}" 
-                   Style="{StaticResource SubtitleTextBlockStyle}" Foreground="DarkRed" Margin="10,30,10,30" IsTextSelectionEnabled="False" 
-                   MaxLines="1" />
-            <ToggleSwitch Header="Are you done with this crop?"
-                Margin="10,20,10,10" IsOn="{x:Bind ViewModel.CloseCropRun, Mode=TwoWay}" 
-                          OnContent="Yes, End this Crop Run" OffContent="No, continue with the same crop" FontSize="20"/>
-
-            <Button  IsEnabled="{x:Bind ViewModel.ValidEntry, Mode=OneWay}" Click="Button_Click" 
-                 Content="{x:Bind ViewModel.ButtonText, Mode=OneWay}" Margin="10,20,10,10" FontSize="20" />
+        <StackPanel Background="#EBEBEB"
+            Padding="30, 30, 20, 20"
+            RequestedTheme="Light">
+            <TextBox Margin="10,10,10,10"
+                Background="{x:Bind ViewModel.TextBoxColour, Mode=OneWay}"
+                FontSize="20"
+                Header="Today you harvested"
+                InputScope="Number"
+                MaxLength="10"
+                PlaceholderText="over 9,000 kg"
+                Text="{x:Bind ViewModel.UserEnteredText, Mode=TwoWay}"
+                TextChanging="TextBox_TextChanging" />
+            <TextBlock Margin="10,30,10,30"
+                Foreground="DarkRed"
+                IsTextSelectionEnabled="False"
+                MaxLines="1"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Text="Your input is not a valid number."
+                Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}" />
+            <ToggleSwitch Margin="10,20,10,10"
+                FontSize="20"
+                Header="Are you done with this crop?"
+                IsOn="{x:Bind ViewModel.CloseCropRun, Mode=TwoWay}"
+                OffContent="No, continue with the same crop"
+                OnContent="Yes, End this Crop Run" />
+            <StackPanel Orientation="Horizontal">
+                <Button Margin="10,20,10,10"
+                    Click="AddYieldAndOrEndRunClick"
+                    Content="{x:Bind ViewModel.ButtonText, Mode=OneWay}"
+                    FontSize="20"
+                    IsEnabled="{x:Bind ViewModel.ValidEntry, Mode=OneWay}" />
+                <Button Margin="10,20,10,10"
+                    Click="CancelClick"
+                    Content="Cancel"
+                    FontSize="20" />
+            </StackPanel>
         </StackPanel>
-        <ProgressRing HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                      Foreground="#FF515C6B" 
-                      IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Margin="300, 300, 300, 300"/>
+        <ProgressRing Margin="300, 300, 300, 300"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Foreground="#FF515C6B"
+            IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
     </Grid>
 </Page>
+
