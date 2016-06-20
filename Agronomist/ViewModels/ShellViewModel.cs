@@ -97,7 +97,7 @@
         {
             Debug.WriteLine("Shell update triggered");
 
-            var cropCycles = await DatabaseHelper.Instance.GetDatatreeAsync();
+            var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsync();
 
             // Remove items that no longer exist.
             var validIds = cropCycles.Select(cc => cc.ID).ToList();
