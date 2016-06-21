@@ -61,13 +61,13 @@
             // Swap out the continuation task before any awaits are called.
             // We want to replace the _lastTask field before this method returns.
             // We cannot do this after an await because the method may return on the await statement.
-            var treeQueryWrappedInAnContinuation = AttachContinuationsAndSwapLastTask(TreeQueryAsync);
+            var treeQueryWrappedInAnContinuation = AttachContinuationsAndSwapLastTask(() => Task.Run(() => TreeQuery()));
             stopwatchA.Stop();
 
             var stopwatchB = Stopwatch.StartNew();
             // await the continuation, then the treeQuery wrapped in (and executed by) the continuation.
             // technically we could await once and then take the .Result, it is the same thing.
-            var userData = await await treeQueryWrappedInAnContinuation;
+            var userData = await await treeQueryWrappedInAnContinuation.ConfigureAwait(false);
             stopwatchB.Stop();
 
             Debug.WriteLine(
@@ -78,29 +78,28 @@
 
         /// <summary>
         ///     Gets a large tree of all of the data the UI uses except for live and historical readings.
+        ///     Run on threadpool because SQLite doesn't do async IO.
         /// </summary>
         /// <returns>Non-readings tree of data used bvy the UI.</returns>
-        private static async Task<List<CropCycle>> TreeQueryAsync()
+        private List<CropCycle> TreeQuery()
         {
             using (var db = new MainDbContext())
             {
                 return
-                    await
-                        db.CropCycles.Include(cc => cc.Location)
-                            .Include(cc => cc.CropType)
-                            .Include(cc => cc.Location)
-                            .ThenInclude(l => l.Devices)
-                            .ThenInclude(d => d.Sensors)
-                            .ThenInclude(s => s.SensorType)
-                            .ThenInclude(st => st.Param)
-                            .Include(cc => cc.Location)
-                            .ThenInclude(l => l.Devices)
-                            .ThenInclude(d => d.Sensors)
-                            .ThenInclude(s => s.SensorType)
-                            .ThenInclude(st => st.Place)
-                            .AsNoTracking()
-                            // ConfigureAwait false with cause this to run on the threadpool.
-                            .ToListAsync().ConfigureAwait(false);
+                    db.CropCycles.Include(cc => cc.Location)
+                        .Include(cc => cc.CropType)
+                        .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Param)
+                        .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Place)
+                        .AsNoTracking()
+                        .ToList();
             }
         }
 
@@ -110,11 +109,11 @@
         {
             // Wrap in a function, attach continuation and set _lastTask before awaiting.
             var queryContinuation =
-                AttachContinuationsAndSwapLastTask(() => QueryDataReadingAsync(sensorIDs, start, end));
-            return await await queryContinuation;
+                AttachContinuationsAndSwapLastTask(() => Task.Run(() => QueryDataReading(sensorIDs, start, end)));
+            return await await queryContinuation.ConfigureAwait(false);
         }
 
-        private async Task<List<KeyValuePair<Guid, List<SensorHistory>>>> QueryDataReadingAsync(List<Guid> sensorIDs,
+        private List<KeyValuePair<Guid, List<SensorHistory>>> QueryDataReading(List<Guid> sensorIDs,
             DateTimeOffset start, DateTimeOffset end)
         {
             var trueStartDate = start.AddDays(-1);
@@ -123,14 +122,12 @@
             List<SensorHistory> readings;
             using (var db = new MainDbContext())
             {
-                readings = await db.SensorsHistory
+                readings = db.SensorsHistory
                     .Where(
                         sh => sh.TimeStamp > trueStartDate
                               && sh.TimeStamp < end && sensorIDs.Contains(sh.SensorID))
                     .AsNoTracking()
-                    .ToListAsync()
-                    // ConfigureAwait false with cause this to run on the threadpool.
-                    .ConfigureAwait(false);
+                    .ToList();
             }
 
             var result = new List<KeyValuePair<Guid, List<SensorHistory>>>();
@@ -159,8 +156,8 @@
         /// <returns>A compilation of errors.</returns>
         public async Task<List<string>> GetUpdatesFromServerAsync(DateTimeOffset lastUpdate, Creds creds)
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => UpdateFromServerAsync(lastUpdate, creds));
-            return await await cont;
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => UpdateFromServerAsync(lastUpdate, creds)));
+            return await await cont.ConfigureAwait(false);
         }
 
         private async Task<List<string>> UpdateFromServerAsync(DateTimeOffset lastUpdate, Creds creds)
@@ -195,17 +192,38 @@
                 // 5. SensorTypes
                 // 6. Subsystems
 
-                responses.Add(await DownloadDeserialiseTable<Parameter>(nameof(db.Parameters), tableList));
-                responses.Add(await DownloadDeserialiseTable<Placement>(nameof(db.Placements), tableList));
-                responses.Add(await DownloadDeserialiseTable<Subsystem>(nameof(db.Subsystems), tableList));
-                responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList));
-                responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList));
+
+                // This might look like a good idea but it wont work, the dbcontext is not threadsafe.
+                // The download part of that method could be done in paralell, but the rest need to be done in order.
+                //var tasks = new[]
+                //{
+                //    Task.Run(() => DownloadDeserialiseTable<Parameter>(nameof(db.Parameters), tableList)),
+                //    Task.Run(() => DownloadDeserialiseTable<Placement>(nameof(db.Placements), tableList)),
+                //    Task.Run(() => DownloadDeserialiseTable<Subsystem>(nameof(db.Subsystems), tableList)),
+                //    Task.Run(() => DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList)),
+                //    Task.Run(() => DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList))
+                //};
+
+                //await Task.WhenAll(tasks);
+
+                // Setting configure await to false allows all of this method to be run on the threadpool.
+                // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
+                responses.Add(
+                    await DownloadDeserialiseTable<Parameter>(nameof(db.Parameters), tableList).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<Placement>(nameof(db.Placements), tableList).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<Subsystem>(nameof(db.Subsystems), tableList).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList).ConfigureAwait(false));
 
                 if (responses.Any(r => r != null))
                 {
                     return responses.Where(r => r != null).ToList();
                 }
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                db.SaveChanges();
 
                 // Editable types that must be merged.
                 // 1.CropCycles
@@ -215,20 +233,30 @@
                 // 5.Relays
                 // 6.
 
-                responses.Add(await DownloadDeserialiseTable<Person>(nameof(db.People), tableList, creds));
+                responses.Add(
+                    await DownloadDeserialiseTable<Person>(nameof(db.People), tableList, creds).ConfigureAwait(false));
                 // Crop type is the only mergable that is no-auth.
-                responses.Add(await DownloadDeserialiseTable<CropType>(nameof(db.CropTypes), tableList));
-                responses.Add(await DownloadDeserialiseTable<Location>(nameof(db.Locations), tableList, creds));
-                responses.Add(await DownloadDeserialiseTable<CropCycle>(nameof(db.CropCycles), tableList, creds));
-                responses.Add(await DownloadDeserialiseTable<Device>(nameof(db.Devices), tableList, creds));
-                responses.Add(await DownloadDeserialiseTable<Relay>(nameof(db.Relays), tableList, creds));
-                responses.Add(await DownloadDeserialiseTable<Sensor>(nameof(db.Sensors), tableList, creds));
+                responses.Add(
+                    await DownloadDeserialiseTable<CropType>(nameof(db.CropTypes), tableList).ConfigureAwait(false));
+                responses.Add(
+                    await
+                        DownloadDeserialiseTable<Location>(nameof(db.Locations), tableList, creds).ConfigureAwait(false));
+                responses.Add(
+                    await
+                        DownloadDeserialiseTable<CropCycle>(nameof(db.CropCycles), tableList, creds)
+                            .ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<Device>(nameof(db.Devices), tableList, creds).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<Relay>(nameof(db.Relays), tableList, creds).ConfigureAwait(false));
+                responses.Add(
+                    await DownloadDeserialiseTable<Sensor>(nameof(db.Sensors), tableList, creds).ConfigureAwait(false));
 
                 if (responses.Any(r => r != null))
                 {
                     return responses.Where(r => r != null).ToList();
                 }
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                db.SaveChanges();
 
                 // Items that have to get got in time slices.
                 // 1.RelayHistory
@@ -239,17 +267,17 @@
                 responses.Add(
                     await
                         DownloadDeserialiseTable<SensorHistory>($"{nameof(db.SensorsHistory)}/{unixtime}/9001",
-                            tableList, creds));
+                            tableList, creds).ConfigureAwait(false));
                 responses.Add(
                     await
                         DownloadDeserialiseTable<RelayHistory>($"{nameof(db.RelayHistory)}/{unixtime}/9001", tableList,
-                            creds));
+                            creds).ConfigureAwait(false));
 
                 if (responses.Any(r => r != null))
                 {
                     return responses.Where(r => r != null).ToList();
                 }
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                db.SaveChanges();
             }
 
             return responses;
@@ -271,9 +299,9 @@
             // Step 1: Request
             string response;
             if (cred == null)
-                response = await Request.GetTable(ApiUrl, tableName);
+                response = await Request.GetTable(ApiUrl, tableName).ConfigureAwait(false);
             else
-                response = await Request.GetTable(ApiUrl, tableName, cred);
+                response = await Request.GetTable(ApiUrl, tableName, cred).ConfigureAwait(false);
 
             if (response.StartsWith("Error:"))
             {
@@ -287,7 +315,8 @@
             List<TPoco> updatesFromServer;
             try
             {
-                updatesFromServer = await Task.Run(() => JsonConvert.DeserializeObject<List<TPoco>>(response));
+                updatesFromServer =
+                    await Task.Run(() => JsonConvert.DeserializeObject<List<TPoco>>(response)).ConfigureAwait(false);
             }
             catch (JsonSerializationException e)
             {
@@ -298,7 +327,7 @@
 
             // Step 3: Merge
             // Get the DbSet that this request should be inserted into.
-            await AddOrModify(updatesFromServer, tableList);
+            await AddOrModify(updatesFromServer, tableList).ConfigureAwait(false);
 
             return null;
         }
@@ -322,18 +351,16 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        await
-                            dbSet.Select(a => a)
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(d => ((IHasId) d).ID == ((IHasId) remote).ID);
+                        dbSet.Select(a => a)
+                            .AsNoTracking()
+                            .FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
-                        await
-                            dbSet.Select(a => a)
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
+                        dbSet.Select(a => a)
+                            .AsNoTracking()
+                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -367,8 +394,9 @@
                     {
                         var id = remoteSenHist.SensorID;
                         await Messenger.Instance.NewSensorDataPoint.Invoke(
-                            remoteSenHist.Data.Select(
-                                d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
+                                remoteSenHist.Data.Select(
+                                    d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
+                            .ConfigureAwait(false);
                     }
                 }
                 else if (pocoType == typeof(RelayHistory))
@@ -398,8 +426,9 @@
                     {
                         var id = remoteRelayHist.RelayID;
                         await Messenger.Instance.NewRelayDataPoint.Invoke(
-                            remoteRelayHist.Data.Select(
-                                d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
+                                remoteRelayHist.Data.Select(
+                                    d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)))
+                            .ConfigureAwait(false);
                     }
                 }
 
@@ -456,14 +485,14 @@
 
         public async Task<List<string>> PostUpdatesAsync()
         {
-            var cont = AttachContinuationsAndSwapLastTask(PostUpdateToServerAsync);
-            return await await cont;
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostUpdateToServerAsync));
+            return await await cont.ConfigureAwait(false);
         }
 
         public async Task<string> PostHistoryAsync()
         {
-            var cont = AttachContinuationsAndSwapLastTask(PostHistoryChangesAsync);
-            return await await cont;
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostHistoryChangesAsync));
+            return await await cont.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -481,12 +510,17 @@
             // CropCycle, Devices.
             using (var db = new MainDbContext())
             {
-                responses.Add(await PostAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds));
+                responses.Add(
+                    await PostAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds).ConfigureAwait(false));
 
-                responses.Add(await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds));
-                responses.Add(await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds));
-                responses.Add(await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds));
-                responses.Add(await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds));
+                responses.Add(
+                    await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds).ConfigureAwait(false));
 
                 // CropTypes is unique:
                 var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
@@ -494,7 +528,8 @@
                 if (changedCropTypes.Any())
                 {
                     var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
-                    responses.Add(await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds));
+                    responses.Add(
+                        await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds).ConfigureAwait(false));
                 }
             }
 
@@ -542,7 +577,7 @@
 
                 var json = JsonConvert.SerializeObject(deserialiseAndSlice);
 
-                result = await Request.PostTable(ApiUrl, nameof(db.SensorsHistory), json, creds);
+                result = await Request.PostTable(ApiUrl, nameof(db.SensorsHistory), json, creds).ConfigureAwait(false);
                 if (result == null)
                 {
                     // Only update last post if it was successfull.
@@ -571,7 +606,7 @@
             if (!edited.Any()) return null;
 
             var data = JsonConvert.SerializeObject(edited, Formatting.None);
-            var req = await Request.PostTable(ApiUrl, tableName, data, creds);
+            var req = await Request.PostTable(ApiUrl, tableName, data, creds).ConfigureAwait(false);
             return req;
         }
     }

@@ -105,7 +105,7 @@
                     }
                     else
                     {
-                        await new Task(() => action(param));
+                        await Task.Run(() => action(param)).ConfigureAwait(false);
                     }
                 }
             }
