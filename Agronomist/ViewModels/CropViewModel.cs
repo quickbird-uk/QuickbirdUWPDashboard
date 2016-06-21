@@ -203,13 +203,13 @@
             SyncButtonEnabled = false;
 
             var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
-            if (updateErrors.Any()) Debug.WriteLine(updateErrors);
+            if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
 
             var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
-            if (postErrors.Any()) Debug.WriteLine(string.Join(",", postErrors));
+            if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
 
             var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
-            if(postHistErrors.Any()) Debug.WriteLine(postHistErrors);
+            if(postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
 
             SyncButtonEnabled = true;
         }

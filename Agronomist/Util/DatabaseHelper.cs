@@ -103,7 +103,6 @@
             }
         }
 
-
         public async Task<List<KeyValuePair<Guid, List<SensorHistory>>>> GetDataReadingsAsync(List<Guid> sensorIDs,
             DateTimeOffset start, DateTimeOffset end)
         {
@@ -292,7 +291,6 @@
 
             return responses;
         }
-
 
         /// <summary>
         ///     Makes a webrequest to the API server to fetch a table.
@@ -492,7 +490,6 @@
             }
         }
 
-
         public async Task<List<string>> PostUpdatesAsync()
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostUpdateToServerAsync));
@@ -548,7 +545,6 @@
             return errors;
         }
 
-
         /// <summary>
         ///     Posts all new history items since the last time data was posted.
         /// </summary>
@@ -596,7 +592,6 @@
             }
             return result;
         }
-
 
         /// <summary>
         ///     Only supports tables that derive from BaseEntity and Croptype.

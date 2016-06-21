@@ -94,7 +94,7 @@
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
             var now = DateTimeOffset.Now;
-            var errors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync(settings.LastDatabaseUpdate, creds);
+            var errors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
             DatabaseErrors = string.Join(",", errors);
             settings.LastDatabaseUpdate = now;
         }
