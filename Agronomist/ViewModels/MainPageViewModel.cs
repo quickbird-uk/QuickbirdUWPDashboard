@@ -4,6 +4,9 @@
     using Internet;
     using Util;
 
+    /// <summary>
+    ///     This is a testing class not actually used in the app.
+    /// </summary>
     public class MainPageViewModel : ViewModelBase
     {
         private string _databaseErrors = "none";
