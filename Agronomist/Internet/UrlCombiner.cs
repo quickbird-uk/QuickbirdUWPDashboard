@@ -1,4 +1,4 @@
-namespace NetLib
+namespace Agronomist.Internet
 {
     using System;
     using System.Linq;

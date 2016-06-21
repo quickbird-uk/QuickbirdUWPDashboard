@@ -4,14 +4,15 @@
     using System.Diagnostics;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
+    using Internet;
     using Models;
-    using NetLib;
     using Util;
     using Views;
 
     public class CropViewModel : ViewModelBase
     {
         private const string ShowNotificationsString = "Show Notifications";
+        private readonly DashboardViewModel _dashboardViewModel;
 
         private readonly Guid _id;
 
@@ -19,7 +20,6 @@
 
         private Frame _cropContentFrame;
         private string _cropName;
-        private readonly DashboardViewModel _dashboardViewModel;
 
         private bool _isNotificationsOpen;
         private string _notificationsButtonText = ShowNotificationsString;

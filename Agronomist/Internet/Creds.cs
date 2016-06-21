@@ -1,4 +1,4 @@
-﻿namespace NetLib
+﻿namespace Agronomist.Internet
 {
     using System;
     using System.Diagnostics;
@@ -8,7 +8,7 @@
     using Windows.Security.Authentication.Web;
 
     /// <summary>
-    ///     Holds an authentication token and the associated information.
+    ///     Authentication token, associated information and broker to create it.
     /// </summary>
     public class Creds
     {

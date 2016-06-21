@@ -33,6 +33,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Internet\Creds.cs" />
+    <Compile Include="Internet\Request.cs" />
+    <Compile Include="Internet\UrlCombiner.cs" />
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
     <Compile Include="Migrations\20160602131608_Initial.cs" />
@@ -42,7 +45,6 @@
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Util\DatabaseHelper.cs" />
     <Compile Include="Util\Messenger.cs" />
-    <Compile Include="Models\IDataModel.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="Util\Settings.cs" />

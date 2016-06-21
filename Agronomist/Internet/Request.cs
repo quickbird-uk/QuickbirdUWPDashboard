@@ -1,15 +1,14 @@
-﻿namespace NetLib
+﻿namespace Agronomist.Internet
 {
     using System;
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
+    using Windows.Security.Cryptography;
     using Windows.Web.Http;
     using Windows.Web.Http.Filters;
+    using Windows.Web.Http.Headers;
     using JetBrains.Annotations;
-    using System.Net.Http.Headers;
-    using Windows.Storage.Streams;
-    using Windows.Security.Cryptography;
 
     public static class Request
     {
@@ -87,16 +86,16 @@
 
             try
             {
-                IBuffer buffUTF8 = CryptographicBuffer.ConvertStringToBinary(data, BinaryStringEncoding.Utf8);
-                IHttpContent content = new HttpBufferContent(buffUTF8, 0, buffUTF8.Length);
-                var body = await content.ReadAsStringAsync(); 
-                content.Headers.ContentType = new Windows.Web.Http.Headers.HttpMediaTypeHeaderValue("application/json");
-                
+                var buffUtf8 = CryptographicBuffer.ConvertStringToBinary(data, BinaryStringEncoding.Utf8);
+                IHttpContent content = new HttpBufferContent(buffUtf8, 0, buffUtf8.Length);
+                var body = await content.ReadAsStringAsync();
+                content.Headers.ContentType = new HttpMediaTypeHeaderValue("application/json");
+
                 var response = await client.PostAsync(url, content).AsTask((CancellationToken) canceller);
-                var it = response.Content; 
+                var it = response.Content;
                 return response.IsSuccessStatusCode
                     ? null
-                    : $"Error: Request returned {response.StatusCode} ({response.ReasonPhrase})";
+                    : $"Error: Request returned {response.StatusCode} ({response.ReasonPhrase}), Content:{it}";
             }
             catch (TaskCanceledException)
             {

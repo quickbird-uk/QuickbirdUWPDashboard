@@ -4,14 +4,14 @@
     using System.Diagnostics;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
-    using NetLib;
+    using Internet;
     using Util;
     using Views;
 
     public class LandingPageViewModel : ViewModelBase
     {
         private bool _loginEnabled;
-        
+
         public bool LoginEnabled
         {
             get { return _loginEnabled; }
@@ -52,8 +52,7 @@
 
             UpdateCredsAndTokens();
 
-            ((Frame)Window.Current.Content).Navigate(typeof(Shell));
+            ((Frame) Window.Current.Content).Navigate(typeof(Shell));
         }
-
     }
 }

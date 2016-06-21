@@ -9,13 +9,13 @@
     using DatabasePOCOs;
     using DatabasePOCOs.Global;
     using DatabasePOCOs.User;
+    using Internet;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
-    using NetLib;
     using Newtonsoft.Json;
     using Util;
 
-    public class MainDbContext : DbContext, IDataModel
+    public class MainDbContext : DbContext
     {
         /// <summary>
         ///     The Url of the web api that is used to fetch data.
@@ -237,7 +237,7 @@
             foreach (var remote in updatesFromServer)
             {
                 TPoco local = null;
-                TPoco merged = null; 
+                TPoco merged = null;
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
@@ -272,11 +272,13 @@
                         // They are the same primary key so merge them.
                         localSH.DeserialiseData();
                         var mergedSH = SensorHistory.Merge(remoteSH, localSH);
-                        mergedSH.SerialiseData(); 
+                        mergedSH.SerialiseData();
                         merged = mergedSH as TPoco;
                     }
                     else
-                    { remoteSH.SerialiseData();  }
+                    {
+                        remoteSH.SerialiseData();
+                    }
 
                     if (remoteSH != null)
                     {
@@ -299,7 +301,7 @@
                         oldHist.DeserialiseData();
                         var mergedRH = DatabasePOCOs.User.RelayHistory.Merge(remoteRH, oldHist);
                         mergedRH.SerialiseData();
-                        merged = mergedRH as TPoco; 
+                        merged = mergedRH as TPoco;
                     }
                     else
                     {
@@ -310,7 +312,7 @@
                     {
                         var id = remoteRH.RelayID;
                         await Messenger.Instance.NewRelayDataPoint.Invoke(
-                            remoteRH.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration))); 
+                            remoteRH.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
                     }
                 }
 

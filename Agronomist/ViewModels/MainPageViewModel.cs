@@ -1,12 +1,13 @@
 ﻿namespace Agronomist.ViewModels
 {
     using System;
+    using Internet;
     using Models;
-    using NetLib;
     using Util;
 
     public class MainPageViewModel : ViewModelBase
     {
+        private string _databaseErrors = "none";
         private bool _loginEnabled = true;
 
         private string _token;
@@ -26,8 +27,6 @@
                 OnPropertyChanged();
             }
         }
-
-        private string _databaseErrors = "none";
 
         public string DatabaseErrors
         {
@@ -75,7 +74,7 @@
             }
 
             var settings = Settings.Instance;
-            settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0,4)));
+            settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0, 4)));
 
             UpdateCredsAndTokens();
 
