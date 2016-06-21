@@ -151,17 +151,20 @@
         /// <summary>
         ///     Updates the database from the cloud server.
         /// </summary>
-        /// <param name="lastUpdate"></param>
-        /// <param name="creds"></param>
         /// <returns>A compilation of errors.</returns>
-        public async Task<List<string>> GetUpdatesFromServerAsync(DateTimeOffset lastUpdate, Creds creds)
+        public async Task<List<string>> GetUpdatesFromServerAsync()
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => UpdateFromServerAsync(lastUpdate, creds)));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateFromServerAsync));
             return await await cont.ConfigureAwait(false);
         }
 
-        private async Task<List<string>> UpdateFromServerAsync(DateTimeOffset lastUpdate, Creds creds)
+        private async Task<List<string>> UpdateFromServerAsync()
         {
+            var settings = Settings.Instance;
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var lastUpdate = settings.LastDatabaseUpdate;
+            var now = DateTimeOffset.Now;
+
             var responses = new List<string>();
 
             using (var db = new MainDbContext())
@@ -278,6 +281,13 @@
                     return responses.Where(r => r != null).ToList();
                 }
                 db.SaveChanges();
+            }
+
+            responses = responses.Where(r => r != null).ToList();
+
+            if (!responses.Any())
+            {
+                settings.LastDatabaseUpdate = now;
             }
 
             return responses;

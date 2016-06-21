@@ -2,9 +2,9 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
-    using Internet;
     using Util;
     using Views;
 
@@ -201,17 +201,15 @@
         public async void Sync(object sender, object e)
         {
             SyncButtonEnabled = false;
-            var settings = Settings.Instance;
-            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            var now = DateTimeOffset.Now;
-            var errors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync(settings.LastDatabaseUpdate, creds);
-            settings.LastDatabaseUpdate = now;
-            Debug.WriteLine(errors);
 
-            var posterrors = string.Join(",", await DatabaseHelper.Instance.PostUpdatesAsync());
-            Debug.WriteLine(posterrors);
+            var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
+            if (updateErrors.Any()) Debug.WriteLine(updateErrors);
 
-            Debug.WriteLine(await DatabaseHelper.Instance.PostHistoryAsync());
+            var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
+            if (postErrors.Any()) Debug.WriteLine(string.Join(",", postErrors));
+
+            var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
+            if(postHistErrors.Any()) Debug.WriteLine(postHistErrors);
 
             SyncButtonEnabled = true;
         }
