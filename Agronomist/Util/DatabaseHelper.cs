@@ -152,7 +152,7 @@
         }
 
         /// <summary>
-        /// Updates the database from the cloud server.
+        ///     Updates the database from the cloud server.
         /// </summary>
         /// <param name="lastUpdate"></param>
         /// <param name="creds"></param>
@@ -201,7 +201,7 @@
                 responses.Add(await DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList));
                 responses.Add(await DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList));
 
-                if(responses.Any(r=>r!=null))
+                if (responses.Any(r => r != null))
                 {
                     return responses.Where(r => r != null).ToList();
                 }
@@ -308,11 +308,12 @@
         /// </summary>
         /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
         /// <param name="updatesFromServer">The data recieved from the server.</param>
+        /// <param name="tables">List of the DbSet table objects from the context that the updates could belong to.</param>
         /// <returns>Awaitable, the local database queries are done async.</returns>
-        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, List<object> _tables)
+        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, List<object> tables)
             where TPoco : class
         {
-            var dbSet = (DbSet<TPoco>) _tables.First(d => d is DbSet<TPoco>);
+            var dbSet = (DbSet<TPoco>) tables.First(d => d is DbSet<TPoco>);
             var pocoType = typeof(TPoco);
             foreach (var remote in updatesFromServer)
             {
@@ -341,58 +342,64 @@
                 }
                 else if (pocoType == typeof(SensorHistory))
                 {
-                    var remoteSH = remote as SensorHistory;
-                    var localSH =
+                    var remoteSenHist = remote as SensorHistory;
+                    var localSenHist =
                         dbSet.OfType<SensorHistory>()
                             .AsNoTracking()
-                            .FirstOrDefault(d => d.SensorID == remoteSH.SensorID && d.TimeStamp == remoteSH.TimeStamp);
-                    local = localSH as TPoco;
+                            .FirstOrDefault(
+                                d => d.SensorID == remoteSenHist.SensorID && d.TimeStamp == remoteSenHist.TimeStamp);
+                    local = localSenHist as TPoco;
                     if (null != local)
                     {
                         // They are the same primary key so merge them.
-                        localSH.DeserialiseData();
-                        var mergedSH = SensorHistory.Merge(remoteSH, localSH);
-                        mergedSH.SerialiseData();
-                        merged = mergedSH as TPoco;
+                        localSenHist.DeserialiseData();
+                        var mergedSenHist = SensorHistory.Merge(remoteSenHist, localSenHist);
+                        mergedSenHist.SerialiseData();
+                        merged = mergedSenHist as TPoco;
                     }
                     else
                     {
-                        remoteSH.SerialiseData();
+                        Debug.Assert(remoteSenHist != null, "remoteSenHist != null, poco type detection failed.");
+                        remoteSenHist.SerialiseData();
                     }
 
-                    if (remoteSH != null)
+                    if (remoteSenHist != null)
                     {
-                        var id = remoteSH.SensorID;
+                        var id = remoteSenHist.SensorID;
                         await Messenger.Instance.NewSensorDataPoint.Invoke(
-                            remoteSH.Data.Select(d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
+                            remoteSenHist.Data.Select(
+                                d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)));
                     }
                 }
                 else if (pocoType == typeof(RelayHistory))
                 {
-                    var remoteRH = remote as RelayHistory;
+                    var remoteRelayHist = remote as RelayHistory;
                     var oldHist =
                         dbSet.OfType<RelayHistory>()
                             .AsNoTracking()
-                            .FirstOrDefault(d => d.RelayID == remoteRH.RelayID && d.TimeStamp == remoteRH.TimeStamp);
+                            .FirstOrDefault(
+                                d => d.RelayID == remoteRelayHist.RelayID && d.TimeStamp == remoteRelayHist.TimeStamp);
                     local = oldHist as TPoco;
                     if (null != local)
                     {
                         // They are the same primary key so merge them.
                         oldHist.DeserialiseData();
-                        var mergedRH = RelayHistory.Merge(remoteRH, oldHist);
-                        mergedRH.SerialiseData();
-                        merged = mergedRH as TPoco;
+                        var mergedRelayHist = RelayHistory.Merge(remoteRelayHist, oldHist);
+                        mergedRelayHist.SerialiseData();
+                        merged = mergedRelayHist as TPoco;
                     }
                     else
                     {
-                        remoteRH.SerialiseData();
+                        Debug.Assert(remoteRelayHist != null, "remoteRelayHist != null, poco type detection failed.");
+                        remoteRelayHist.SerialiseData();
                     }
 
-                    if (remoteRH != null)
+                    if (remoteRelayHist != null)
                     {
-                        var id = remoteRH.RelayID;
+                        var id = remoteRelayHist.RelayID;
                         await Messenger.Instance.NewRelayDataPoint.Invoke(
-                            remoteRH.Data.Select(d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
+                            remoteRelayHist.Data.Select(
+                                d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)));
                     }
                 }
 
@@ -426,11 +433,13 @@
                     }
                     else if (typeof(TPoco) == typeof(SensorHistory))
                     {
+                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
                         dbSet.Update(merged);
                         // The messenger message is done earlier, no difference between new and update.
                     }
                     else if (typeof(TPoco) == typeof(RelayHistory))
                     {
+                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
                         dbSet.Update(merged);
                     }
                     //RED - Global read-only tables
@@ -458,21 +467,24 @@
             var responses = new List<string>();
             // Simple tables that change:
             // CropCycle, Devices.
-            responses.Add(await Post(Locations, nameof(Locations), lastDatabasePost, creds));
-            responses.Add(await Post(CropCycles, nameof(CropCycles), lastDatabasePost, creds));
-            responses.Add(await Post(Devices, nameof(Devices), lastDatabasePost, creds));
-            responses.Add(await Post(Sensors, nameof(Sensors), lastDatabasePost, creds));
-            responses.Add(await Post(Relays, nameof(Relays), lastDatabasePost, creds));
-
-            // CropTypes is unique:
-            var changedCropTypes = CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
-
-            if (changedCropTypes.Any())
+            using (var db = new MainDbContext())
             {
-                var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
-                responses.Add(await Request.PostTable(ApiUrl, nameof(CropTypes), cropTypeData, creds));
-            }
+                responses.Add(await Post(db.Locations, nameof(db.Locations), lastDatabasePost, creds));
 
+                responses.Add(await Post(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds));
+                responses.Add(await Post(db.Devices, nameof(db.Devices), lastDatabasePost, creds));
+                responses.Add(await Post(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds));
+                responses.Add(await Post(db.Relays, nameof(db.Relays), lastDatabasePost, creds));
+
+                // CropTypes is unique:
+                var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
+
+                if (changedCropTypes.Any())
+                {
+                    var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
+                    responses.Add(await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds));
+                }
+            }
 
             var errors = responses.Where(r => r != null).ToList();
             if (!errors.Any()) settings.LastDatabasePost = postTime;
@@ -489,37 +501,41 @@
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
             var lastSensorDataPost = settings.LastSensorDataPost;
-
-            if (!SensorsHistory.Any()) return null;
-
-            // Get the time just before we raid the database.
-            var postTime = DateTimeOffset.Now;
-            var needsPost = SensorsHistory.AsNoTracking().Where(s => s.TimeStamp > lastSensorDataPost).ToList();
-            var deserialiseAndSlice = needsPost.Select(sensorHistory =>
+            string result;
+            using (var db = new MainDbContext())
             {
-                // All data loaded from the DB must be deserialised to properly populate the poco object.
-                sensorHistory.DeserialiseData();
-                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
-                // If the last post was halfway though a day that day will need to be sliced.
-                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
-                var slice = sensorHistory.Slice(lastSensorDataPost);
-                return slice;
-            });
+                if (!db.SensorsHistory.Any()) return null;
 
-            if (!deserialiseAndSlice.Any())
-            {
-                // Nothing to post so quit as a success.
-                return null;
-            }
+                // Get the time just before we raid the database.
+                var postTime = DateTimeOffset.Now;
+                var needsPost = db.SensorsHistory.AsNoTracking().Where(s => s.TimeStamp > lastSensorDataPost).ToList();
 
-            var json = JsonConvert.SerializeObject(deserialiseAndSlice);
 
-            var result =
-                await Request.PostTable(ApiUrl, nameof(SensorsHistory), json, creds);
-            if (result == null)
-            {
-                // Only update last post if it was successfull.
-                settings.LastSensorDataPost = postTime;
+                var deserialiseAndSlice = needsPost.Select(sensorHistory =>
+                {
+                    // All data loaded from the DB must be deserialised to properly populate the poco object.
+                    sensorHistory.DeserialiseData();
+                    var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
+                    // If the last post was halfway though a day that day will need to be sliced.
+                    if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
+                    var slice = sensorHistory.Slice(lastSensorDataPost);
+                    return slice;
+                });
+
+                if (!deserialiseAndSlice.Any())
+                {
+                    // Nothing to post so quit as a success.
+                    return null;
+                }
+
+                var json = JsonConvert.SerializeObject(deserialiseAndSlice);
+
+                result = await Request.PostTable(ApiUrl, nameof(db.SensorsHistory), json, creds);
+                if (result == null)
+                {
+                    // Only update last post if it was successfull.
+                    settings.LastSensorDataPost = postTime;
+                }
             }
             return result;
         }
