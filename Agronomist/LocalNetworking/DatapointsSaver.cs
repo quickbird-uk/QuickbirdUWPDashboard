@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Windows.UI.Xaml;
 using System.Threading;
 using Agronomist.Util;
-using NetLib;
 
 namespace Agronomist.LocalNetworking
 {

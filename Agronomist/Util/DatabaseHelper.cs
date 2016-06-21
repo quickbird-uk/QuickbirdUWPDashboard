@@ -454,10 +454,22 @@
         }
 
 
+        public async Task<List<string>> PostUpdatesAsync()
+        {
+            var cont = AttachContinuationsAndSwapLastTask(PostUpdateToServerAsync);
+            return await await cont;
+        }
+
+        public async Task<string> PostHistoryAsync()
+        {
+            var cont = AttachContinuationsAndSwapLastTask(PostHistoryChangesAsync);
+            return await await cont;
+        }
+
         /// <summary>
         ///     Posts changes saved in the local DB (excluding histories) to the server.
         /// </summary>
-        private async Task<List<string>> PostChanges()
+        private async Task<List<string>> PostUpdateToServerAsync()
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
@@ -469,12 +481,12 @@
             // CropCycle, Devices.
             using (var db = new MainDbContext())
             {
-                responses.Add(await Post(db.Locations, nameof(db.Locations), lastDatabasePost, creds));
+                responses.Add(await PostAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds));
 
-                responses.Add(await Post(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds));
-                responses.Add(await Post(db.Devices, nameof(db.Devices), lastDatabasePost, creds));
-                responses.Add(await Post(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds));
-                responses.Add(await Post(db.Relays, nameof(db.Relays), lastDatabasePost, creds));
+                responses.Add(await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds));
+                responses.Add(await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds));
+                responses.Add(await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds));
+                responses.Add(await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds));
 
                 // CropTypes is unique:
                 var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
@@ -496,7 +508,7 @@
         ///     Posts all new history items since the last time data was posted.
         /// </summary>
         /// <returns></returns>
-        private async Task<string> PostHistoryChanges()
+        private async Task<string> PostHistoryChangesAsync()
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
@@ -540,6 +552,7 @@
             return result;
         }
 
+
         /// <summary>
         ///     Only supports tables that derive from BaseEntity and Croptype.
         /// </summary>
@@ -548,7 +561,7 @@
         /// <param name="lastPost">The last time the table was synced.</param>
         /// <param name="creds">Authentication credentials.</param>
         /// <returns>Null on success otherwise an error message.</returns>
-        private async Task<string> Post(IQueryable<BaseEntity> table, string tableName, DateTimeOffset lastPost,
+        private async Task<string> PostAsync(IQueryable<BaseEntity> table, string tableName, DateTimeOffset lastPost,
             Creds creds)
         {
             var edited = table
