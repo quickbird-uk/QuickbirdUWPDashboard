@@ -16,16 +16,17 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>Agronomist_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>Agronomist_StoreKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
-    <PackageCertificateThumbprint>F6B11D3EC045105F13CDE4009C4D92F3C60E7962</PackageCertificateThumbprint>
+    <AppxBundlePlatforms>x86</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>1CA290844FDD5A17474BB3F3B0F44172FC7BD250</PackageCertificateThumbprint>
     <AppxPackageDir>C:\Users\Vladimir Akopyan\Desktop\AgronomistPackage\</AppxPackageDir>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <None Include="Agronomist_StoreKey.pfx" />
     <None Include="Agronomist_TemporaryKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
@@ -43,6 +44,24 @@
       <DependentUpon>20160602131608_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
+    <Compile Include="Models\ErrorResponse.cs" />
+    <Compile Include="Models\Global\CropType.cs" />
+    <Compile Include="Models\Global\Parameter.cs" />
+    <Compile Include="Models\Global\Placement.cs" />
+    <Compile Include="Models\Global\RelayType.cs" />
+    <Compile Include="Models\Global\SensorType.cs" />
+    <Compile Include="Models\Global\Subsystem.cs" />
+    <Compile Include="Models\Hardware\Device.cs" />
+    <Compile Include="Models\Hardware\Relay.cs" />
+    <Compile Include="Models\Hardware\Sensor.cs" />
+    <Compile Include="Models\IHasGuid.cs" />
+    <Compile Include="Models\IHasId.cs" />
+    <Compile Include="Models\Person.cs" />
+    <Compile Include="Models\User\BaseEntity.cs" />
+    <Compile Include="Models\User\CropCycle.cs" />
+    <Compile Include="Models\User\Location.cs" />
+    <Compile Include="Models\User\RelayHistory.cs" />
+    <Compile Include="Models\User\SensorHistory.cs" />
     <Compile Include="Util\DatabaseHelper.cs" />
     <Compile Include="Util\Messenger.cs" />
     <Compile Include="Models\MainDbContext.cs" />
@@ -147,6 +166,7 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
@@ -201,10 +221,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DbStructure\DatabasePOCOs.csproj">
-      <Project>{27ff170a-961d-4372-a340-818dc56c53d0}</Project>
-      <Name>DatabasePOCOs</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GnatMQ\GnatMQ.csproj">
       <Project>{6f54ccaf-5b22-4293-9afc-a664cc180ec9}</Project>
       <Name>GnatMQ</Name>
@@ -228,6 +244,7 @@
     <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <PlatformTarget>x86</PlatformTarget>
     <Optimize>true</Optimize>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <OutputPath>bin\ARM\Debug\</OutputPath>
@@ -248,6 +265,8 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|x86'">
     <OutputPath>bin\x86\NATIVE\</OutputPath>

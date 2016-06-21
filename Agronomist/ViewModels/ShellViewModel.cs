@@ -90,7 +90,19 @@
                 SelectedShellListViewModel = item;
             }
             else
+            {
+                //TODO: this cause ssync on first connect. Tell manish to think of where to put it properly
+                var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
+                if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
+
+                var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
+                if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
+
+                var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
+                if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
+
                 _contentFrame.Navigate(typeof(AddCropCycleView));
+            }
         }
 
         private async Task Update()
