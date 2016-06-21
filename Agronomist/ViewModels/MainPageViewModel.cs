@@ -2,7 +2,6 @@
 {
     using System;
     using Internet;
-    using Models;
     using Util;
 
     public class MainPageViewModel : ViewModelBase
@@ -89,33 +88,24 @@
 
         public async void UpdateData()
         {
-            using (var context = new MainDbContext())
-            {
-                var settings = Settings.Instance;
-                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-                var now = DateTimeOffset.Now;
-                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
-                DatabaseErrors = errors;
-                settings.LastDatabaseUpdate = now;
-            }
+            var settings = Settings.Instance;
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var now = DateTimeOffset.Now;
+            var errors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync(settings.LastDatabaseUpdate, creds);
+            DatabaseErrors = string.Join(",", errors);
+            settings.LastDatabaseUpdate = now;
         }
 
         public async void PostSensorData()
         {
             DatabaseErrors = "posting";
-            using (var context = new MainDbContext())
-            {
-                DatabaseErrors = await context.PostHistoryChanges();
-            }
+            DatabaseErrors = await DatabaseHelper.Instance.PostHistoryAsync();
         }
 
         public async void PostDatabase()
         {
             DatabaseErrors = "posting";
-            using (var context = new MainDbContext())
-            {
-                DatabaseErrors = string.Join(",", await context.PostChanges());
-            }
+            DatabaseErrors = string.Join(",", await DatabaseHelper.Instance.PostUpdatesAsync());
         }
     }
 }

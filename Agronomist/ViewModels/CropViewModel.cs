@@ -5,7 +5,6 @@
     using Windows.UI.Xaml.Controls;
     using DatabasePOCOs.User;
     using Internet;
-    using Models;
     using Util;
     using Views;
 
@@ -202,20 +201,18 @@
         public async void Sync(object sender, object e)
         {
             SyncButtonEnabled = false;
-            using (var context = new MainDbContext())
-            {
-                var settings = Settings.Instance;
-                var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-                var now = DateTimeOffset.Now;
-                var errors = await context.UpdateFromServer(settings.LastDatabaseUpdate, creds);
-                settings.LastDatabaseUpdate = now;
-                Debug.WriteLine(errors);
+            var settings = Settings.Instance;
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var now = DateTimeOffset.Now;
+            var errors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync(settings.LastDatabaseUpdate, creds);
+            settings.LastDatabaseUpdate = now;
+            Debug.WriteLine(errors);
 
-                var posterrors = string.Join(",", await context.PostChanges());
-                Debug.WriteLine(posterrors);
+            var posterrors = string.Join(",", await DatabaseHelper.Instance.PostUpdatesAsync());
+            Debug.WriteLine(posterrors);
 
-                Debug.WriteLine(await context.PostHistoryChanges());
-            }
+            Debug.WriteLine(await DatabaseHelper.Instance.PostHistoryAsync());
+
             SyncButtonEnabled = true;
         }
     }
