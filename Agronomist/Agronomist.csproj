@@ -209,10 +209,6 @@
       <Project>{6f54ccaf-5b22-4293-9afc-a664cc180ec9}</Project>
       <Name>GnatMQ</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NetLib\NetLib.csproj">
-      <Project>{ba28c443-0ff2-492f-9351-f1cf4f76bb93}</Project>
-      <Name>NetLib</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Syncfusion.SfChart.UWP">
