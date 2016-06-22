@@ -5,6 +5,7 @@
     using System.Linq;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
     using DatabasePOCOs;
     using MoreLinq;
     using Util;
@@ -22,10 +23,13 @@
         public const string ErrorCardColour = "#FFFF0000";
         private const string Visible = "Visible";
         private const string Collapsed = "Collapsed";
+        private readonly DispatcherTimer _ageStatusUpdateTime;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
+
+        private string _ageStatus;
 
         private string _cardBackColour = NormalCardColour;
 
@@ -61,12 +65,34 @@
                 if (ofThisSensor.Any())
                 {
                     var mostRecent = ofThisSensor.MaxBy(r => r.Timestamp);
-                    var formattedValue = FormatValue(mostRecent.Value);
-                    await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Value = formattedValue);
+                    await
+                        _dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            () => UpdateValueAndAgeStatusIfNew(mostRecent.Value, mostRecent.Timestamp));
                 }
             };
+
+            _ageStatusUpdateTime = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(10)
+            };
+
+            _ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
+        }
+
+        private DateTimeOffset TimeOfCurrentValue { get; set; }
+
+        public string AgeStatus
+        {
+            get { return _ageStatus; }
+            set
+            {
+                if (value == _ageStatus) return;
+                _ageStatus = value;
+                OnPropertyChanged();
+            }
         }
 
         public long PlacementId { get; }
@@ -216,6 +242,51 @@
             {
                 _scaleY = value;
                 OnPropertyChanged();
+            }
+        }
+
+        private void AgeStatusUpdateTimeOnTick(object sender, object o)
+        {
+            UpdateAgeStatusMessage();
+        }
+
+        private void UpdateAgeStatusMessage()
+        {
+            var now = DateTimeOffset.Now;
+            var age = now - TimeOfCurrentValue;
+            if (age < TimeSpan.FromSeconds(10))
+            {
+                AgeStatus = "live";
+            }
+            else if (age < TimeSpan.FromMinutes(1))
+            {
+                AgeStatus = "recent";
+            }
+            else if (age < TimeSpan.FromMinutes(60))
+            {
+                var mins = age.Minutes.ToString();
+                AgeStatus = $"{mins} minutes ago";
+            }
+            else if (age < TimeSpan.FromHours(24))
+            {
+                var hours = age.Hours.ToString();
+                AgeStatus = $"{hours} minutes ago";
+            }
+            else
+            {
+                var hours = ((int) Math.Floor(age.TotalDays)).ToString();
+                AgeStatus = $"{hours} minutes ago";
+            }
+        }
+
+        private void UpdateValueAndAgeStatusIfNew(double value, DateTimeOffset time)
+        {
+            if (time > TimeOfCurrentValue)
+            {
+                TimeOfCurrentValue = time;
+                var formattedValue = FormatValue(value);
+                Value = formattedValue;
+                UpdateAgeStatusMessage();
             }
         }
 
