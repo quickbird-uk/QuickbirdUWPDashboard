@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
     using Windows.UI.Xaml.Controls;
     using Util;
     using Views;
@@ -23,6 +24,8 @@
 
         private object _selectedShellListViewModel;
 
+        private readonly bool _killTimer = false;
+
         /// <summary>
         ///     Initialise the shell.
         /// </summary>
@@ -33,10 +36,68 @@
 
             FirstUpdate();
 
+            Task.Run(() => RunUpdateTimer());
+
             _updateAction = async s => await Update();
 
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+        }
+
+        /// <summary>
+        /// An infinite loop that uses a delay instead of a time so that it is not reentrant.
+        /// </summary>
+        private async void RunUpdateTimer()
+        {
+            while (!_killTimer)
+            {
+                Debug.WriteLine("Auto Sync started...");
+                // Disables the sync button in every CropView (there is one for each crop).
+                await SetSyncEnabled(false);
+
+
+                var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
+                if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
+
+                var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
+                if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
+
+                var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
+                if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
+
+
+                await SetSyncEnabled(true);
+
+                Debug.WriteLine("...Auto Sync finished.");
+
+                //Run timer at the end so that the program starts with an update.
+                // Use a delay to space out syncs, stops it from being reentrant.
+                // We don't care about the exact timing.
+                await Task.Delay(TimeSpan.FromMinutes(1));
+            }
+        }
+
+        /// <summary>
+        /// Enable or disable the Sync button in every cropview, this task waits until the bound variable is sucessfully set.
+        /// </summary>
+        /// <param name="enabled"></param>
+        /// <returns></returns>
+        private async Task SetSyncEnabled(bool enabled)
+        {
+            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher;
+            var completer = new TaskCompletionSource<bool>();
+
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                foreach (var shellListViewModel in ShellListViewModels)
+                {
+                    shellListViewModel.CropViewSyncButtonEnabled = enabled;
+                }
+
+                completer.SetResult(true);
+            });
+
+            await completer.Task;
         }
 
         public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =

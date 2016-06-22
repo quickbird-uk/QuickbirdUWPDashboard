@@ -82,6 +82,15 @@
             }
         }
 
+        /// <summary>
+        ///     Provides the shell the ability to enable and disable the sync button on every CropView.
+        ///     Ideally the sync button should be part of the shell but we havn't found a nice place to put it.
+        /// </summary>
+        public bool CropViewSyncButtonEnabled
+        {
+            set { CropViewModel.SyncButtonEnabled = value; }
+        }
+
         public void Update(CropCycle cropCycle)
         {
             CropName = cropCycle.CropTypeName;
