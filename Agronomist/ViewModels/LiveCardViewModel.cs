@@ -250,17 +250,20 @@
             UpdateAgeStatusMessage();
         }
 
+        /// <summary>
+        /// Update the age status message according to how old it is.
+        /// </summary>
         private void UpdateAgeStatusMessage()
         {
             var now = DateTimeOffset.Now;
             var age = now - TimeOfCurrentValue;
             if (age < TimeSpan.FromSeconds(10))
             {
-                AgeStatus = "live";
+                AgeStatus = "live reading";
             }
             else if (age < TimeSpan.FromMinutes(1))
             {
-                AgeStatus = "recent";
+                AgeStatus = "recent reading";
             }
             else if (age < TimeSpan.FromMinutes(60))
             {
@@ -270,15 +273,20 @@
             else if (age < TimeSpan.FromHours(24))
             {
                 var hours = age.Hours.ToString();
-                AgeStatus = $"{hours} minutes ago";
+                AgeStatus = $"{hours} hours ago";
             }
             else
             {
-                var hours = ((int) Math.Floor(age.TotalDays)).ToString();
-                AgeStatus = $"{hours} minutes ago";
+                var days = ((int) Math.Floor(age.TotalDays)).ToString();
+                AgeStatus = $"{days} days ago";
             }
         }
 
+        /// <summary>
+        /// Only updates the UI if the value is newer.
+        /// </summary>
+        /// <param name="value">The value to display.</param>
+        /// <param name="time">The datestamp of the reading.</param>
         private void UpdateValueAndAgeStatusIfNew(double value, DateTimeOffset time)
         {
             if (time > TimeOfCurrentValue)

@@ -87,8 +87,8 @@
                 <!--  1 - Name of sensor  -->
                 <RowDefinition Height="*" />
                 <!--  2,3 Alert symbol, reading and units  -->
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="Auto" />
                 <!--  4- Bottom button panel  -->
                 <RowDefinition Height="10" />
                 <!--  5- Unused margin placeholder  -->
@@ -105,7 +105,6 @@
                 Style="{StaticResource TitleTextBlockStyle}"
                 Text="{x:Bind ViewModel.UnitName, Mode=OneWay, FallbackValue=Unit Type}" />
             <StackPanel Grid.Row="2"
-                Grid.RowSpan="2"
                 Grid.Column="0"
                 HorizontalAlignment="Center"
                 Orientation="Horizontal">
@@ -116,7 +115,6 @@
                     TextAlignment="Right" />
             </StackPanel>
             <StackPanel Grid.Row="2"
-                Grid.RowSpan="2"
                 Grid.Column="1"
                 HorizontalAlignment="Center"
                 Orientation="Horizontal">
@@ -129,6 +127,12 @@
                     Style="{StaticResource BaseTextBlockStyle}"
                     Text="{x:Bind ViewModel.Units, Mode=OneWay, FallbackValue=units}" />
             </StackPanel>
+            <TextBlock Grid.Row="3"
+                Grid.Column="1"
+                Margin="0,0,15,0"
+                HorizontalAlignment="Right"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind ViewModel.AgeStatus}" />
 
             <!--  The bottom button panel.  -->
             <Grid Grid.Row="5"
