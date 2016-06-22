@@ -21,7 +21,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86</AppxBundlePlatforms>
     <PackageCertificateThumbprint>1CA290844FDD5A17474BB3F3B0F44172FC7BD250</PackageCertificateThumbprint>
-    <AppxPackageDir>C:\Users\Vladimir Akopyan\Dropbox %28Quickbird%29\AgroBuilds\</AppxPackageDir>
+    <AppxPackageDir>C:\Users\Vladimir Akopyan\Desktop\AgronomistPackage\</AppxPackageDir>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
   </PropertyGroup>
   <ItemGroup>
@@ -243,8 +243,8 @@
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <PlatformTarget>x86</PlatformTarget>
-    <Optimize>false</Optimize>
-    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
+    <Optimize>true</Optimize>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <OutputPath>bin\ARM\Debug\</OutputPath>
