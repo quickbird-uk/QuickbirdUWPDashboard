@@ -298,6 +298,10 @@
             }
         }
 
+        /// <summary>
+        /// Updates the basic data on the live card.
+        /// </summary>
+        /// <param name="poco"></param>
         public void Update(Sensor poco)
         {
             Units = poco.SensorType.Param.Unit;
