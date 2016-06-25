@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
@@ -23,7 +24,6 @@
         public const string ErrorCardColour = "#FFFF0000";
         private const string Visible = "Visible";
         private const string Collapsed = "Collapsed";
-        private readonly DispatcherTimer _ageStatusUpdateTime;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
@@ -71,12 +71,13 @@
                 }
             };
 
-            _ageStatusUpdateTime = new DispatcherTimer
+            var ageStatusUpdateTime = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(10)
+                Interval = TimeSpan.FromSeconds(1)
             };
 
-            _ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            ageStatusUpdateTime.Start();
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
@@ -257,28 +258,33 @@
         {
             var now = DateTimeOffset.Now;
             var age = now - TimeOfCurrentValue;
-            if (age < TimeSpan.FromSeconds(10))
+            if (age < TimeSpan.FromSeconds(5))
             {
                 AgeStatus = "live reading";
             }
-            else if (age < TimeSpan.FromMinutes(1))
+            else if (age < TimeSpan.FromSeconds(60))
             {
-                AgeStatus = "recent reading";
+                var seconds = age.Seconds;
+                var plural = seconds == 1 ? "" : "s";
+                AgeStatus = $"{seconds} second{plural} ago";
             }
             else if (age < TimeSpan.FromMinutes(60))
             {
-                var mins = age.Minutes.ToString();
-                AgeStatus = $"{mins} minutes ago";
+                var mins = age.Minutes;
+                var plural = mins == 1 ? "" : "s";
+                AgeStatus = $"{mins} minute{plural} ago";
             }
             else if (age < TimeSpan.FromHours(24))
             {
-                var hours = age.Hours.ToString();
-                AgeStatus = $"{hours} hours ago";
+                var hours = age.Hours;
+                var plural = hours == 1 ? "" : "s";
+                AgeStatus = $"{hours} hour{plural} ago";
             }
             else
             {
-                var days = ((int) Math.Floor(age.TotalDays)).ToString();
-                AgeStatus = $"{days} days ago";
+                var days = (int) Math.Floor(age.TotalDays);
+                var plural = days == 1 ? "" : "s";
+                AgeStatus = $"{days} day{plural} ago";
             }
         }
 

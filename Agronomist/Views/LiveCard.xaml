@@ -132,7 +132,7 @@
                 Margin="0,0,15,0"
                 HorizontalAlignment="Right"
                 Style="{StaticResource CaptionTextBlockStyle}"
-                Text="{x:Bind ViewModel.AgeStatus}" />
+                Text="{x:Bind ViewModel.AgeStatus, Mode=OneWay}" />
 
             <!--  The bottom button panel.  -->
             <Grid Grid.Row="5"
