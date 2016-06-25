@@ -23,6 +23,19 @@
             }
         }
 
+        private string _friendlyText = "Your Twitter Account is used to authenticate you.";
+
+        public string FriendlyText
+        {
+            get { return _friendlyText; }
+            set
+            {
+                if (value == _friendlyText) return;
+                _friendlyText = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void UpdateCredsAndTokens()
         {
             var settings = Settings.Instance;
@@ -31,9 +44,18 @@
 
         public async void Login()
         {
+
             LoginEnabled = false;
             const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
             const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
+            
+            if (!Internet.Request.IsInternetAvailable())
+            {
+
+                LoginEnabled = true;
+                FriendlyText = "Internet seems unavailable, please check your connection and try again.";
+                return;
+            }
 
             Creds creds;
             try
@@ -43,6 +65,7 @@
             catch (Exception)
             {
                 Debug.WriteLine("Login failed or cancelled.");
+                FriendlyText = "Login failed or cancelled.";
                 LoginEnabled = true;
                 return;
             }

@@ -122,7 +122,7 @@
             }
         }
 
-        private static bool IsInternetAvailable()
+        public static bool IsInternetAvailable()
         {
             var icp = NetworkInformation.GetInternetConnectionProfile();
             return (icp?.GetNetworkConnectivityLevel() ?? NetworkConnectivityLevel.None) ==
