@@ -10,6 +10,7 @@
 
     public class LandingPageViewModel : ViewModelBase
     {
+        private string _friendlyText = "Your Twitter Account is used to authenticate you.";
         private bool _loginEnabled;
 
         public bool LoginEnabled
@@ -22,8 +23,6 @@
                 OnPropertyChanged();
             }
         }
-
-        private string _friendlyText = "Your Twitter Account is used to authenticate you.";
 
         public string FriendlyText
         {
@@ -44,14 +43,12 @@
 
         public async void Login()
         {
-
             LoginEnabled = false;
             const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
             const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
-            
-            if (!Internet.Request.IsInternetAvailable())
-            {
 
+            if (!Request.IsInternetAvailable())
+            {
                 LoginEnabled = true;
                 FriendlyText = "Internet seems unavailable, please check your connection and try again.";
                 return;
@@ -75,7 +72,7 @@
 
             UpdateCredsAndTokens();
 
-            ((Frame) Window.Current.Content).Navigate(typeof(Shell));
+            ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
         }
     }
 }
