@@ -191,7 +191,7 @@
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        public void OnSuspending(object sender, SuspendingEventArgs e)
+        public async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             Toast.Debug("OnSuspending", e.SuspendingOperation.ToString());
 
@@ -206,6 +206,8 @@
             // With the deferral there is still a 5 second time limit to completing suspension code.
             // The deferral allows code to be awaited in this method.
             var deferral = e.SuspendingOperation.GetDeferral();
+
+            await Messenger.Instance.Suspending.Invoke(true);
 
             deferral.Complete();
         }

@@ -11,8 +11,6 @@
     /// </summary>
     public class Messenger
     {
-        
-
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
         public BroadcastMessage<IEnumerable<SensorReading>> NewSensorDataPoint { get; } =
@@ -20,9 +18,14 @@
 
         public BroadcastMessage<IEnumerable<RelayReading>> NewRelayDataPoint { get; } =
             new BroadcastMessage<IEnumerable<RelayReading>>();
-        
+
         public BroadcastMessage<string> TablesChanged { get; } =
             new BroadcastMessage<string>();
+
+        /// <summary>
+        ///     True for suspending false for resuming.
+        /// </summary>
+        public BroadcastMessage<CompletionsSource> Suspending { get; } = new BroadcastMessage<bool>();
 
         public struct SensorReading
         {
