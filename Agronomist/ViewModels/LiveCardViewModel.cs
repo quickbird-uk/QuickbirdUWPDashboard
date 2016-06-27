@@ -2,9 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
     using DatabasePOCOs;
     using MoreLinq;
     using Util;
@@ -26,6 +28,8 @@
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
+
+        private string _ageStatus;
 
         private string _cardBackColour = NormalCardColour;
 
@@ -61,12 +65,35 @@
                 if (ofThisSensor.Any())
                 {
                     var mostRecent = ofThisSensor.MaxBy(r => r.Timestamp);
-                    var formattedValue = FormatValue(mostRecent.Value);
-                    await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Value = formattedValue);
+                    await
+                        _dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            () => UpdateValueAndAgeStatusIfNew(mostRecent.Value, mostRecent.Timestamp));
                 }
             };
+
+            var ageStatusUpdateTime = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+
+            ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            ageStatusUpdateTime.Start();
+
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
+        }
+
+        private DateTimeOffset TimeOfCurrentValue { get; set; }
+
+        public string AgeStatus
+        {
+            get { return _ageStatus; }
+            set
+            {
+                if (value == _ageStatus) return;
+                _ageStatus = value;
+                OnPropertyChanged();
+            }
         }
 
         public long PlacementId { get; }
@@ -219,6 +246,68 @@
             }
         }
 
+        private void AgeStatusUpdateTimeOnTick(object sender, object o)
+        {
+            UpdateAgeStatusMessage();
+        }
+
+        /// <summary>
+        /// Update the age status message according to how old it is.
+        /// </summary>
+        private void UpdateAgeStatusMessage()
+        {
+            var now = DateTimeOffset.Now;
+            var age = now - TimeOfCurrentValue;
+            if (age < TimeSpan.FromSeconds(5))
+            {
+                AgeStatus = "live reading";
+            }
+            else if (age < TimeSpan.FromSeconds(60))
+            {
+                var seconds = age.Seconds;
+                var plural = seconds == 1 ? "" : "s";
+                AgeStatus = $"{seconds} second{plural} ago";
+            }
+            else if (age < TimeSpan.FromMinutes(60))
+            {
+                var mins = age.Minutes;
+                var plural = mins == 1 ? "" : "s";
+                AgeStatus = $"{mins} minute{plural} ago";
+            }
+            else if (age < TimeSpan.FromHours(24))
+            {
+                var hours = age.Hours;
+                var plural = hours == 1 ? "" : "s";
+                AgeStatus = $"{hours} hour{plural} ago";
+            }
+            else
+            {
+                var days = (int) Math.Floor(age.TotalDays);
+                var plural = days == 1 ? "" : "s";
+                AgeStatus = $"{days} day{plural} ago";
+            }
+        }
+
+        /// <summary>
+        /// Only updates the UI if the value is newer.
+        /// </summary>
+        /// <param name="value">The value to display.</param>
+        /// <param name="time">The datestamp of the reading.</param>
+        private void UpdateValueAndAgeStatusIfNew(double value, DateTimeOffset time)
+        {
+            if (time > TimeOfCurrentValue)
+            {
+                TimeOfCurrentValue = time;
+                var formattedValue = FormatValue(value);
+                Value = formattedValue;
+                UpdateAgeStatusMessage();
+            }
+        }
+
+        /// <summary>
+        /// Updates the basic data on the live card.
+        /// </summary>
+        /// <param name="poco"></param>
         public void Update(Sensor poco)
         {
             Units = poco.SensorType.Param.Unit;

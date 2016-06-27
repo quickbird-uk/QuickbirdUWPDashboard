@@ -4,6 +4,7 @@
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
+    using Windows.Networking.Connectivity;
     using Windows.Security.Cryptography;
     using Windows.Web.Http;
     using Windows.Web.Http.Filters;
@@ -26,6 +27,12 @@
         public static async Task<string> GetTable([NotNull] string baseUrl, [NotNull] string tableName,
             [CanBeNull] Creds cred = null, [CanBeNull] CancellationToken? canceller = null)
         {
+            if (!IsInternetAvailable())
+            {
+                //Responses starting with "Error:" should be filtered as failures.
+                return "Error: No Internet, get request aborted.";
+            }
+
             // Must add the AllowUI=false setting otherwise it tries enumerating UI and doesn't report errors properly.
             var client = new HttpClient(new HttpBaseProtocolFilter {AllowUI = false});
             var tokenHeader = "X-ZUMO-AUTH";
@@ -69,6 +76,12 @@
         public static async Task<string> PostTable([NotNull] string baseUrl, [NotNull] string tableName,
             [NotNull] string data, [CanBeNull] Creds cred = null, [CanBeNull] CancellationToken? canceller = null)
         {
+            if (!IsInternetAvailable())
+            {
+                //Responses starting with "Error:" should be filtered as failures.
+                return "Error: No Internet, post request aborted.";
+            }
+
             // Must add the AllowUI=false setting otherwise it tries enumerating UI and doesn't report errors properly.
             var client = new HttpClient(new HttpBaseProtocolFilter {AllowUI = false});
             var tokenHeader = "X-ZUMO-AUTH";
@@ -107,6 +120,13 @@
                 Debug.WriteLine($"Req '{tableName}' error: {ex}");
                 return $"Error: NetFail: {ex.Message}, {ex.InnerException}, END";
             }
+        }
+
+        public static bool IsInternetAvailable()
+        {
+            var icp = NetworkInformation.GetInternetConnectionProfile();
+            return (icp?.GetNetworkConnectivityLevel() ?? NetworkConnectivityLevel.None) ==
+                   NetworkConnectivityLevel.InternetAccess;
         }
     }
 }

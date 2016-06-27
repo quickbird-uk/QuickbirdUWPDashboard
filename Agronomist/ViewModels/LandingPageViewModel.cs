@@ -10,6 +10,7 @@
 
     public class LandingPageViewModel : ViewModelBase
     {
+        private string _friendlyText = "Your Twitter Account is used to authenticate you.";
         private bool _loginEnabled;
 
         public bool LoginEnabled
@@ -19,6 +20,17 @@
             {
                 if (value == _loginEnabled) return;
                 _loginEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string FriendlyText
+        {
+            get { return _friendlyText; }
+            set
+            {
+                if (value == _friendlyText) return;
+                _friendlyText = value;
                 OnPropertyChanged();
             }
         }
@@ -35,6 +47,13 @@
             const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
             const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
 
+            if (!Request.IsInternetAvailable())
+            {
+                LoginEnabled = true;
+                FriendlyText = "Internet seems unavailable, please check your connection and try again.";
+                return;
+            }
+
             Creds creds;
             try
             {
@@ -43,6 +62,7 @@
             catch (Exception)
             {
                 Debug.WriteLine("Login failed or cancelled.");
+                FriendlyText = "Login failed or cancelled.";
                 LoginEnabled = true;
                 return;
             }
@@ -52,7 +72,7 @@
 
             UpdateCredsAndTokens();
 
-            ((Frame) Window.Current.Content).Navigate(typeof(Shell));
+            ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
         }
     }
 }

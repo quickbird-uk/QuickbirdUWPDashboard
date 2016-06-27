@@ -154,6 +154,7 @@ namespace Agronomist.LocalNetworking
             _localTask.ContinueWith((Task previous) =>
             {
                 Device device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
+
                 if (device == null)
                 {
                     CreateDevice(values); 
@@ -280,9 +281,10 @@ namespace Agronomist.LocalNetworking
             _localTask.ContinueWith((Task previous) =>
             {
                 Settings settings = Settings.Instance;
-
-                if (settings.LastDatabaseUpdate != default(DateTimeOffset))
+                
+                if (settings.LastDatabaseUpdate > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
                 {
+                    Debug.WriteLine("Datasaver started, recent update detected.");
 
                     var db = new MainDbContext();
                     // List<SensorHistory> updatedSensorHistories = new List<SensorHistory>(); 
@@ -360,6 +362,10 @@ namespace Agronomist.LocalNetworking
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data"); 
                     db.Dispose();
+                }
+                else
+                {
+                    Debug.WriteLine("Skipped datasaver due to lack of recent update.");
                 }
             }); 
         }
