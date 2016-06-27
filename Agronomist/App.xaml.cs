@@ -57,6 +57,7 @@
                 rootFrame.NavigationFailed += OnNavigationFailed;
 
                 _networking = new Manager();
+                _networking.MqttDied += ResetNetworking;
 
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
@@ -97,6 +98,14 @@
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+        }
+
+        private void ResetNetworking(Exception e)
+        {
+            Debug.WriteLine("MQTT died: " + e.ToString());
+            _networking.MqttDied -= ResetNetworking;
+            _networking = new Manager();
+            _networking.MqttDied += ResetNetworking;
         }
 
         private void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
