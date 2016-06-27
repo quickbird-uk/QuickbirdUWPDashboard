@@ -36,6 +36,8 @@ namespace Agronomist.ViewModels
         private DateTimeOffset _selectedStartTime;
         private DateTimeOffset? _selectedEndTime;
         private bool _currentlyRunning = true;
+        private TimeSpan _graphPeriod;
+        private TimeSpan _chosenGraphPeriod;
 
         private bool _realtimeMode; 
 
@@ -245,7 +247,8 @@ namespace Agronomist.ViewModels
                         SensorsToGraph.Add(tuple);
                     }
                     SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Place.Name);
-                    LoadHistoricalData(); 
+                    LoadHistoricalData();
+                    _graphPeriod = (_selectedCropCycle.EndDate ?? DateTimeOffset.Now) - _selectedCropCycle.StartDate; 
                     _selectedEndTime = _selectedCropCycle.EndDate;
 
                     RealtimeMode = false;
@@ -265,6 +268,8 @@ namespace Agronomist.ViewModels
                     && sh.TimeStamp > _selectedCropCycle.StartDate &&
                     sh.TimeStamp < endDate).ToListAsync();
 
+            TimeSpan dataPeriod; 
+
             foreach (SensorTuple tuple in SensorsToGraph)
             {
                 var shCollection = sensorsHistories.Where(sh => sh.SensorID == tuple.sensor.ID);
@@ -274,13 +279,18 @@ namespace Agronomist.ViewModels
                     sh.DeserialiseData(); 
                     foreach(SensorDatapoint dp in sh.Data)
                     {
-                        var bindable = new BindableDatapoint(dp);
-                        datapointCollection.Add(bindable); 
+                        if (dp.TimeStamp > _selectedCropCycle.StartDate) // becuase datapoints are packed into days, we must avoid datapoitns that astarted before the cropRun
+                        {
+                            var bindable = new BindableDatapoint(dp);
+                            datapointCollection.Add(bindable);
+                        }
                     }
                 }
-                var ordered = datapointCollection.OrderBy(dp => dp.timestamp); 
+                var ordered = datapointCollection.OrderBy(dp => dp.timestamp);
+
+               
                 tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(ordered); 
-            }           
+            } 
         }
 
         public bool LiveCropRun
@@ -293,7 +303,6 @@ namespace Agronomist.ViewModels
             get { return _realtimeMode; }
             set { _realtimeMode = value;
                 OnPropertyChanged("HistControls");
-                TimeLabel = _realtimeMode ? "HH:mm": "MMM dd" ;
                 OnPropertyChanged("TimeLabel");
                 foreach (var tuple in SensorsToGraph)
                 {
@@ -317,10 +326,42 @@ namespace Agronomist.ViewModels
             get { return _selectedCropCycle?.StartDate ?? DateTimeOffset.Now.AddDays(-1); }
         }
 
+        public TimeSpan GraphPeriod { get { return _graphPeriod; } }
+
+        public TimeSpan ChosenGraphPeriod
+        {
+            get { return _chosenGraphPeriod; }
+            set
+            {
+                _chosenGraphPeriod = value;
+                OnPropertyChanged();
+                OnPropertyChanged("TimeLabel"); 
+            }
+        }
 
 
+        public string TimeLabel {
+            get
+            {
+                if (_realtimeMode)
+                    return "hh:mm:ss"; 
+                else
+                {
+                    if (_chosenGraphPeriod < TimeSpan.FromHours(48))
+                    {
+                        return "t";
+                    }
+                    else if (_chosenGraphPeriod < TimeSpan.FromDays(15))
+                    {
+                        return "ddd H:mm";
+                    }
+                    else
+                        return "M";
+               }
+            }
+        }
 
-        public string TimeLabel { get; set; } = "HH:mm"; 
+
 
         //Destructor
         ~GraphingViewModel(){
@@ -413,6 +454,7 @@ namespace Agronomist.ViewModels
             }
             public CropCycle cropCycle;
             public Location location;
+
             public List<Sensor> sensors; 
         }
 
