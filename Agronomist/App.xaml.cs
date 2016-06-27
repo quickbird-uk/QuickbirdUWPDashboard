@@ -2,28 +2,29 @@
 {
     using System;
     using System.Diagnostics;
-    using System.Threading;
+    using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
+    using Windows.ApplicationModel.ExtendedExecution;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
+    using LocalNetworking;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
-    using Windows.UI.Core;
-    using Windows.ApplicationModel.ExtendedExecution;
-    using System.Threading.Tasks;
-    using LocalNetworking;
+    using Views;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
     /// </summary>
     sealed partial class App : Application
     {
+        private ExtendedExecutionSession _extendedExecutionSession;
 
-        private LocalNetworking.Manager _networking;
-        ExtendedExecutionSession _extendedExecutionSession; 
+        private Manager _networking;
+        private Frame _rootFrame;
 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
@@ -36,73 +37,50 @@
         }
 
         /// <summary>
-        ///     Invoked when the application is launched normally by the end user.  Other entry points
-        ///     will be used such as when the application is launched to open a specific file.
+        ///     Fired when the user attempts to open the program, even whent he program is already open.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-           
-            Toast.Debug("OnLaunched", e.Kind.ToString());
-
-            var rootFrame = Window.Current.Content as Frame;
-            
-            // Do not repeat app initialization when the Window already has content,
-            // just ensure that the window is active
-            if (rootFrame == null)
+            // Only initialise if the program is not already open.
+            if (_rootFrame == null)
             {
-                // Create a Frame to act as the navigation context and navigate to the first page
-                rootFrame = new Frame();
+                // Creates a frame and shoves it in the provided default window.
+                _rootFrame = Window.Current.Content as Frame;
+                _rootFrame = new Frame();
+                _rootFrame.NavigationFailed += OnNavigationFailed;
+                Window.Current.Content = _rootFrame;
 
-                rootFrame.NavigationFailed += OnNavigationFailed;
-
-                _networking = new Manager();
-                _networking.MqttDied += ResetNetworking;
-
-
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-                {
-                    //TODO: Load state from previously suspended application
-                }
-
-                // Place the frame in the current Window
-                Window.Current.Content = rootFrame;
-
-            }
-
-            Window.Current.VisibilityChanged += OnVisibilityChanged; 
-
-            if (e.PrelaunchActivated == false)
-            {
                 using (var db = new MainDbContext())
                 {
                     db.Database.Migrate();
                 }
 
-                if (rootFrame.Content == null)
-                {
-                    // When the navigation stack isn't restored navigate to the first page,
-                    // configuring the new page by passing required information as a navigation
-                    // parameter
-                    
-                    if (Settings.Instance.CredsSet)
-                    {
-                        rootFrame.Navigate(typeof(Views.Shell), e.Arguments);
-                    }
-                    else
-                    {
-                        rootFrame.Navigate(typeof(Views.LandingPage), e.Arguments);
-                    }
+                _networking = new Manager();
+                _networking.MqttDied += ResetNetworking;
 
-                }
-                // Ensure the current window is active
-                Window.Current.Activate();
+                Window.Current.VisibilityChanged += OnVisibilityChanged;
+
             }
+
+            // If the user launches the app when it is already open, just bring it to foreground.
+            Window.Current.Activate();
+
+            if (e.PrelaunchActivated)
+            {
+                Toast.Debug("Prelaunched", "");
+            }
+        }
+
+        private void NavigateToInitialPage()
+        {
+            _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
+            Window.Current.Activate();
         }
 
         private void ResetNetworking(Exception e)
         {
-            Debug.WriteLine("MQTT died: " + e.ToString());
+            Debug.WriteLine("MQTT died: " + e);
             _networking.MqttDied -= ResetNetworking;
             _networking = new Manager();
             _networking.MqttDied += ResetNetworking;
@@ -110,7 +88,11 @@
 
         private void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
-            
+            Toast.Debug("OnVisibilityChanged", "");
+            if (_rootFrame.Content == null)
+            {
+                NavigateToInitialPage();
+            }
         }
 
 
@@ -128,7 +110,7 @@
         {
             KillExtendedExecutionSession();
 
-            _extendedExecutionSession = new ExtendedExecutionSession()
+            _extendedExecutionSession = new ExtendedExecutionSession
             {
                 Reason = ExtendedExecutionReason.Unspecified,
                 Description = "Live data needs to be synchronised to allow important alerts."
@@ -172,13 +154,11 @@
         }
 
         /// <summary>
-        ///     Invoked when application execution is being suspended.  Application state is saved
-        ///     without knowing whether the application will be terminated or resumed with the contents
-        ///     of memory still intact.
+        ///     Lifecycle suspend.
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private async void OnSuspending(object sender, SuspendingEventArgs e)
+        public void OnSuspending(object sender, SuspendingEventArgs e)
         {
             Toast.Debug("Suspending", e.SuspendingOperation.ToString());
 

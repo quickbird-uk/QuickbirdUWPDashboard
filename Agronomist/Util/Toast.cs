@@ -5,14 +5,16 @@
     public static class Toast
     {
         /// <summary>
-        /// This toast will be #IFDEBUGed out before version 1.
+        /// Toast used for debug messages.
         /// </summary>
         /// <param name="title"></param>
         /// <param name="text"></param>
         public static void Debug(string title, string text)
         {
+#if DEBUG
             System.Diagnostics.Debug.WriteLine($"{title} - {text}");
             FireToast(title, text);
+#endif
         }
 
         public static void NotifyUserOfError(string text)

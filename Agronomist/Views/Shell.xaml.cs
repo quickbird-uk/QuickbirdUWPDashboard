@@ -19,8 +19,6 @@
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e);
-
             // Shell frame shouldn't have any backstack history.
             Frame.BackStack.Clear();
         }
