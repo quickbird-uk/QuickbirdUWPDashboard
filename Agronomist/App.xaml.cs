@@ -25,6 +25,7 @@
 
         private Manager _networking;
         private Frame _rootFrame;
+        private bool _notPrelaunchSuspend;
 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
@@ -38,9 +39,11 @@
 
         /// <summary>
         ///     Fired when the user attempts to open the program, even whent he program is already open.
+        ///     This gets fired when the user clicks notifications, resulting in this being called in an already running
+        ///     application.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             // Only initialise if the program is not already open.
             if (_rootFrame == null)
@@ -60,7 +63,6 @@
                 _networking.MqttDied += ResetNetworking;
 
                 Window.Current.VisibilityChanged += OnVisibilityChanged;
-
             }
 
             // If the user launches the app when it is already open, just bring it to foreground.
@@ -68,12 +70,24 @@
 
             if (e.PrelaunchActivated)
             {
-                Toast.Debug("Prelaunched", "");
+                // We must not try starting an extended session in this situation.
+                Toast.Debug("OnLaunched", "Prelaunched");
+            }
+            else
+            {
+                // There could be a session open if the app is launched twice.
+                if (_extendedExecutionSession == null)
+                    await StartExtendedSession();
+                NavigateToInitialPage();
             }
         }
 
         private void NavigateToInitialPage()
         {
+            // Page navigation is somthing we do immediately after prelaunch is over.
+            // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
+            _notPrelaunchSuspend = true;
+
             _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
             Window.Current.Activate();
         }
@@ -86,12 +100,15 @@
             _networking.MqttDied += ResetNetworking;
         }
 
-        private void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
+        private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
             Toast.Debug("OnVisibilityChanged", "");
+            // If there is no content the app was prelaunched and we mush navigate and begin the session.
             if (_rootFrame.Content == null)
             {
                 NavigateToInitialPage();
+                if (_extendedExecutionSession == null)
+                    await StartExtendedSession();
             }
         }
 
@@ -106,10 +123,12 @@
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
+        /// <summary>
+        ///     Starts a new session, assuming the old one has been closed. I hope you did a null check.
+        /// </summary>
+        /// <returns>awaitable</returns>
         private async Task StartExtendedSession()
         {
-            KillExtendedExecutionSession();
-
             _extendedExecutionSession = new ExtendedExecutionSession
             {
                 Reason = ExtendedExecutionReason.Unspecified,
@@ -126,30 +145,44 @@
             }
             else
             {
+                // The request has failed, kill will null it, and then the app will try again when the visibility changes.
                 KillExtendedExecutionSession();
                 Toast.NotifyUserOfError("Windows error, program may fail to record, sync and alert when minimised.");
             }
         }
 
+        /// <summary>
+        ///     Cleanly destroy an old session so that a new one can be requested.
+        /// </summary>
         private void KillExtendedExecutionSession()
         {
             if (_extendedExecutionSession != null)
             {
                 _extendedExecutionSession.Revoked -= ExtendedExecutionRevoked;
+                _extendedExecutionSession.Dispose();
                 _extendedExecutionSession = null;
             }
         }
 
+        /// <summary>
+        ///     Fired when Windows decides to kill a session.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private async void ExtendedExecutionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
         {
+            KillExtendedExecutionSession(); // Null it.
             if (args.Reason == ExtendedExecutionRevokedReason.Resumed)
             {
-                await StartExtendedSession();
+                if (_extendedExecutionSession == null)
+                    await StartExtendedSession();
             }
             else if (args.Reason == ExtendedExecutionRevokedReason.SystemPolicy)
             {
-                Toast.NotifyUserOfError(
-                    "Program failing because there are too many apps running on this computer.");
+                // SystemPolicy could mean:
+                // a. The app was closed by the user.
+                // b. The app was terminated for system resources.
+                // c. Something undocumented.
             }
         }
 
@@ -160,7 +193,14 @@
         /// <param name="e">Details about the suspend request.</param>
         public void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            Toast.Debug("Suspending", e.SuspendingOperation.ToString());
+            Toast.Debug("OnSuspending", e.SuspendingOperation.ToString());
+
+            // This is the most accurate thing that we can tell the user.
+            // There is no way to know if the app is being terminated or just suspended for fun.
+            if(_notPrelaunchSuspend)
+                Toast.NotifyUserOfInformation("App is suspending.");
+            else
+                Toast.Debug("OnSuspending", "Prelaunch");
 
             // If the deferral is not obtained the suspension proceeds at the end of this method.
             // With the deferral there is still a 5 second time limit to completing suspension code.
@@ -170,6 +210,10 @@
             deferral.Complete();
         }
 
+        /// <summary>
+        ///     This only gets called if the application is activated via some special means. We are not currently doing so.
+        /// </summary>
+        /// <param name="args"></param>
         protected override void OnActivated(IActivatedEventArgs args)
         {
             switch (args.PreviousExecutionState)

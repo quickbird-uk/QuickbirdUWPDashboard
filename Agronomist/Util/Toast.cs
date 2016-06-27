@@ -22,6 +22,11 @@
             FireToast("Error", text);
         }
 
+        public static void NotifyUserOfInformation(string text)
+        {
+            FireToast("Info", text);
+        }
+
 
         private static void FireToast(string title, string text)
         {
