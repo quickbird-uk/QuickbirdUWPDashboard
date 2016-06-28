@@ -19,7 +19,7 @@ namespace Agronomist.LocalNetworking
     /// This class is in charge of all the local communication. It initiates MQTT and UDP messaging. 
     /// IF you try to instantiate this class twice, it will throw and exception! 
     /// </summary>
-    public class Manager
+    public class Manager : IDisposable
     {
 
         private static uPLibrary.Networking.M2Mqtt.MqttBroker _mqttBroker = null;
@@ -48,7 +48,7 @@ namespace Agronomist.LocalNetworking
                 }
                 else
                 {
-                    throw new Exception("You should onl;y instantiate this class once! "); 
+                    throw new Exception("You should only instantiate this class once! "); 
                 }
             }
 
@@ -102,6 +102,46 @@ namespace Agronomist.LocalNetworking
             public byte SensorTypeID;
             public const int incomingLength = 9;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).  
+                }
+
+                _mqttBroker.MessagePublished -= MqttMessageRecieved;
+                _mqttBroker.Stop();
+                _mqttBroker = null;               
+                _datapointsSaver = null;
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        ~Manager()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
 
 
 

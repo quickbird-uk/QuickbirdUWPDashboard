@@ -22,7 +22,7 @@ namespace Agronomist.LocalNetworking
     /// Here i use a System.Net api which is different to Windows.Networking, and is somewhat lower level. 
     /// If you try to instantiate this class twice, you will get an exception! 
     /// </summary>
-    public class UDPMessaging
+    public class UDPMessaging : IDisposable
     {
         private static UDPMessaging _instance = null;
 
@@ -30,8 +30,8 @@ namespace Agronomist.LocalNetworking
         private DispatcherTimer UdpBroadcastTimer;
         
 
-        Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
+        private Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        private IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
 
 
         public UDPMessaging()
@@ -107,7 +107,7 @@ namespace Agronomist.LocalNetworking
 
 
         /// <summary>
-        /// This is a call-back function triggered wehn we receive a new message, otehrwise known as Async for C 
+        /// This is a call-back function triggered when we receive a new message, otehrwise known as Async for C 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -122,7 +122,7 @@ namespace Agronomist.LocalNetworking
             Socket udpSocket = sender as Socket;
 
             byte[] buffer = e.Buffer;
-            //NOw we got hte data!!
+            //Now we got the data!!
            // Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred));
 
             if (!udpSocket.ReceiveFromAsync(e))
@@ -130,6 +130,47 @@ namespace Agronomist.LocalNetworking
                 ReceiveFromCallback(udpSocket, e);
             }
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).
+                }
+
+                UdpBroadcastTimer.Stop();
+                UdpBroadcastTimer.Tick -= UDPBroadcast; 
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                _udpSocket.Dispose();
+
+                // TODO: set large fields to null.
+                _instance = null;
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        ~UDPMessaging()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 
 }

@@ -20,9 +20,6 @@ namespace Agronomist.LocalNetworking
 
     public class DatapointsSaver
     {
-
-
-
         //Local Cache
         private List<SensorType> _sensorTypes = null; 
         private List<Device> _dbDevices;
