@@ -117,7 +117,8 @@ namespace Agronomist.LocalNetworking
 
                 _mqttBroker.MessagePublished -= MqttMessageRecieved;
                 _mqttBroker.Stop();
-                _mqttBroker = null;               
+                _mqttBroker = null;
+                _udpMessaging = null; 
                 _datapointsSaver = null;
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
