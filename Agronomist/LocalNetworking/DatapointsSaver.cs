@@ -273,6 +273,7 @@
         //Closes sensor Histories that are no longer usefull
         private void SaveBufferedReadings(object sender, object e)
         {
+            Toast.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
             _localTask.ContinueWith(previous =>
             {
                 var settings = Settings.Instance;
