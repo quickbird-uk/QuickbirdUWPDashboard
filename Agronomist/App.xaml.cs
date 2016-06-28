@@ -35,6 +35,15 @@
         {
             InitializeComponent();
             Suspending += OnSuspending;
+            Resuming += OnResuming;
+        }
+
+        private async void OnResuming(object sender, object e)
+        {
+            Toast.Debug("OnResuming", e.ToString());
+            var completer = new TaskCompletionSource<object>();
+            await Messenger.Instance.Resume.Invoke(completer);
+            await completer.Task;
         }
 
         /// <summary>
@@ -53,15 +62,6 @@
                 _rootFrame = new Frame();
                 _rootFrame.NavigationFailed += OnNavigationFailed;
                 Window.Current.Content = _rootFrame;
-
-                using (var db = new MainDbContext())
-                {
-                    db.Database.Migrate();
-                }
-
-                _networking = new Manager();
-                _networking.MqttDied += ResetNetworking;
-
                 Window.Current.VisibilityChanged += OnVisibilityChanged;
             }
 
@@ -78,26 +78,7 @@
                 // There could be a session open if the app is launched twice.
                 if (_extendedExecutionSession == null)
                     await StartExtendedSession();
-                NavigateToInitialPage();
             }
-        }
-
-        private void NavigateToInitialPage()
-        {
-            // Page navigation is somthing we do immediately after prelaunch is over.
-            // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
-            _notPrelaunchSuspend = true;
-
-            _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
-            Window.Current.Activate();
-        }
-
-        private void ResetNetworking(Exception e)
-        {
-            Debug.WriteLine("MQTT died: " + e);
-            _networking.MqttDied -= ResetNetworking;
-            _networking = new Manager();
-            _networking.MqttDied += ResetNetworking;
         }
 
         private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
@@ -106,12 +87,25 @@
             // If there is no content the app was prelaunched and we mush navigate and begin the session.
             if (_rootFrame.Content == null)
             {
-                NavigateToInitialPage();
+                using (var db = new MainDbContext())
+                {
+                    db.Database.Migrate();
+                }
+
+                _networking = new Manager();
+
+                // Page navigation is somthing we do immediately after prelaunch is over.
+                // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
+                _notPrelaunchSuspend = true;
+
+                _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
+           
+                Window.Current.Activate();
+
                 if (_extendedExecutionSession == null)
                     await StartExtendedSession();
             }
         }
-
 
         /// <summary>
         ///     Invoked when Navigation to a certain page fails
