@@ -24,7 +24,6 @@
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-
         }
 
         public GraphingView()
@@ -40,8 +39,11 @@
             // You should two way bind box.selecteditem to ViewModel.SelectedCropCycle.
             ComboBox box = (ComboBox) sender;            
             KeyValuePair<CropCycle, string> selection = (KeyValuePair <CropCycle, string>)box.SelectedItem;
-            ViewModel.SelectedCropCycle = selection.Key; 
+            ViewModel.SelectedCropCycle = selection.Key;
+            StartDatePicker.Date = ViewModel.CycleStartTime;
+            EndDatePicker.Date = ViewModel.CycleEndTime; 
         }
+
 
         private void OnSensorToggleChecked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
@@ -107,18 +109,39 @@
             lineSeries.Label = tuple.sensor.SensorType.Param.Name + ": " + locationString;
 
             ChartView.Series.Add(lineSeries);
+            
         }
 
         private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if(args.NewDate.HasValue)
-                DateAxis.Maximum = args.NewDate.Value.LocalDateTime; 
+            if (args.NewDate.HasValue)
+            {
+                if (args.NewDate.Value.LocalDateTime.Date == ViewModel.CycleEndTime.Date)
+                {
+                    DateAxis.Maximum = ViewModel.CycleEndTime.LocalDateTime;
+                }
+                else
+                {
+                    DateAxis.Maximum = args.NewDate.Value.LocalDateTime.Date;
+                }
+                ViewModel.ChosenGraphPeriod = (DateTime)DateAxis.Maximum - (DateTime)DateAxis.Minimum;
+            }
         }
 
         private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             if (args.NewDate.HasValue)
-                DateAxis.Minimum = args.NewDate.Value.LocalDateTime;
+            {
+                if (args.NewDate.Value.LocalDateTime.Date > ViewModel.CycleStartTime.LocalDateTime)
+                {
+                    DateAxis.Minimum = args.NewDate.Value.LocalDateTime.Date;
+                }
+                else
+                {
+                    DateAxis.Minimum = ViewModel.CycleStartTime.LocalDateTime; 
+                }
+                ViewModel.ChosenGraphPeriod = (DateTime)DateAxis.Maximum - (DateTime)DateAxis.Minimum; 
+            }
         }
     }
 }

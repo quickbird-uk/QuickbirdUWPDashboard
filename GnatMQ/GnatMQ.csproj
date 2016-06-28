@@ -116,6 +116,7 @@
     <DefineConstants>NETFX_CORE;WINDOWS_UWP;WINDOWS_APP;BROKER</DefineConstants>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
     <Optimize>true</Optimize>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NATIVE|x64'">
     <OutputPath>bin\x64\NATIVE\</OutputPath>

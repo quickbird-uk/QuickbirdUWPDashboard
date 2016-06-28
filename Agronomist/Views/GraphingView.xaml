@@ -130,8 +130,16 @@
                 <Charts:SfChart.PrimaryAxis>
                     <Charts:DateTimeAxis x:Name="DateAxis"
                                      FontSize="16" LabelFormat="{x:Bind ViewModel.TimeLabel, Mode=OneWay}"
+                                         LabelsIntersectAction="Hide"  
+                                         Header="Time"
                                       />
                 </Charts:SfChart.PrimaryAxis>
+
+                <Charts:SfChart.SecondaryAxis>
+
+                    <Charts:NumericalAxis RangePadding="Round"  Header="Values"  StartRangeFromZero="True" />
+
+                </Charts:SfChart.SecondaryAxis>
 
                 <Charts:SfChart.Legend>
                     <Charts:ChartLegend IconHeight="10"
