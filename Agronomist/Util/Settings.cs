@@ -121,6 +121,20 @@
             }
         }
 
+        /// <summary>
+        ///     Local setting that allows the app to run local network for device management. Defaults to false.
+        /// </summary>
+        public bool LocalDeviceManagementEnabled
+        {
+            get { return Get(_localSettings, false); }
+            set
+            {
+                if (value == LocalDeviceManagementEnabled) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void SetNewCreds(string token, string userId, Guid stableSid)

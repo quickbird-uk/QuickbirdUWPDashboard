@@ -35,6 +35,8 @@
         public BroadcastMessage<TaskCompletionSource<object>> Resuming { get; } =
             new BroadcastMessage<TaskCompletionSource<object>>();
 
+        public BroadcastMessage<string> LocalNetworkConflict { get; } = new BroadcastMessage<string>();
+
         public struct SensorReading
         {
             public SensorReading(Guid id, double value, DateTimeOffset timestamp, TimeSpan duration)
