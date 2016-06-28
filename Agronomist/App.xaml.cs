@@ -1,7 +1,6 @@
 ﻿namespace Agronomist
 {
     using System;
-    using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
@@ -24,8 +23,8 @@
         private ExtendedExecutionSession _extendedExecutionSession;
 
         private Manager _networking;
-        private Frame _rootFrame;
         private bool _notPrelaunchSuspend;
+        private Frame _rootFrame;
 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
@@ -40,9 +39,9 @@
 
         private async void OnResuming(object sender, object e)
         {
-            Toast.Debug("OnResuming", e.ToString());
+            Toast.Debug("OnResuming", "");
             var completer = new TaskCompletionSource<object>();
-            await Messenger.Instance.Resume.Invoke(completer);
+            await Messenger.Instance.Resuming.Invoke(completer, true, true);
             await completer.Task;
         }
 
@@ -99,7 +98,7 @@
                 _notPrelaunchSuspend = true;
 
                 _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
-           
+
                 Window.Current.Activate();
 
                 if (_extendedExecutionSession == null)
@@ -191,7 +190,7 @@
 
             // This is the most accurate thing that we can tell the user.
             // There is no way to know if the app is being terminated or just suspended for fun.
-            if(_notPrelaunchSuspend)
+            if (_notPrelaunchSuspend)
                 Toast.NotifyUserOfInformation("App is suspending.");
             else
                 Toast.Debug("OnSuspending", "Prelaunch");

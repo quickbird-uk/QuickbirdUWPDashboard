@@ -26,12 +26,14 @@
         /// <summary>
         ///     App suspending.
         /// </summary>
-        public BroadcastMessage<TaskCompletionSource<object>> Suspending { get; } = new BroadcastMessage<TaskCompletionSource<object>>();
+        public BroadcastMessage<TaskCompletionSource<object>> Suspending { get; } =
+            new BroadcastMessage<TaskCompletionSource<object>>();
 
         /// <summary>
         ///     App resuming.
         /// </summary>
-        public BroadcastMessage<TaskCompletionSource<object>> Resume { get; } = new BroadcastMessage<TaskCompletionSource<object>>();
+        public BroadcastMessage<TaskCompletionSource<object>> Resuming { get; } =
+            new BroadcastMessage<TaskCompletionSource<object>>();
 
         public struct SensorReading
         {
@@ -111,12 +113,12 @@
                     var completers = new List<TaskCompletionSource<object>>();
                     var originalCompleter = param as TaskCompletionSource<object>;
 
-                    if(null == originalCompleter) throw new NullReferenceException("This should be a completer.");
+                    if (null == originalCompleter) throw new NullReferenceException("This should be a completer.");
 
                     foreach (var action in actions)
                     {
                         var completingAction = action as Action<TaskCompletionSource<object>>;
-                        if(completingAction == null) continue;
+                        if (completingAction == null) continue;
 
                         var completer = new TaskCompletionSource<object>();
                         completers.Add(completer);

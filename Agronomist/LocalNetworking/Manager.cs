@@ -1,66 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using uPLibrary.Networking.M2Mqtt.Messages;
-using Windows.Networking.Connectivity;
-using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
-using Windows.UI.Xaml;
-using Agronomist.LocalNetworking; 
-
-namespace Agronomist.LocalNetworking
+﻿namespace Agronomist.LocalNetworking
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Threading.Tasks;
+    using uPLibrary.Networking.M2Mqtt;
+    using uPLibrary.Networking.M2Mqtt.Messages;
+    using Util;
+
     /// <summary>
-    /// This class is in charge of all the local communication. It initiates MQTT and UDP messaging. 
-    /// IF you try to instantiate this class twice, it will throw and exception! 
+    ///     This class is in charge of all the local communication. It initiates MQTT and UDP messaging.
+    ///     IF you try to instantiate this class twice, it will throw and exception!
     /// </summary>
     public class Manager : IDisposable
     {
+        private static MqttBroker _mqttBroker;
 
-        private static uPLibrary.Networking.M2Mqtt.MqttBroker _mqttBroker = null;
+        private static readonly object _lock = new object();
+
+        private static UDPMessaging _udpMessaging;
+        private static DatapointsSaver _datapointsSaver;
         private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        private static object _lock = new object();
+        private bool disposedValue; // To detect redundant calls
 
-        private static UDPMessaging _udpMessaging= null;
-        private static DatapointsSaver _datapointsSaver = null;
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<TaskCompletionSource<object>> _resumeAction;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<TaskCompletionSource<object>> _suspendAction;
 
         public Manager()
         {
             lock (_lock)
             {
                 if (_mqttBroker == null)
-                {               
-                    _mqttBroker = new uPLibrary.Networking.M2Mqtt.MqttBroker();
+                {
+                    _mqttBroker = new MqttBroker();
                     _mqttBroker.Start();
                     _udpMessaging = new UDPMessaging();
                     _datapointsSaver = new DatapointsSaver();
                     _mqttBroker.MessagePublished += MqttMessageRecieved;
 
+                    _resumeAction = Resume;
+                    _suspendAction = Suspend;
+                    Messenger.Instance.Suspending.Subscribe(_suspendAction);
+                    Messenger.Instance.Resuming.Subscribe(_resumeAction);
                 }
                 else
                 {
-                    throw new Exception("You should only instantiate this class once! "); 
+                    throw new Exception("You should only instantiate this class once! ");
                 }
             }
+        }
 
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
         }
 
         private void MqttMessageRecieved(KeyValuePair<string, MqttMsgPublish> publishEvent)
         {
             //TODO move this GUID parsing code somewhere appropriate!
             Guid clientID;
-            string rawClientID = publishEvent.Key.Replace(":", string.Empty);
+            var rawClientID = publishEvent.Key.Replace(":", string.Empty);
             if (Guid.TryParse(rawClientID, out clientID) == false)
             {
                 Debug.WriteLine("recieved message with invalid ClientID");
@@ -69,60 +75,51 @@ namespace Agronomist.LocalNetworking
             {
                 SensorMessage[] readings;
                 var message = publishEvent.Value;
-                
+
                 if (message.Topic.Contains("reading"))
                 {
-                    byte[] rawData = message.Message;
-                    if (rawData.Length % SensorMessage.incomingLength != 0)
+                    var rawData = message.Message;
+                    if (rawData.Length%SensorMessage.incomingLength != 0)
                     {
                         Debug.WriteLine("message recieved over MQTT has incorrect length!");
                     }
                     else
                     {
-                        int numberOfReadings = rawData.Length / SensorMessage.incomingLength;
+                        var numberOfReadings = rawData.Length/SensorMessage.incomingLength;
                         readings = new SensorMessage[numberOfReadings];
                         //process each reading
-                        for (int i = 0; i < numberOfReadings; i++)
+                        for (var i = 0; i < numberOfReadings; i++)
                         {
-                            readings[i].value = BitConverter.ToSingle(rawData, i * SensorMessage.incomingLength);
-                            readings[i].duration = BitConverter.ToInt32(rawData, i * SensorMessage.incomingLength + 4);
-                            readings[i].SensorTypeID = rawData[i * SensorMessage.incomingLength + 8];
+                            readings[i].value = BitConverter.ToSingle(rawData, i*SensorMessage.incomingLength);
+                            readings[i].duration = BitConverter.ToInt32(rawData, i*SensorMessage.incomingLength + 4);
+                            readings[i].SensorTypeID = rawData[i*SensorMessage.incomingLength + 8];
                         }
-                        KeyValuePair<Guid, SensorMessage[]> toWrite = 
+                        var toWrite =
                             new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
 
-                        _datapointsSaver.BufferAndSendReadings(toWrite); 
+                        _datapointsSaver.BufferAndSendReadings(toWrite);
                     }
                 }
             }
         }
 
-        public struct SensorMessage
+
+        private void Suspend(TaskCompletionSource<object> taskCompletionSource)
         {
-            public float value;
-            public Int32 duration;
-            public byte SensorTypeID;
-            public const int incomingLength = 9;
-        }
-
-
-
-
-        private void Pause()
-        {
+            Debug.WriteLine("suspending manager");
             _mqttBroker?.Stop();
             _udpMessaging?.Dispose();
-            _udpMessaging = null; 
+            _udpMessaging = null;
+            taskCompletionSource.SetResult(null);
         }
 
-        private void Resume()
+        private void Resume(TaskCompletionSource<object> taskCompletionSource)
         {
-            _mqttBroker?.Start(); 
-
-            if(_udpMessaging == null || _udpMessaging.Disposed)
+            Debug.WriteLine("resuming manager");
+            _mqttBroker?.Start();
+            if (_udpMessaging == null || _udpMessaging.Disposed)
                 _udpMessaging = new UDPMessaging();
-
-           
+            taskCompletionSource.SetResult(null);
         }
 
 
@@ -140,7 +137,7 @@ namespace Agronomist.LocalNetworking
                     _mqttBroker.Stop();
                 }
                 _mqttBroker = null;
-                _udpMessaging = null; 
+                _udpMessaging = null;
                 _datapointsSaver = null;
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -156,18 +153,12 @@ namespace Agronomist.LocalNetworking
             Dispose(false);
         }
 
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
+        public struct SensorMessage
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
+            public float value;
+            public int duration;
+            public byte SensorTypeID;
+            public const int incomingLength = 9;
         }
-        #endregion
-
-
-
-
     }
 }
