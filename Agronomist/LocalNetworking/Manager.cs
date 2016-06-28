@@ -28,8 +28,10 @@ namespace Agronomist.LocalNetworking
         private static object _lock = new object();
 
         private static UDPMessaging _udpMessaging= null;
-        private static DatapointsSaver _datapointsSaver = null; 
+        private static DatapointsSaver _datapointsSaver = null;
 
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
 
 
 
@@ -103,8 +105,26 @@ namespace Agronomist.LocalNetworking
             public const int incomingLength = 9;
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+
+
+
+        private void Pause()
+        {
+            _mqttBroker?.Stop();
+            _udpMessaging?.Dispose();
+            _udpMessaging = null; 
+        }
+
+        private void Resume()
+        {
+            _mqttBroker?.Start(); 
+
+            if(_udpMessaging == null || _udpMessaging.Disposed)
+                _udpMessaging = new UDPMessaging();
+
+           
+        }
+
 
         protected virtual void Dispose(bool disposing)
         {
@@ -114,9 +134,11 @@ namespace Agronomist.LocalNetworking
                 {
                     // TODO: dispose managed state (managed objects).  
                 }
-
-                _mqttBroker.MessagePublished -= MqttMessageRecieved;
-                _mqttBroker.Stop();
+                if (_mqttBroker != null)
+                {
+                    _mqttBroker.MessagePublished -= MqttMessageRecieved;
+                    _mqttBroker.Stop();
+                }
                 _mqttBroker = null;
                 _udpMessaging = null; 
                 _datapointsSaver = null;

@@ -33,6 +33,8 @@ namespace Agronomist.LocalNetworking
         private Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
 
+        private bool disposedValue = false; // To detect redundant calls
+        public bool Disposed { get { return disposedValue; } }
 
         public UDPMessaging()
         {
@@ -131,8 +133,7 @@ namespace Agronomist.LocalNetworking
             }
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+
 
         protected virtual void Dispose(bool disposing)
         {
@@ -170,7 +171,6 @@ namespace Agronomist.LocalNetworking
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
-        #endregion
     }
 
 }

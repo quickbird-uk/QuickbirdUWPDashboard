@@ -386,6 +386,17 @@ namespace Agronomist.LocalNetworking
 
 
 
+        private void Pause()
+        {
+            _saveTimer?.Stop(); 
+        }
+
+        private void Resume()
+        {
+            _saveTimer?.Start(); 
+        }
+
+
         private class SensorBuffer
         {
 
