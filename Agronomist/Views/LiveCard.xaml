@@ -48,8 +48,8 @@
                 Grid.Column="5"
                 Grid.ColumnSpan="3"
                 IsOn="{x:Bind ViewModel.HighAlertIsEnabled, Mode=TwoWay}"
-                OffContent="Enable"
-                OnContent="Disable" />
+                OffContent="Disabled"
+                OnContent="Enabled" />
             <TextBlock Grid.Row="2"
                 Grid.Column="1"
                 VerticalAlignment="Center"
@@ -63,8 +63,8 @@
                 Grid.Column="5"
                 Grid.ColumnSpan="3"
                 IsOn="{x:Bind ViewModel.LowAlertIsEnabled, Mode=TwoWay}"
-                OffContent="Enable"
-                OnContent="Disable" />
+                OffContent="Disabled"
+                OnContent="Enabled" />
             <Button Grid.Row="3"
                 Grid.Column="1"
                 Grid.ColumnSpan="3"
@@ -80,7 +80,9 @@
         </Grid>
 
         <!--  Main dash readings front.  -->
-        <Grid Background="{x:Bind ViewModel.CardBackColour, FallbackValue=#FF4A90E2}" Visibility="{x:Bind ViewModel.ReadingSideVisible, Mode=OneWay}">
+        <Grid d:IsHidden="True"
+            Background="{x:Bind ViewModel.CardBackColour, FallbackValue=#FF4A90E2}"
+            Visibility="{x:Bind ViewModel.ReadingSideVisible, Mode=OneWay}">
             <Grid.RowDefinitions>
                 <!--  0 - Margin  -->
                 <RowDefinition Height="5" />
