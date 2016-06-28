@@ -19,6 +19,8 @@
         /// </summary>
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _updateAction;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _localNetworkConflictAction;
 
         private bool _isNavOpen = true;
 
@@ -42,6 +44,8 @@
 
             Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            _localNetworkConflictAction = s => NavToSettingsView();
+            Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
         }
 
         /// <summary>
@@ -54,7 +58,6 @@
                 Debug.WriteLine("Auto Sync started...");
                 // Disables the sync button in every CropView (there is one for each crop).
                 await SetSyncEnabled(false);
-
 
                 var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
                 if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
@@ -211,6 +214,11 @@
         public void NavToArchiveView()
         {
             _contentFrame.Navigate(typeof(ArchiveView));
+        }
+        public void NavToSettingsView()
+        {
+            if(_contentFrame.CurrentSourcePageType != typeof(SettingsView))
+                _contentFrame.Navigate(typeof(SettingsView));
         }
     }
 }

@@ -13,7 +13,7 @@
     using Models;
     using Util;
 
-    public class DatapointsSaver
+    public class DatapointsSaver : IDisposable
     {
         private const int _saveIntervalSeconds = 60;
         private static DatapointsSaver _Instance;
@@ -405,6 +405,12 @@
                 freshBuffer = new List<SensorDatapoint>();
                 dataDay = inDataDay;
             }
+        }
+
+        public void Dispose()
+        {
+            _saveTimer?.Stop();
+            _Instance = null;
         }
     }
 }

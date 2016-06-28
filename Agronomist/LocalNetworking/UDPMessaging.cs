@@ -16,6 +16,8 @@ using System.Threading;
 
 namespace Agronomist.LocalNetworking
 {
+    using Util;
+
     /// <summary>
     /// This class broadcasts UDP messages.  It should be instantiated by the Manager. 
     /// The sensor boxees listen for those UDP messages, and connect to the server that sent them. 
@@ -27,13 +29,13 @@ namespace Agronomist.LocalNetworking
     {
         private static UDPMessaging _instance = null;
 
-        private const int BroadcastIntervalSeconds = 3;
+        public const int BroadcastIntervalSeconds = 3;
         private DispatcherTimer UdpBroadcastTimer;
         
 
         private Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
-        private List<IPAddress> _localEndPoints; 
+        private List<IPAddress> _localEndPoints = new List<IPAddress>(); 
 
         private bool disposedValue = false; // To detect redundant calls
         public bool Disposed { get { return disposedValue; } }
@@ -145,7 +147,7 @@ namespace Agronomist.LocalNetworking
                     string message = Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred);
                     if (message == "sekret")
                     {
-                        //TODO: Put here the messender broadcast
+                        Task.Run(()=>Messenger.Instance.LocalNetworkConflict.Invoke(e.RemoteEndPoint.ToString()));
                         Debug.WriteLine(e.RemoteEndPoint.ToString());
                     }
                 }

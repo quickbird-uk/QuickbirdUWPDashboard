@@ -18,7 +18,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="112" />
                     <RowDefinition />
-                    <RowDefinition Height="216" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!--  Pane Header  -->
@@ -113,8 +113,7 @@
                     <!--  Add Crop Button  -->
                     <Button x:Name="AddCropButton"
                         Background="DodgerBlue"
-                        BorderBrush="#66EBEBEB"
-                        BorderThickness="0,1,0,1"
+                        BorderThickness="0,1,0,3"
                         Click="{x:Bind ViewModel.NavToAddNewView}"
                         Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="72">
@@ -137,9 +136,7 @@
                     </Button>
 
                     <!--  Archive Button  -->
-                    <Button x:Name="ArchiveButton"
-                        Background="DodgerBlue"
-                        BorderBrush="#66EBEBEB"
+                    <Button Background="DodgerBlue"
                         BorderThickness="0,1,0,1"
                         Click="{x:Bind ViewModel.NavToArchiveView}"
                         Style="{ThemeResource NoBackgroundDarkTheme}">
@@ -162,10 +159,8 @@
                         </Grid>
                     </Button>
 
-                    <!--  Settings Button  -->
-
-                    <Button x:Name="SettingsButton"
-                        Background="DodgerBlue"
+                    <!--  Graph Button  -->
+                    <Button Background="DodgerBlue"
                         BorderThickness="0,1,0,1"
                         Click="{x:Bind ViewModel.NavToGraphingView}"
                         Style="{ThemeResource NoBackgroundDarkTheme}">
@@ -185,6 +180,30 @@
                                 FontSize="20"
                                 FontWeight="Normal"
                                 Text="Graphs" />
+                        </Grid>
+                    </Button>
+
+                    <!--  Settings Button  -->
+                    <Button Background="DodgerBlue"
+                        BorderThickness="0,1,0,1"
+                        Click="{x:Bind ViewModel.NavToSettingsView}"
+                        Style="{ThemeResource NoBackgroundDarkTheme}">
+                        <Grid Height="72">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Margin="24,0,24,0"
+                                FontSize="28"
+                                Foreground="#FFEBEBEB"
+                                Style="{ThemeResource Icon}"
+                                Text="&#xE713;" />
+                            <TextBlock Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe UI"
+                                FontSize="20"
+                                FontWeight="Normal"
+                                Text="Settings" />
                         </Grid>
                     </Button>
                 </StackPanel>

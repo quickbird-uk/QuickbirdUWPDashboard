@@ -4,7 +4,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:Agronomist.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    RequestedTheme="Light"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <local:TrueVisible x:Key="TrueVisible" />
+        <local:FalseVisible x:Key="FalseVisible" />
+    </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -36,21 +42,24 @@
         <StackPanel Grid.Row="2"
             Grid.Column="1"
             Padding="5">
-
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Network" />
-
-            <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
-            <TextBlock Text="No conflicts detected." TextWrapping="WrapWholeWords" />
-            <TextBlock Foreground="Red"
-                Text="Conflict detected. You must disable local device management on a computer."
-                TextWrapping="WrapWholeWords" />
-
-            <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
-            <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
-            <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled}"
-                OffContent="Disabled"
-                OnContent="Enabled" />
-
+            <StackPanel Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
+                <TextBlock Text="No conflicts detected."
+                    TextWrapping="WrapWholeWords"
+                    Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource FalseVisible}, Mode=OneWay}" />
+                <TextBlock Foreground="Red"
+                    Text="Conflict detected. You must disable local device management on a computer."
+                    TextWrapping="WrapWholeWords"
+                    Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource TrueVisible}, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
+                <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Page>

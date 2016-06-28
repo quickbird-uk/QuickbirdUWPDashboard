@@ -21,6 +21,7 @@
     sealed partial class App : Application
     {
         private ExtendedExecutionSession _extendedExecutionSession;
+        private Action<object> _manageLocalNetworkChangeEvent;
 
         private Manager _networking;
         private bool _notPrelaunchSuspend;
@@ -83,7 +84,9 @@
         private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
             Toast.Debug("OnVisibilityChanged", "");
-            // If there is no content the app was prelaunched and we mush navigate and begin the session.
+
+            // _rootFrame will only ever be null here once.
+            // If there is no content the app was prelaunched and we must navigate and begin the session.
             if (_rootFrame.Content == null)
             {
                 using (var db = new MainDbContext())
@@ -91,7 +94,9 @@
                     db.Database.Migrate();
                 }
 
-                _networking = new Manager();
+                _manageLocalNetworkChangeEvent = StartLocalNetworkManagerIfSettingsAllow;
+                Messenger.Instance.DeviceManagementEnableChanged.Subscribe(_manageLocalNetworkChangeEvent);
+                StartLocalNetworkManagerIfSettingsAllow();
 
                 // Page navigation is somthing we do immediately after prelaunch is over.
                 // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
@@ -103,6 +108,29 @@
 
                 if (_extendedExecutionSession == null)
                     await StartExtendedSession();
+            }
+        }
+
+        /// <summary>
+        ///     Starts or kills the local device network if the settings permit it.
+        /// </summary>
+        /// <param name="throwAway">An atefact of the BroadcastMessenger class, not used.</param>
+        private void StartLocalNetworkManagerIfSettingsAllow(object throwAway = null)
+        {
+            if (Settings.Instance.LocalDeviceManagementEnabled)
+            {
+                // If it has already started, leave it alone.
+                if (_networking == null)
+                    _networking = new Manager();
+            }
+            else
+            {
+                // Shut it down if it has started.
+                if (_networking != null)
+                {
+                    _networking.Dispose();
+                    _networking = null;
+                }
             }
         }
 

@@ -78,6 +78,7 @@
     <Compile Include="Views\Dashboard.xaml.cs">
       <DependentUpon>Dashboard.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\FalseVisible.cs" />
     <Compile Include="Views\GraphingView.xaml.cs">
       <DependentUpon>GraphingView.xaml</DependentUpon>
     </Compile>
@@ -100,6 +101,7 @@
     <Compile Include="Views\SyncingView.xaml.cs">
       <DependentUpon>SyncingView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\TrueVisible.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

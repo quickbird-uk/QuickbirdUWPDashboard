@@ -129,7 +129,9 @@
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).  
+                    // TODO: dispose managed state (managed objects). 
+                    _udpMessaging?.Dispose();
+                    _datapointsSaver?.Dispose();
                 }
                 if (_mqttBroker != null)
                 {
