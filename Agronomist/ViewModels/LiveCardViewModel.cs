@@ -79,6 +79,8 @@
             ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
             ageStatusUpdateTime.Start();
 
+            DispatcherTimers.Add(ageStatusUpdateTime);
+
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
         }

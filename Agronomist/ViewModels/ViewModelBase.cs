@@ -4,6 +4,7 @@
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Runtime.CompilerServices;
+    using System.Threading.Tasks;
     using Windows.UI.Xaml;
     using JetBrains.Annotations;
     using Util;
@@ -15,20 +16,21 @@
         public ViewModelBase()
         {
             Messenger.Instance.Suspending.Subscribe(OnSuspend);
+            Messenger.Instance.Resume.Subscribe(OnResume);
+        }
+
+        private void OnResume(TaskCompletionSource<object> completer)
+        {
+            ResumeDispatcherTimers();
+            completer.SetResult(null);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void OnSuspend(bool isSuspendingIsntResuming)
+        private void OnSuspend(TaskCompletionSource<object> completer)
         {
-            if (isSuspendingIsntResuming)
-            {
-                SuspendDispacherTimers();
-            }
-            else
-            {
-                ResumeDispatcherTimers();
-            }
+            SuspendDispacherTimers();
+            completer.SetResult(null);
         }
 
         [NotifyPropertyChangedInvocator]

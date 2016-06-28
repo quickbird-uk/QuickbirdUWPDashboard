@@ -206,8 +206,9 @@
             // With the deferral there is still a 5 second time limit to completing suspension code.
             // The deferral allows code to be awaited in this method.
             var deferral = e.SuspendingOperation.GetDeferral();
-
-            await Messenger.Instance.Suspending.Invoke(true);
+            var completer = new TaskCompletionSource<object>();
+            await Messenger.Instance.Suspending.Invoke(completer, true, true);
+            await completer.Task;
 
             deferral.Complete();
         }

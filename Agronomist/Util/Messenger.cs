@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
@@ -23,9 +24,14 @@
             new BroadcastMessage<string>();
 
         /// <summary>
-        ///     True for suspending false for resuming.
+        ///     App suspending.
         /// </summary>
-        public BroadcastMessage<CompletionsSource> Suspending { get; } = new BroadcastMessage<bool>();
+        public BroadcastMessage<TaskCompletionSource<object>> Suspending { get; } = new BroadcastMessage<TaskCompletionSource<object>>();
+
+        /// <summary>
+        ///     App resuming.
+        /// </summary>
+        public BroadcastMessage<TaskCompletionSource<object>> Resume { get; } = new BroadcastMessage<TaskCompletionSource<object>>();
 
         public struct SensorReading
         {
@@ -78,7 +84,7 @@
                 _subscribers.Add(new WeakReference<Action<T>>(action));
             }
 
-            public async Task Invoke(T param, bool useCoreDispatcher = true)
+            public async Task Invoke(T param, bool useCoreDispatcher = true, bool insertCompletionSource = false)
             {
                 //The first half of this code has externally mutable lists, so no awaits.
                 var actions = new List<Action<T>>();
@@ -99,16 +105,48 @@
                 CoreDispatcher dispatcher = null;
                 if (useCoreDispatcher) dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
 
-                // Looping through external lists complete, safe to await now.
-                foreach (var action in actions)
+                // Special mode when the param is a TaskCompletionSource<object> and you want it to be set when all the actions complete.
+                if (insertCompletionSource)
                 {
-                    if (useCoreDispatcher)
+                    var completers = new List<TaskCompletionSource<object>>();
+                    var originalCompleter = param as TaskCompletionSource<object>;
+
+                    if(null == originalCompleter) throw new NullReferenceException("This should be a completer.");
+
+                    foreach (var action in actions)
                     {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
+                        var completingAction = action as Action<TaskCompletionSource<object>>;
+                        if(completingAction == null) continue;
+
+                        var completer = new TaskCompletionSource<object>();
+                        completers.Add(completer);
+
+                        if (useCoreDispatcher)
+                        {
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => completingAction(completer));
+                        }
+                        else
+                        {
+                            await Task.Run(() => completingAction(completer)).ConfigureAwait(false);
+                        }
                     }
-                    else
+
+                    await Task.WhenAll(completers.Select(s => s.Task));
+                    originalCompleter.SetResult(null);
+                }
+                else
+                {
+                    // Looping through external lists complete, safe to await now.
+                    foreach (var action in actions)
                     {
-                        await Task.Run(() => action(param)).ConfigureAwait(false);
+                        if (useCoreDispatcher)
+                        {
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
+                        }
+                        else
+                        {
+                            await Task.Run(() => action(param)).ConfigureAwait(false);
+                        }
                     }
                 }
             }
