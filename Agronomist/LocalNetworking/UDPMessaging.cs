@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.Networking.Connectivity;
 using Windows.Networking;
+using System.Threading;
 
 namespace Agronomist.LocalNetworking
 {
@@ -32,6 +33,7 @@ namespace Agronomist.LocalNetworking
 
         private Socket _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 44000);
+        private List<IPAddress> _localEndPoints; 
 
         private bool disposedValue = false; // To detect redundant calls
         public bool Disposed { get { return disposedValue; } }
@@ -70,29 +72,39 @@ namespace Agronomist.LocalNetworking
 
         private void UDPBroadcast(object sender, object o)
         {
+            List<IPAddress> localEndPoints = new List<IPAddress>(); 
+
             foreach (HostName localHostName in NetworkInformation.GetHostNames())
             {
                 if (localHostName.IPInformation != null && localHostName.Type == HostNameType.Ipv4
                     && localHostName.IPInformation.PrefixLength.HasValue) //by making sure that there is a prefix, we will probably hit a local network
                 {
+                    
                     string ipString = localHostName.CanonicalName;
                     string[] stringBytes = ipString.Split('.');
-                    byte[] ipBytes = new byte[stringBytes.Length]; 
+                    byte[] localIPBytes = new byte[stringBytes.Length];
+                    byte[] broadcastIpBytes = new byte[stringBytes.Length];
+
+                    
                                          
                     for (int i=0; i < stringBytes.Length; i++)
                     {
-                        ipBytes[i] = Byte.Parse(stringBytes[i]);
+                        localIPBytes[i] = Byte.Parse(stringBytes[i]);
+                        broadcastIpBytes[i] = localIPBytes[i]; 
+
                         int maskLength = localHostName.IPInformation.PrefixLength.Value - 8 * i;
+
                         if (maskLength > 0)
                         {
                             byte bynaryMask = (byte)(255 >> maskLength);
-                            ipBytes[i] = (byte)(ipBytes[i] | bynaryMask);
+                            broadcastIpBytes[i] = (byte)(broadcastIpBytes[i] | bynaryMask);
                         }
                         else
-                            ipBytes[i] = 255;
+                            broadcastIpBytes[i] = 255;
                     }
 
-                    IPAddress broadcast = new IPAddress(ipBytes);
+                    localEndPoints.Add(new IPAddress(localIPBytes));
+                    IPAddress broadcast = new IPAddress(broadcastIpBytes);
 
                     SocketAsyncEventArgs sds = new SocketAsyncEventArgs
                     {
@@ -104,7 +116,7 @@ namespace Agronomist.LocalNetworking
                 }
             }
 
-           
+            Interlocked.Exchange(ref _localEndPoints, localEndPoints); 
         }
 
 
@@ -122,10 +134,27 @@ namespace Agronomist.LocalNetworking
             }
 
             Socket udpSocket = sender as Socket;
-
+            IPEndPoint recievedFrom = e.RemoteEndPoint as IPEndPoint;
             byte[] buffer = e.Buffer;
-            //Now we got the data!!
-           // Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred));
+
+            
+            if (_localEndPoints.Contains(recievedFrom.Address) == false)
+            {
+                try
+                {
+                    string message = Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred);
+                    if (message == "sekret")
+                    {
+                        //TODO: Put here the messender broadcast
+                        Debug.WriteLine(e.RemoteEndPoint.ToString());
+                    }
+                }
+                catch(Exception exception)
+                {
+                    Debug.WriteLine("Got a weired broadcast from " + recievedFrom.Address); 
+                }
+                
+            }
 
             if (!udpSocket.ReceiveFromAsync(e))
             {
