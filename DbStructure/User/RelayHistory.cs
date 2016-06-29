@@ -8,13 +8,13 @@
     public class RelayHistory : IValidatableObject
     {
         [JsonIgnore]
-        public Relay Relay { get; set; }
+        public virtual Relay Relay { get; set; }
 
         [Required]
         public Guid RelayID { get; set; }
 
         [JsonIgnore]
-        public Location Location { get; set; }
+        public virtual Location Location { get; set; }
 
         public Guid? LocationID { get; set; }
 
@@ -22,7 +22,7 @@
         public DateTimeOffset TimeStamp { get; set; }
 
         [JsonIgnore]
-        public byte[] RawData{ get; set; }
+        public byte[] RawData { get; set; } = new byte[0];
 
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
@@ -60,7 +60,7 @@
                 bool state = RawData[i] > 0;
                 TimeSpan duration = TimeSpan.FromTicks(BitConverter.ToInt64(RawData, i + 1));
                 long timestampTicks = BitConverter.ToInt64(RawData, i + 9);
-                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset);
+                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset).Add(TimeStamp.Offset); ;
                 dataItems.Add(new RelayDatapoint(state, timeStamp, duration)); 
             }
 

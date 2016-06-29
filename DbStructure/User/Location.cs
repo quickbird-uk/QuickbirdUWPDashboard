@@ -19,7 +19,7 @@
         public virtual List<Device> Devices { get; set; }
 
         [JsonIgnore]
-        public List<CropCycle> CropCycles { get; set; }
+        public virtual List<CropCycle> CropCycles { get; set; }
 
         [JsonIgnore]
         public virtual List<SensorHistory> SensorHistory { get; set; }

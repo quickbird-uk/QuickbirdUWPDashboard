@@ -17,12 +17,12 @@
         public Guid? LocationID { get; set; }
 
         [JsonIgnore]
-        public byte[] RawData { get; set; }
+        public byte[] RawData { get; set; } = new byte[0]; 
 
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
         [Required]
-        public List<SensorDatapoint> Data { get; set; }
+        public virtual List<SensorDatapoint> Data { get; set; }
 
         public void SerialiseData()
         {
@@ -52,7 +52,8 @@
                 double value = BitConverter.ToDouble(RawData, i);
                 TimeSpan duration = TimeSpan.FromTicks(BitConverter.ToInt64(RawData, i + 8));
                 long timestampTicks = BitConverter.ToInt64(RawData, i + 16);
-                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset);
+                //we need to add the time in because the timestampTicks are in UTC
+                DateTimeOffset timeStamp = new DateTimeOffset(timestampTicks, TimeStamp.Offset).Add(TimeStamp.Offset);
                 dataItems.Add(new SensorDatapoint(value, timeStamp, duration));
             }
             Data = dataItems;
@@ -87,7 +88,8 @@
 
         public static SensorHistory Merge(SensorHistory slice1, SensorHistory slice2)
         {
-            if(slice1.SensorID!= slice2.SensorID)
+
+            if (slice1.SensorID!= slice2.SensorID)
             {
                 throw new Exception("Attempted to merge SensorHistory slices from different sensors! "
                 + slice1.SensorID + " and " + slice2.SensorID);
@@ -103,6 +105,8 @@
                 throw new Exception("Attempted to merge SensorHistory from different days! "
                     + slice1.TimeStamp + " and " + slice2.TimeStamp);
             }
+
+
 
             SensorHistory result = new SensorHistory
             {
@@ -173,6 +177,15 @@
         public readonly DateTimeOffset TimeStamp;
         [Required]
         public readonly TimeSpan Duration;
+
+        //public override bool Equals(object obj)
+        //{
+        //    SensorDatapoint comparand = obj as SensorDatapoint;
+        //    if (comparand == null)
+        //        return false;
+        //    else 
+        //    return base.Equals(obj);
+        //}
 
         public SensorDatapoint(double value, DateTimeOffset timestamp, TimeSpan duration)
         {
