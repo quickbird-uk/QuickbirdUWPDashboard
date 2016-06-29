@@ -68,14 +68,14 @@ namespace GhAPIAzure.Controllers
         /// Accepts a list of SensorHistories you want to edit. 
         /// </summary>
         /// <remarks> This accepts delta updates. 
-        /// So you can add a SensorsHistory that has only one new datapoint each, and it will just add it on top of what's already in the DB</remarks>
+        /// So you can add a SensorsHistory that has only one new datapoint each, and it will just add it on top of what's already in the DB
+        /// UpdatedAt will be overwritten with the time of upload, even if no changes were made to the item</remarks>
         /// <param name="shRecievedList">A list of sensorHistories that you want to add or edit.</param>
         /// <returns>Ok if all good, otherwise you will get an ErrorResponce</returns>
 
         [SwaggerResponse(HttpStatusCode.OK, Type = typeof(void))]
         [SwaggerResponse(HttpStatusCode.BadRequest, Type = typeof(ModelStateDictionary))]
         [SwaggerResponse(HttpStatusCode.Forbidden, "Happens when you try to edit someone else's stuff",Type = typeof(ErrorResponse<SensorHistory>))]
-        [SwaggerResponse(HttpStatusCode.NotFound, "Refers to something that doesn;t exist", Type = typeof(ErrorResponse<SensorHistory>))]
         public async Task<HttpResponseMessage> PostSensorsHistory(List<SensorHistory> shRecievedList)
         {
             if (!ModelState.IsValid)
@@ -85,17 +85,17 @@ namespace GhAPIAzure.Controllers
 
             List<Guid> sensorIDs = shRecievedList.Select(chR => chR.SensorID).ToList();
 
-            //Get all relevant Controllables, they must both exist and belong to this user! 
-            List<Sensor> usersRelays =
+            //Get all relevant sensors, they must both exist and belong to this user! 
+            List<Sensor> userSensors =
                 await db.Sensors.Where(rel => sensorIDs.Contains(rel.ID) && rel.Device.Location.PersonId == _UserID)
                 .ToListAsync();
 
-            //If one of the submitted items reffers to a controllable that doesnt exist/belong to user, return error
+            //If one of the submitted items reffers to a sensor that doesn't exist/belong to user, return error
             foreach (SensorHistory sHistory in shRecievedList)
             {
-                if (!usersRelays.Any(rel => rel.ID == sHistory.SensorID))
+                if (userSensors.Any(rel => rel.ID == sHistory.SensorID) == false)
                 {
-                    return Request.CreateResponse(HttpStatusCode.NotFound,
+                    return Request.CreateResponse(HttpStatusCode.BadRequest,
                         new ErrorResponse<SensorHistory>("One of the SensorIDs does not exist", sHistory));
                 }
             }
@@ -108,13 +108,14 @@ namespace GhAPIAzure.Controllers
 
             foreach (var sensHistRecieved in shRecievedList)
             {
-                SensorHistory SensHIstoryDB = sensHistDbRawList.FirstOrDefault(rHist => rHist.SensorID == sensHistRecieved.SensorID
+                SensorHistory SensHistoryDB = sensHistDbRawList.FirstOrDefault(rHist => rHist.SensorID == sensHistRecieved.SensorID
                 && rHist.TimeStamp == sensHistRecieved.TimeStamp);
-                if (SensHIstoryDB == null) //create new
+
+                if (SensHistoryDB == null) //create new
                 {
                     if(false == userLocations.Any(loc => loc.ID == sensHistRecieved.LocationID))
                     {
-                        return Request.CreateResponse(HttpStatusCode.NotFound,
+                        return Request.CreateResponse(HttpStatusCode.BadRequest,
                       new ErrorResponse<SensorHistory>("Referenced location doesn't exist", sensHistRecieved));
                     }
 
@@ -123,20 +124,22 @@ namespace GhAPIAzure.Controllers
                 }
                 else
                 {
-                    if(SensHIstoryDB.LocationID != sensHistRecieved.LocationID)
+                    if(SensHistoryDB.LocationID != sensHistRecieved.LocationID)
                     {
                         return Request.CreateResponse(HttpStatusCode.Forbidden,
                        new ErrorResponse<SensorHistory>("You are not allowed to change location of SensorHistory", sensHistRecieved));
                     }
                     
-                    SensHIstoryDB.DeserialiseData();
-                    SensorHistory chMerged = SensorHistory.Merge(SensHIstoryDB, sensHistRecieved);
-                    chMerged.SerialiseData();
-                    SensHIstoryDB.RawData = chMerged.RawData;
+                    SensHistoryDB.DeserialiseData();
+                    SensorHistory chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
+
+                    SensHistoryDB.Data = chMerged.Data; 
+                    SensHistoryDB.SerialiseData(); 
                 }
             }
 
             await db.SaveChangesAsync();
+
             return Request.CreateResponse(HttpStatusCode.OK);
         }
     }
