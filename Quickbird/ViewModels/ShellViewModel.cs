@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Util;
     using Views;
@@ -28,6 +29,7 @@
         private bool _isNavOpen = true;
 
         private object _selectedShellListViewModel;
+        private bool _isInternetAvailable;
 
         /// <summary>
         ///     Initialise the shell.
@@ -36,6 +38,21 @@
         public ShellViewModel(Frame contentFrame)
         {
             _contentFrame = contentFrame;
+            IsInternetAvailable = Internet.Request.IsInternetAvailable();
+
+            UpdateInternetInViewModels(IsInternetAvailable);
+
+            var internetCheckTimer = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+
+            internetCheckTimer.Tick += (sender, o) =>
+            {
+                IsInternetAvailable = Internet.Request.IsInternetAvailable();
+            };
+            DispatcherTimers.Add(internetCheckTimer);
+            internetCheckTimer.Start();
 
             FirstUpdate();
 
@@ -47,6 +64,8 @@
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
             _localNetworkConflictAction = s => NavToSettingsView();
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
+
+            
         }
 
         public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
@@ -71,6 +90,17 @@
                 if (value == _selectedShellListViewModel) return;
                 _selectedShellListViewModel = value;
                 OnPropertyChanged();
+            }
+        }
+
+        public bool IsInternetAvailable
+        {
+            get { return _isInternetAvailable; }
+            set
+            {
+                if(IsInternetAvailable == value) return;
+                _isInternetAvailable = value;
+                UpdateInternetInViewModels(value);
             }
         }
 
@@ -158,6 +188,14 @@
                 _contentFrame.Navigate(typeof(AddCropCycleView));
         }
 
+        private void UpdateInternetInViewModels(bool isInternetAvailable)
+        {
+            foreach (var shellListViewModel in ShellListViewModels)
+            {
+                shellListViewModel.UpdateInternetStatus(isInternetAvailable);
+            }
+        }
+
         private async Task Update()
         {
             Debug.WriteLine("Shell update triggered");
@@ -167,7 +205,7 @@
             // Remove items that no longer exist.
             var now = DateTimeOffset.Now;
             var validIds =
-                cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) < now)
+                cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) > now)
                     .Select(cc => cc.ID)
                     .ToList();
             var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
@@ -178,8 +216,8 @@
 
             // Add new items, update existing.
             foreach (var cropCycle in cropCycles)
-            { 
-                if(!validIds.Contains(cropCycle.ID)) continue;
+            {
+                if (!validIds.Contains(cropCycle.ID)) continue;
 
                 var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
                 if (null == item)
@@ -191,6 +229,8 @@
                     item.Update(cropCycle);
                 }
             }
+
+            UpdateInternetInViewModels(IsInternetAvailable);
         }
 
         public void ToggleNav()
