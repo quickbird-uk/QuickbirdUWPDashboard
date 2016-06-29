@@ -205,7 +205,7 @@
             // Remove items that no longer exist.
             var now = DateTimeOffset.Now;
             var validIds =
-                cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) < now)
+                cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) > now)
                     .Select(cc => cc.ID)
                     .ToList();
             var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
@@ -216,8 +216,8 @@
 
             // Add new items, update existing.
             foreach (var cropCycle in cropCycles)
-            { 
-                if(!validIds.Contains(cropCycle.ID)) continue;
+            {
+                if (!validIds.Contains(cropCycle.ID)) continue;
 
                 var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
                 if (null == item)
