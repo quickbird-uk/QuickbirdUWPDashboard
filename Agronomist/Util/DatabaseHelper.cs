@@ -520,15 +520,6 @@
                 responses.Add(
                     await PostAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds).ConfigureAwait(false));
 
-                responses.Add(
-                    await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds).ConfigureAwait(false));
-                responses.Add(
-                    await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds).ConfigureAwait(false));
-                responses.Add(
-                    await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds).ConfigureAwait(false));
-                responses.Add(
-                    await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds).ConfigureAwait(false));
-
                 // CropTypes is unique:
                 var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
 
@@ -538,6 +529,17 @@
                     responses.Add(
                         await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds).ConfigureAwait(false));
                 }
+
+                responses.Add(
+                    await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds).ConfigureAwait(false));
+                responses.Add(
+                    await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds).ConfigureAwait(false));
+
+
             }
 
             var errors = responses.Where(r => r != null).ToList();
