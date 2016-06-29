@@ -1,11 +1,9 @@
 ﻿{
   "dependencies": {
-    "EntityFramework.Core": "7.0.0-rc1-final",
     "JetBrains.Annotations": "10.1.4",
-    "Microsoft.EntityFrameworkCore": "1.0.0-rc2-final",
-    "Microsoft.EntityFrameworkCore.Sqlite": "1.0.0-rc2-final",
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
-    "MoreLinq.Portable": "2.0.0-beta03"
+    "Microsoft.EntityFrameworkCore": "1.0.0",
+    "Microsoft.EntityFrameworkCore.Sqlite": "1.0.0",
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0"
   },
   "frameworks": {
     "uap10.0": {}

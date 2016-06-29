@@ -4,9 +4,9 @@
     "uwp.10.0.app": {}
   },
   "dependencies": {
-    "Microsoft.NETCore": "5.0.0",
-    "Microsoft.NETCore.Portable.Compatibility": "1.0.0",
-    "Newtonsoft.Json": "8.0.3"
+    "Microsoft.NETCore": "5.0.1",
+    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+    "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {
     "dotnet": {
