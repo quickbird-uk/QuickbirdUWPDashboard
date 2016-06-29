@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs
+﻿namespace DbStructure
 {
     public interface IHasId
     {

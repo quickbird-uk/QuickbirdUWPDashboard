@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs
+﻿namespace DbStructure
 {
     using System;
     using System.Collections.Generic;

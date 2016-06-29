@@ -1,0 +1,72 @@
+﻿<Page x:Class="Quickbird.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Quickbird.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    RequestedTheme="Light"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <local:TrueVisible x:Key="TrueVisible" />
+        <local:FalseVisible x:Key="FalseVisible" />
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <!--  0 reserved for margins  -->
+            <RowDefinition Height="5" />
+            <!--  1 title row  -->
+            <RowDefinition Height="Auto" />
+            <!--  2 content row  -->
+            <RowDefinition Height="Auto" />
+            <!--  3 reserved for margins  -->
+            <RowDefinition Height="5" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <!--  0 reserved for margins  -->
+            <ColumnDefinition Width="5" />
+            <!--  1,2 allow upto 2 column layout  -->
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="0" />
+            <!--  3 reserved for margins  -->
+            <ColumnDefinition Width="5" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="1"
+            Grid.Column="1"
+            Style="{StaticResource HeaderTextBlockStyle}"
+            Text="Settings" />
+        <!--  Column 1 content  -->
+        <StackPanel Grid.Row="2"
+            Grid.Column="1"
+            Padding="5">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Network" />
+            <StackPanel Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
+                <TextBlock Text="No conflicts detected."
+                    TextWrapping="WrapWholeWords"
+                    Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource FalseVisible}, Mode=OneWay}" />
+                <TextBlock Foreground="Red"
+                    Text="Conflict detected. You must disable local device management on a computer."
+                    TextWrapping="WrapWholeWords"
+                    Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource TrueVisible}, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
+                <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>
+
+
+
+
+
+
+

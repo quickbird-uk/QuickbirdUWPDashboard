@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace DatabasePOCOs.Global
+namespace DbStructure.Global
 {
     public class SensorType : IHasId
     {
