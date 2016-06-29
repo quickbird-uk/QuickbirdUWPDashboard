@@ -28,6 +28,8 @@
         private bool _syncButtonEnabled = true;
         private string _varietyName;
         private string _yield;
+        private bool _isInternetAvailable;
+        private bool _syncing;
 
         public CropViewModel(CropCycle cropCycle)
         {
@@ -99,7 +101,7 @@
             set
             {
                 if (value == _syncButtonEnabled) return;
-                _syncButtonEnabled = value;
+                _syncButtonEnabled = _isInternetAvailable && value;
                 OnPropertyChanged();
             }
         }
@@ -200,6 +202,7 @@
 
         public async void Sync(object sender, object e)
         {
+            _syncing = true;
             SyncButtonEnabled = false;
 
             var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
@@ -211,7 +214,28 @@
             var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
             if(postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
 
-            SyncButtonEnabled = true;
+            _syncing = false;
+            if(_isInternetAvailable)
+                SyncButtonEnabled = true;
+        }
+
+        public void UpdateInternetStatus(bool isInternetAvailable)
+        {
+            // When switching from false to true the sync button needs to be enabled unless it is syncing.
+            if (!_isInternetAvailable && isInternetAvailable && !_syncing)
+            {
+                SyncButtonEnabled = true;
+            }
+
+            _isInternetAvailable = isInternetAvailable;
+
+            if (!isInternetAvailable)
+            {
+                SyncButtonEnabled = false;
+            }
+
+
+
         }
     }
 }

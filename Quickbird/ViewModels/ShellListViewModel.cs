@@ -102,5 +102,10 @@
 
             _cropViewModel.Update(cropCycle);
         }
+
+        public void UpdateInternetStatus(bool isInternetAvailable)
+        {
+            CropViewModel.UpdateInternetStatus(isInternetAvailable);
+        }
     }
 }
