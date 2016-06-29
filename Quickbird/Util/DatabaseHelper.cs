@@ -154,7 +154,9 @@
         public async Task<List<string>> GetUpdatesFromServerAsync()
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateFromServerAsync));
-            return await await cont.ConfigureAwait(false);
+            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
+            await Messenger.Instance.TablesChanged.Invoke(null);
+            return updatesFromServerAsync;
         }
 
         private async Task<List<string>> UpdateFromServerAsync()
