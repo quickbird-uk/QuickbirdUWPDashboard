@@ -102,9 +102,9 @@
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160629165441_Initial.cs" />
-    <Compile Include="Migrations\20160629165441_Initial.designer.cs">
-      <DependentUpon>20160629165441_Initial.cs</DependentUpon>
+    <Compile Include="Migrations\20160629182604_Initial.cs" />
+    <Compile Include="Migrations\20160629182604_Initial.designer.cs">
+      <DependentUpon>20160629182604_Initial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
@@ -312,6 +312,7 @@
       <Name>GnatMQ</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>

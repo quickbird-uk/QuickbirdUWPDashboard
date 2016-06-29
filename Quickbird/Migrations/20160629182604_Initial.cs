@@ -322,7 +322,8 @@ namespace Quickbird.Migrations
                     SensorID = table.Column<Guid>(nullable: false),
                     TimeStamp = table.Column<DateTimeOffset>(nullable: false),
                     LocationID = table.Column<Guid>(nullable: true),
-                    RawData = table.Column<byte[]>(nullable: true)
+                    RawData = table.Column<byte[]>(nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {

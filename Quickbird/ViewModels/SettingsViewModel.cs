@@ -27,7 +27,6 @@
             {
                 var now = DateTimeOffset.Now;
                 var diff = now - _lastConflictDetected;
-                Debug.WriteLine(diff.TotalSeconds);
                 IsNetworkConflict = diff < TimeSpan.FromSeconds(UDPMessaging.BroadcastIntervalSeconds + 1);
             };
             timer.Tick += timerOnTick;

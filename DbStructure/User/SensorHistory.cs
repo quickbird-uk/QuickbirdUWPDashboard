@@ -4,7 +4,7 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
-    public class SensorHistory
+    public class SensorHistory : IHasUpdatedAt
     {
         [Required]
         public DateTimeOffset TimeStamp { get; set; }
@@ -12,9 +12,13 @@
         public virtual Sensor Sensor { get; set; }
         [Required]
         public Guid SensorID { get; set; }
+
         [JsonIgnore]
         public virtual Location Location { get; set; }
         public Guid? LocationID { get; set; }
+
+        [Required]
+        public DateTimeOffset UpdatedAt {get; set;} = DateTimeOffset.Now;  
 
         [JsonIgnore]
         public byte[] RawData { get; set; } = new byte[0]; 
@@ -39,7 +43,8 @@
                 byte[] timestampBytes = BitConverter.GetBytes(ticks);
                 Array.Copy(timestampBytes, 0, dataRaw, i * dataSize + 16, 8);
             }
-            RawData = dataRaw; 
+            RawData = dataRaw;
+            UpdatedAt = DateTimeOffset.Now; 
         }
 
         public void DeserialiseData()
@@ -74,6 +79,7 @@
                 TimeStamp = this.TimeStamp,
                 Location = this.Location,
                 LocationID = this.LocationID,
+                UpdatedAt = UpdatedAt,
                 Data = new List<SensorDatapoint>()
             };
             foreach(SensorDatapoint item in Data)
@@ -115,6 +121,7 @@
                 TimeStamp = slice1.TimeStamp,
                 Location = slice1.Location,
                 LocationID = slice1.LocationID,
+                UpdatedAt = DateTimeOffset.Now,
                 Data = new List<SensorDatapoint>()
             };
 
