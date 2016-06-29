@@ -2,7 +2,7 @@
 {
     using System;
     using System.Linq;
-    using DatabasePOCOs.User;
+    using DbStructure.User;
 
     public class ShellListViewModel : ViewModelBase
     {

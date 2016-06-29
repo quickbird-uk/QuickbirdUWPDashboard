@@ -4,7 +4,7 @@
     using System.Diagnostics;
     using System.Linq;
     using Windows.UI.Xaml.Controls;
-    using DatabasePOCOs.User;
+    using DbStructure.User;
     using Util;
     using Views;
 

@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs.User
+﻿namespace DbStructure.User
 {
     using Newtonsoft.Json;
     using System;

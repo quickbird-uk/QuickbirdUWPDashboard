@@ -1,6 +1,6 @@
 ﻿using Quickbird.Models;
 using Quickbird.Util;
-using DatabasePOCOs.User;
+using DbStructure.User;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

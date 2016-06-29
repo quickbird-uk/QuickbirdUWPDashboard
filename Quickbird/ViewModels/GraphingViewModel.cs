@@ -1,6 +1,6 @@
-﻿using DatabasePOCOs;
-using DatabasePOCOs.User;
-using DatabasePOCOs.Global;
+﻿using DbStructure;
+using DbStructure.User;
+using DbStructure.Global;
 using System.Collections.Generic;
 using System;
 using Windows.UI.Xaml;

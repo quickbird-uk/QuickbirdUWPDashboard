@@ -3,7 +3,7 @@
     using System;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using DatabasePOCOs.User;
+    using DbStructure.User;
     using JetBrains.Annotations;
 
     public class DashboardViewModel : ViewModelBase

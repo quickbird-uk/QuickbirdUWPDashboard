@@ -1,4 +1,4 @@
-﻿using DatabasePOCOs.User;
+﻿using DbStructure.User;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Quickbird.Models;
-using DatabasePOCOs;
+using DbStructure;
 using Quickbird.Util;
 
 namespace Quickbird.ViewModels

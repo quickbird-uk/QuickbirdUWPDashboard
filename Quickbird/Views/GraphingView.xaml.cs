@@ -3,10 +3,10 @@
     using Windows.UI.Xaml.Controls;
     using ViewModels;
     using System.Collections.Generic;
-    using DatabasePOCOs.User;
+    using DbStructure.User;
     using Windows.UI.Xaml.Navigation;
     using Windows.UI.Xaml.Controls.Primitives;
-    using DatabasePOCOs;
+    using DbStructure;
     using Syncfusion.UI.Xaml.Charts;
     using System;
     using System.Collections.Specialized;

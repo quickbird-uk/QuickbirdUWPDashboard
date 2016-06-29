@@ -6,9 +6,9 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
-    using DatabasePOCOs;
-    using DatabasePOCOs.Global;
-    using DatabasePOCOs.User;
+    using DbStructure;
+    using DbStructure.Global;
+    using DbStructure.User;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;

@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs.User
+﻿namespace DbStructure.User
 {
     using System;
     using System.ComponentModel.DataAnnotations;

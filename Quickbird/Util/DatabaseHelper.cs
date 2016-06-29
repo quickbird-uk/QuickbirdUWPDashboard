@@ -6,9 +6,9 @@
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-    using DatabasePOCOs;
-    using DatabasePOCOs.Global;
-    using DatabasePOCOs.User;
+    using DbStructure;
+    using DbStructure.Global;
+    using DbStructure.User;
     using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;

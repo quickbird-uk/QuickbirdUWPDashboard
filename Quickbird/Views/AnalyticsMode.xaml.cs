@@ -13,9 +13,9 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Collections.ObjectModel;
-using DatabasePOCOs;
-using DatabasePOCOs.User;
-using DatabasePOCOs.Global; 
+using DbStructure;
+using DbStructure.User;
+using DbStructure.Global; 
 
 namespace Quickbird.Views
 {

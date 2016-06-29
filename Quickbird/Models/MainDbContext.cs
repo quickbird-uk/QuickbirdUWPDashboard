@@ -1,8 +1,8 @@
 ﻿namespace Quickbird.Models
 {
-    using DatabasePOCOs;
-    using DatabasePOCOs.Global;
-    using DatabasePOCOs.User;
+    using DbStructure;
+    using DbStructure.Global;
+    using DbStructure.User;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
 

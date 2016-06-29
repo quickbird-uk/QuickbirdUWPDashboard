@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs.Global
+﻿namespace DbStructure.Global
 {
     public class Parameter : IHasId
     {
