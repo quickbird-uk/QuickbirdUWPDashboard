@@ -103,9 +103,9 @@
                                     FontSize="28"
                                     Foreground="Gold"
                                     Text="⚠"
-                                    Visibility="{Binding IsAlerted,
-                                                         Mode=OneWay,
-                                                         FallbackValue=Visible}" />
+                                    Visibility="{Binding Path=IsAlerted,
+                                                         Converter={StaticResource TrueVisible},
+                                                         Mode=OneWay}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>

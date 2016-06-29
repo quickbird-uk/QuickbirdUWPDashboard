@@ -179,7 +179,8 @@
             // Add new items, update existing.
             foreach (var cropCycle in cropCycles)
             { 
-                if(validIds.Contains())
+                if(!validIds.Contains(cropCycle.ID)) continue;
+
                 var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
                 if (null == item)
                 {
