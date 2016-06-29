@@ -15,7 +15,7 @@ namespace Quickbird.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431");
 
-            modelBuilder.Entity("DatabasePOCOs.CropType", b =>
+            modelBuilder.Entity("DbStructure.CropType", b =>
                 {
                     b.Property<string>("Name")
                         .HasAnnotation("MaxLength", 245);
@@ -31,7 +31,7 @@ namespace Quickbird.Migrations
                     b.ToTable("CropTypes");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Device", b =>
+            modelBuilder.Entity("DbStructure.Device", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -58,7 +58,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Devices");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.Parameter", b =>
+            modelBuilder.Entity("DbStructure.Global.Parameter", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
@@ -72,7 +72,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Parameters");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.Placement", b =>
+            modelBuilder.Entity("DbStructure.Global.Placement", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
@@ -84,7 +84,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Placements");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
+            modelBuilder.Entity("DbStructure.Global.RelayType", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
@@ -102,7 +102,7 @@ namespace Quickbird.Migrations
                     b.ToTable("RelayTypes");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
+            modelBuilder.Entity("DbStructure.Global.SensorType", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
@@ -124,7 +124,7 @@ namespace Quickbird.Migrations
                     b.ToTable("SensorTypes");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.Subsystem", b =>
+            modelBuilder.Entity("DbStructure.Global.Subsystem", b =>
                 {
                     b.Property<long>("ID")
                         .ValueGeneratedOnAdd();
@@ -136,7 +136,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Subsystems");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Relay", b =>
+            modelBuilder.Entity("DbStructure.Relay", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -173,7 +173,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Relays");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Sensor", b =>
+            modelBuilder.Entity("DbStructure.Sensor", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -215,7 +215,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Sensors");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
+            modelBuilder.Entity("DbStructure.User.CropCycle", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -254,7 +254,7 @@ namespace Quickbird.Migrations
                     b.ToTable("CropCycles");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
+            modelBuilder.Entity("DbStructure.User.Location", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -279,7 +279,7 @@ namespace Quickbird.Migrations
                     b.ToTable("Locations");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Person", b =>
+            modelBuilder.Entity("DbStructure.User.Person", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd();
@@ -299,7 +299,7 @@ namespace Quickbird.Migrations
                     b.ToTable("People");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
+            modelBuilder.Entity("DbStructure.User.RelayHistory", b =>
                 {
                     b.Property<Guid>("RelayID");
 
@@ -318,7 +318,7 @@ namespace Quickbird.Migrations
                     b.ToTable("RelayHistory");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
+            modelBuilder.Entity("DbStructure.User.SensorHistory", b =>
                 {
                     b.Property<Guid>("SensorID");
 
@@ -327,6 +327,8 @@ namespace Quickbird.Migrations
                     b.Property<Guid?>("LocationID");
 
                     b.Property<byte[]>("RawData");
+
+                    b.Property<DateTimeOffset>("UpdatedAt");
 
                     b.HasKey("SensorID", "TimeStamp");
 
@@ -337,111 +339,111 @@ namespace Quickbird.Migrations
                     b.ToTable("SensorsHistory");
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Device", b =>
+            modelBuilder.Entity("DbStructure.Device", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Location", "Location")
+                    b.HasOne("DbStructure.User.Location", "Location")
                         .WithMany("Devices")
                         .HasForeignKey("LocationID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.RelayType", b =>
+            modelBuilder.Entity("DbStructure.Global.RelayType", b =>
                 {
-                    b.HasOne("DatabasePOCOs.Global.Subsystem", "Subsystem")
+                    b.HasOne("DbStructure.Global.Subsystem", "Subsystem")
                         .WithMany("ControlTypes")
                         .HasForeignKey("SubsystemID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Global.SensorType", b =>
+            modelBuilder.Entity("DbStructure.Global.SensorType", b =>
                 {
-                    b.HasOne("DatabasePOCOs.Global.Parameter", "Param")
+                    b.HasOne("DbStructure.Global.Parameter", "Param")
                         .WithMany()
                         .HasForeignKey("ParamID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DatabasePOCOs.Global.Placement", "Place")
+                    b.HasOne("DbStructure.Global.Placement", "Place")
                         .WithMany()
                         .HasForeignKey("PlaceID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DatabasePOCOs.Global.Subsystem", "Subsystem")
+                    b.HasOne("DbStructure.Global.Subsystem", "Subsystem")
                         .WithMany("SensorTypes")
                         .HasForeignKey("SubsystemID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Relay", b =>
+            modelBuilder.Entity("DbStructure.Relay", b =>
                 {
-                    b.HasOne("DatabasePOCOs.Device", "Device")
+                    b.HasOne("DbStructure.Device", "Device")
                         .WithMany("Relays")
                         .HasForeignKey("DeviceID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DatabasePOCOs.Global.RelayType", "RelayType")
+                    b.HasOne("DbStructure.Global.RelayType", "RelayType")
                         .WithMany()
                         .HasForeignKey("RelayTypeID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.Sensor", b =>
+            modelBuilder.Entity("DbStructure.Sensor", b =>
                 {
-                    b.HasOne("DatabasePOCOs.Device", "Device")
+                    b.HasOne("DbStructure.Device", "Device")
                         .WithMany("Sensors")
                         .HasForeignKey("DeviceID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DatabasePOCOs.Global.Placement")
+                    b.HasOne("DbStructure.Global.Placement")
                         .WithMany("Sensors")
                         .HasForeignKey("PlacementID");
 
-                    b.HasOne("DatabasePOCOs.Global.SensorType", "SensorType")
+                    b.HasOne("DbStructure.Global.SensorType", "SensorType")
                         .WithMany()
                         .HasForeignKey("SensorTypeID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.CropCycle", b =>
+            modelBuilder.Entity("DbStructure.User.CropCycle", b =>
                 {
-                    b.HasOne("DatabasePOCOs.CropType", "CropType")
+                    b.HasOne("DbStructure.CropType", "CropType")
                         .WithMany("CropCycles")
                         .HasForeignKey("CropTypeName")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DatabasePOCOs.User.Location", "Location")
+                    b.HasOne("DbStructure.User.Location", "Location")
                         .WithMany("CropCycles")
                         .HasForeignKey("LocationID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.Location", b =>
+            modelBuilder.Entity("DbStructure.User.Location", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Person", "Person")
+                    b.HasOne("DbStructure.User.Person", "Person")
                         .WithMany("Locations")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.RelayHistory", b =>
+            modelBuilder.Entity("DbStructure.User.RelayHistory", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Location", "Location")
+                    b.HasOne("DbStructure.User.Location", "Location")
                         .WithMany("RelayHistory")
                         .HasForeignKey("LocationID");
 
-                    b.HasOne("DatabasePOCOs.Relay", "Relay")
+                    b.HasOne("DbStructure.Relay", "Relay")
                         .WithMany("RelayHistory")
                         .HasForeignKey("RelayID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("DatabasePOCOs.User.SensorHistory", b =>
+            modelBuilder.Entity("DbStructure.User.SensorHistory", b =>
                 {
-                    b.HasOne("DatabasePOCOs.User.Location", "Location")
+                    b.HasOne("DbStructure.User.Location", "Location")
                         .WithMany("SensorHistory")
                         .HasForeignKey("LocationID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("DatabasePOCOs.Sensor", "Sensor")
+                    b.HasOne("DbStructure.Sensor", "Sensor")
                         .WithMany("SensorHistory")
                         .HasForeignKey("SensorID")
                         .OnDelete(DeleteBehavior.Cascade);
