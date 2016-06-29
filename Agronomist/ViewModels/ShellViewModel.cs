@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml.Controls;
     using Util;
@@ -14,19 +15,19 @@
     {
         private readonly Frame _contentFrame;
 
+        private readonly bool _killTimer = false;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<string> _localNetworkConflictAction;
+
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
         /// </summary>
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _updateAction;
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<string> _localNetworkConflictAction;
 
         private bool _isNavOpen = true;
 
         private object _selectedShellListViewModel;
-
-        private readonly bool _killTimer = false;
 
         /// <summary>
         ///     Initialise the shell.
@@ -48,8 +49,33 @@
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
         }
 
+        public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
+            new ObservableCollection<ShellListViewModel>();
+
+        public bool IsNavOpen
+        {
+            get { return _isNavOpen; }
+            set
+            {
+                if (value == _isNavOpen) return;
+                _isNavOpen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public object SelectedShellListViewModel
+        {
+            get { return _selectedShellListViewModel; }
+            set
+            {
+                if (value == _selectedShellListViewModel) return;
+                _selectedShellListViewModel = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
-        /// An infinite loop that uses a delay instead of a time so that it is not reentrant.
+        ///     An infinite loop that uses a delay instead of a time so that it is not reentrant.
         /// </summary>
         private async void RunUpdateTimer()
         {
@@ -81,13 +107,13 @@
         }
 
         /// <summary>
-        /// Enable or disable the Sync button in every cropview, this task waits until the bound variable is sucessfully set.
+        ///     Enable or disable the Sync button in every cropview, this task waits until the bound variable is sucessfully set.
         /// </summary>
         /// <param name="enabled"></param>
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)
         {
-            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher;
+            var dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
             var completer = new TaskCompletionSource<bool>();
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -101,31 +127,6 @@
             });
 
             await completer.Task;
-        }
-
-        public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
-            new ObservableCollection<ShellListViewModel>();
-
-        public bool IsNavOpen
-        {
-            get { return _isNavOpen; }
-            set
-            {
-                if (value == _isNavOpen) return;
-                _isNavOpen = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public object SelectedShellListViewModel
-        {
-            get { return _selectedShellListViewModel; }
-            set
-            {
-                if (value == _selectedShellListViewModel) return;
-                _selectedShellListViewModel = value;
-                OnPropertyChanged();
-            }
         }
 
         public void ListItemClickedOrChanged()
@@ -164,7 +165,11 @@
             var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsync();
 
             // Remove items that no longer exist.
-            var validIds = cropCycles.Select(cc => cc.ID).ToList();
+            var now = DateTimeOffset.Now;
+            var validIds =
+                cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) < now)
+                    .Select(cc => cc.ID)
+                    .ToList();
             var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
             foreach (var invalidItem in toRemove)
             {
@@ -173,7 +178,8 @@
 
             // Add new items, update existing.
             foreach (var cropCycle in cropCycles)
-            {
+            { 
+                if(validIds.Contains())
                 var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
                 if (null == item)
                 {
@@ -215,9 +221,10 @@
         {
             _contentFrame.Navigate(typeof(ArchiveView));
         }
+
         public void NavToSettingsView()
         {
-            if(_contentFrame.CurrentSourcePageType != typeof(SettingsView))
+            if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
                 _contentFrame.Navigate(typeof(SettingsView));
         }
     }

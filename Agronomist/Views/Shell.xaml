@@ -3,10 +3,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:Agronomist.Views"
     mc:Ignorable="d">
 
     <!--  Page Resources  -->
-    <Page.Resources />
+    <Page.Resources>
+        <views:TrueVisible x:Key="TrueVisible" />
+    </Page.Resources>
 
     <SplitView x:Name="Navigation"
         IsPaneOpen="{x:Bind ViewModel.IsNavOpen, Mode=OneWay}"
@@ -69,7 +72,8 @@
                                 <Ellipse Grid.Column="0"
                                     Margin="24,12,24,12"
                                     Fill="Gold"
-                                    Visibility="{Binding IsAlerted,
+                                    Visibility="{Binding Path=IsAlerted,
+                                                         Converter={StaticResource TrueVisible},
                                                          Mode=OneWay}" />
                                 <TextBlock Grid.Column="0"
                                     Margin="0,2,2,0"
@@ -113,7 +117,7 @@
                     <!--  Add Crop Button  -->
                     <Button x:Name="AddCropButton"
                         Background="DodgerBlue"
-                        BorderThickness="0,1,0,3"
+                        BorderThickness="0,1,0,1"
                         Click="{x:Bind ViewModel.NavToAddNewView}"
                         Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="72">

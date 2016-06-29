@@ -14,7 +14,7 @@
         private CropViewModel _cropViewModel;
         private string _iconLetter;
 
-        private string _isAlerted;
+        private bool _isAlerted;
 
         public ShellListViewModel(CropCycle cropCycle)
         {
@@ -60,7 +60,7 @@
             }
         }
 
-        public string IsAlerted
+        public bool IsAlerted
         {
             get { return _isAlerted; }
             set
@@ -98,14 +98,7 @@
             IconLetter = CropName.Substring(0, 1);
             CropViewModel.Update(cropCycle);
 
-            if (cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed))
-            {
-                IsAlerted = Visible;
-            }
-            else
-            {
-                IsAlerted = Collapsed;
-            }
+            IsAlerted = cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed);
 
             _cropViewModel.Update(cropCycle);
         }
