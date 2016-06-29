@@ -1,7 +1,10 @@
 ﻿{
   "dependencies": {
+    "JetBrains.Annotations": "10.1.4",
+    "Microsoft.EntityFrameworkCore": "1.0.0-rc2-final",
+    "Microsoft.EntityFrameworkCore.Sqlite": "1.0.0-rc2-final",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
-    "Newtonsoft.Json": "9.0.1"
+    "MoreLinq.Portable": "2.0.0-beta03"
   },
   "frameworks": {
     "uap10.0": {}
