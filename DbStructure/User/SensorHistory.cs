@@ -44,7 +44,6 @@
                 Array.Copy(timestampBytes, 0, dataRaw, i * dataSize + 16, 8);
             }
             RawData = dataRaw;
-            UpdatedAt = DateTimeOffset.Now; 
         }
 
         public void DeserialiseData()

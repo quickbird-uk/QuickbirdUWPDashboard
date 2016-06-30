@@ -24,6 +24,8 @@ namespace GhAPIAzure.Controllers
     [Authorize]
     public class SensorsHistoryController : BaseController
     {
+
+
         private DataContext db = new DataContext();
 
         // GET: api/SensorsHistory
@@ -35,32 +37,42 @@ namespace GhAPIAzure.Controllers
         /// The server will then 'slice' the datapoints for that day, and only provide you with ones that were produced later than the from date
         /// Timestamp on the day should be midnight of the day when recording FINISHES. It's the end of that day.
         /// All the records attached to that day sould be timestamped before the day!</remarks>
-        /// <param name="dateTimeTicks">Date from which we start grabbing data, as ticks in UTC</param>
+        /// <param name="linuxTime">Date from which we start grabbing data, as lunux ticks in UTC</param>
         /// <param name="number">How many days to take from that date</param>
-        [Route("api/SensorsHistory/{dateTimeTicks}/{number}")]
+        [Route("api/SensorsHistory/{linuxTime}/{number}")]
         [SwaggerResponse(HttpStatusCode.OK, Type = typeof(List<SensorHistory>))]
         [SwaggerResponse(HttpStatusCode.Unauthorized)]
-        public async Task<HttpResponseMessage> GetSensorsHistory(long dateTimeTicks, int number)
+        public async Task<HttpResponseMessage> GetSensorsHistory(long linuxTime, int number)
         {
-            DateTimeOffset from = new DateTimeOffset(dateTimeTicks, TimeSpan.Zero); 
-            List<SensorHistory> sensorsHistory =  await 
-                db.SensorHistories.Where(Ch => Ch.Location.PersonId == _UserID 
-                && Ch.TimeStamp > from)
-                .OrderBy(Ch => Ch.TimeStamp)
+            DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            DateTimeOffset afterDate = new DateTimeOffset(epoch + TimeSpan.FromSeconds(linuxTime), TimeSpan.Zero);
+
+           // System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            //timer.Start(); 
+
+            List<SensorHistory> sHistories =  await 
+                db.SensorHistories.Where(sHist => sHist.Location.PersonId == _UserID 
+                && sHist.TimeStamp > afterDate)
+                .OrderBy(sHist => sHist.TimeStamp)
                 .Take(number).ToListAsync();
 
+            //timer.Stop(); 
+
             //WE should deserialise ALL of them! 
-            foreach(var ch in sensorsHistory)
+            foreach(var ch in sHistories)
             {
                 ch.DeserialiseData(); 
             }
 
-            if(sensorsHistory.Count > 0)
+
+            //Slice all the time histories that were collected on the same date
+            for (int i = 0; i < sHistories.Count; i++)
             {
-                sensorsHistory[0].DeserialiseData();
-                sensorsHistory[0] = sensorsHistory[0].Slice(from);
+                if ((sHistories[i].TimeStamp.UtcDateTime - afterDate.UtcDateTime) < TimeSpan.FromDays(1))
+                    sHistories[i] = sHistories[i].Slice(afterDate); 
+                 
             }
-            return Request.CreateResponse(HttpStatusCode.OK, sensorsHistory); 
+            return Request.CreateResponse(HttpStatusCode.OK, sHistories); 
         }
 
         // POST: api/SensorsHistory

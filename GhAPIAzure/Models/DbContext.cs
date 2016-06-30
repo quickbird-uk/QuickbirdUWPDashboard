@@ -86,9 +86,15 @@ namespace GhAPIAzure.Models
                 .WithRequired(cc => cc.CropType).HasForeignKey(cc => cc.CropTypeName);
 
             modelBuilder.Entity<RelayHistory>().Ignore(rh => rh.Data);
-            base.OnModelCreating(modelBuilder);
+
 
             modelBuilder.Entity<SensorHistory>().Ignore(sh => sh.Data);
+            modelBuilder.Entity<SensorHistory>().Property(sh => sh.UpdatedAt)
+                .HasColumnAnnotation(
+                IndexAnnotation.AnnotationName,
+                new IndexAnnotation(new IndexAttribute()));
+
+
             base.OnModelCreating(modelBuilder);
         }
 
