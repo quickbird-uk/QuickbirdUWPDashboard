@@ -32,9 +32,9 @@ namespace GhAPIAzure.Controllers
         /// <summary>
         /// Gets historical record of sensor's measurements
         /// </summary>
-        /// <remarks>Gets historical record of sensor's measurements
+        /// <remarks>Gets historical record of sensor's measurements. 
         /// In the "from" parameter you should spesify the date when you have last synced with the server. 
-        /// The server will then 'slice' the datapoints for that day, and only provide you with ones that were produced later than the from date
+        /// The server enforces UpdatedAt as teh time of upload, so you will never miss data. 
         /// Timestamp on the day should be midnight of the day when recording FINISHES. It's the end of that day.
         /// All the records attached to that day sould be timestamped before the day!</remarks>
         /// <param name="linuxTime">Date from which we start grabbing data, as lunux ticks in UTC</param>
@@ -52,8 +52,8 @@ namespace GhAPIAzure.Controllers
 
             List<SensorHistory> sHistories =  await 
                 db.SensorHistories.Where(sHist => sHist.Location.PersonId == _UserID 
-                && sHist.TimeStamp > afterDate)
-                .OrderBy(sHist => sHist.TimeStamp)
+                && sHist.UpdatedAt > afterDate)
+                .OrderBy(sHist => sHist.UpdatedAt)
                 .Take(number).ToListAsync();
 
             //timer.Stop(); 
@@ -64,14 +64,6 @@ namespace GhAPIAzure.Controllers
                 ch.DeserialiseData(); 
             }
 
-
-            //Slice all the time histories that were collected on the same date
-            for (int i = 0; i < sHistories.Count; i++)
-            {
-                if ((sHistories[i].TimeStamp.UtcDateTime - afterDate.UtcDateTime) < TimeSpan.FromDays(1))
-                    sHistories[i] = sHistories[i].Slice(afterDate); 
-                 
-            }
             return Request.CreateResponse(HttpStatusCode.OK, sHistories); 
         }
 
@@ -132,6 +124,7 @@ namespace GhAPIAzure.Controllers
                     }
 
                     sensHistRecieved.SerialiseData();
+                    sensHistRecieved.UpdatedAt = DateTimeOffset.Now; 
                     db.Entry(sensHistRecieved).State = EntityState.Added;
                 }
                 else
@@ -141,18 +134,39 @@ namespace GhAPIAzure.Controllers
                         return Request.CreateResponse(HttpStatusCode.Forbidden,
                        new ErrorResponse<SensorHistory>("You are not allowed to change location of SensorHistory", sensHistRecieved));
                     }
-                    
-                    SensHistoryDB.DeserialiseData();
-                    SensorHistory chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
 
-                    SensHistoryDB.Data = chMerged.Data; 
-                    SensHistoryDB.SerialiseData(); 
+
+
+                    //Check if changed were made by comparing raw bytes data
+                    sensHistRecieved.SerialiseData();
+
+
+                    if (Compare(sensHistRecieved.RawData, SensHistoryDB.RawData) == false)
+                    {
+                        SensHistoryDB.DeserialiseData();
+                        SensorHistory chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
+                        SensHistoryDB.Data = chMerged.Data;
+                        SensHistoryDB.SerialiseData();
+                        SensHistoryDB.UpdatedAt = DateTimeOffset.Now; 
+                    }
                 }
             }
 
             await db.SaveChangesAsync();
 
             return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+        private bool Compare(byte[] a1, byte[] a2)
+        {
+            if (a1.Length != a2.Length)
+                return false;
+
+            for (int i = 0; i < a1.Length; i++)
+                if (a1[i] != a2[i])
+                    return false;
+
+            return true;
         }
     }
 }
