@@ -181,6 +181,7 @@
     <Compile Include="Controllers\Auth\RelaysController.cs" />
     <Compile Include="Controllers\Auth\DevicesController.cs" />
     <Compile Include="Controllers\Auth\RelayHistoryController.cs" />
+    <Compile Include="Controllers\Auth\WebsocketController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\Auth\CropTypesController.cs" />
     <Compile Include="Controllers\Auth\CropCyclesController.cs" />
