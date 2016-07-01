@@ -14,16 +14,20 @@ using Newtonsoft.Json;
 
 namespace Quickbird.Internet
 {
-    public class WebsocketConnection : INotifyPropertyChanged
+
+    /// <summary>
+    /// This class is static, the instance of this class needs to be accessed somewhere, somehow, for websocket communication to activate! 
+    /// </summary>
+    public class WebSocketConnection : INotifyPropertyChanged
     {
-        public static WebsocketConnection Instance { get; } = new WebsocketConnection();
+        public static WebSocketConnection Instance { get; } = new WebSocketConnection();
         private static MessageWebSocket _webSocket = new MessageWebSocket(); //it is laso the subject of lock
         private static DataWriter _messageWriter;
 
         public event PropertyChangedEventHandler PropertyChanged;
         const string SocketCloseMessage = "AppIsSuspending"; 
 
-        public static Timer _ReconnectTimer;
+        private static Timer _ReconnectTimer;
         int _reconnectionAttempt; //Used for exponenetial backoff timer 
 
         private static long _AppRunning = 1; //1 stands for running, 0 for suspended;  
@@ -50,7 +54,7 @@ namespace Quickbird.Internet
         }
 
 
-        public WebsocketConnection()
+        public WebSocketConnection()
         {
 
             Debug.WriteLine("Websocket Starting");

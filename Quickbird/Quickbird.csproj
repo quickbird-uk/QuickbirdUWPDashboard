@@ -103,7 +103,7 @@
     <Compile Include="Internet\Creds.cs" />
     <Compile Include="Internet\Request.cs" />
     <Compile Include="Internet\UrlCombiner.cs" />
-    <Compile Include="Internet\WebsocketConnection.cs" />
+    <Compile Include="Internet\WebSocketConnection.cs" />
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />

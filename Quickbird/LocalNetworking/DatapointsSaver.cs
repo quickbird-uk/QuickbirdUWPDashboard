@@ -58,7 +58,7 @@
                 Messenger.Instance.Suspending.Subscribe(_suspendAction);
                 Messenger.Instance.Resuming.Subscribe(_resumeAction);
 
-                var it = Internet.WebsocketConnection.Instance; 
+                var it = Internet.WebSocketConnection.Instance; 
             }
             else
             {
@@ -182,8 +182,11 @@
                         }
                     }
 
+
+
                     //this is meant to be fire-forget, that's cool 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    Internet.WebSocketConnection.Instance.SendAsync(sensorReadings);
                     Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
