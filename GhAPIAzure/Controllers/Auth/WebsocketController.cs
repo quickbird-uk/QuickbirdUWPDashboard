@@ -28,13 +28,15 @@ namespace GhAPIAzure.Controllers.Auth
         /// </summary>
         /// <remarks>This endpoint is used for braodcasts between apps of the same user. For example if user Bob is logged in with 3 apps,
         /// app №1 can broadcast readings and the other apps will receive them.</remarks>
+        [Authorize]
         [SwaggerResponse(HttpStatusCode.SwitchingProtocols)]
         [SwaggerResponse(HttpStatusCode.Forbidden, "Happens when you make a request that is not a web-socket request", Type = typeof(ErrorResponse<string>))]
-        public HttpResponseMessage Get(string username)
+        public HttpResponseMessage Get()
         {
             if (HttpContext.Current.IsWebSocketRequest)
             {
-                HttpContext.Current.AcceptWebSocketRequest(WebSocketLoop);
+                
+                HttpContext.Current.AcceptWebSocketRequest((AspNetWebSocketContext ctx) =>WebSocketLoop(ctx, _UserID));
                 return Request.CreateResponse(HttpStatusCode.SwitchingProtocols);
             }
             else
@@ -42,13 +44,13 @@ namespace GhAPIAzure.Controllers.Auth
         }
 
 
-        private static async Task WebSocketLoop(AspNetWebSocketContext ctx)
+        private static async Task WebSocketLoop(AspNetWebSocketContext ctx, Guid userID)
         {
             WebSocket socket = ctx.WebSocket;
             //Send the 'Hello' Message
-
+            
             await socket.SendAsync(new ArraySegment<byte>(
-                Encoding.UTF8.GetBytes("Connected to the Echo server!")),
+                Encoding.UTF8.GetBytes($"user {userID} is Connected to the Echo server!")),
                 WebSocketMessageType.Text, true, CancellationToken.None);
 
             //Set up a simple send / receive loop

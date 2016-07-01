@@ -90,11 +90,17 @@ namespace Quickbird.Internet
             _webSocket.MessageReceived += MessageRecieved;
             _webSocket.Closed += SocketClosed;
 
+            var tokenHeader = "X-ZUMO-AUTH";
+            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            _webSocket.SetRequestHeader(tokenHeader, creds.Token); 
+
             if (Settings.Instance.CredsSet)
             {
                 try
                 {
-                    Uri uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket?username=bob");
+                    Uri uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket");
+                    
+                    
                     await _webSocket.ConnectAsync(uri);
                     messageWriter = new DataWriter(_webSocket.OutputStream);
                     Connected = true; 
