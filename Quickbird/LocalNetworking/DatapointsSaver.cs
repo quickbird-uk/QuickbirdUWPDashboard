@@ -21,7 +21,7 @@
 
         //Flow management
         //private volatile int _pendingLoads= 1;
-        private readonly Task _localTask;
+        private Task _localTask;
         private readonly Action<string> _onHardwareChanged;
 
         private List<KeyValuePair<Relay, List<RelayDatapoint>>> _relayBuffer =
@@ -43,21 +43,22 @@
             if (_Instance == null)
             {
                 _Instance = this;
-                var factory = new TaskFactory(TaskCreationOptions.LongRunning,
-                    TaskContinuationOptions.LongRunning);
-                _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(_saveIntervalSeconds)};
+
+                _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
                 _saveTimer.Tick += SaveBufferedReadings;
                 _saveTimer.Start();
 
                 _onHardwareChanged = HardwareChanged;
                 Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged);
 
-                _localTask = factory.StartNew(() => { LoadData(); }, TaskCreationOptions.LongRunning);
+                _localTask = Task.Run(() => { LoadData(); });
 
                 _resumeAction = Resume;
                 _suspendAction = Suspend;
                 Messenger.Instance.Suspending.Subscribe(_suspendAction);
                 Messenger.Instance.Resuming.Subscribe(_resumeAction);
+
+                var it = Internet.WebsocketConnection.Instance; 
             }
             else
             {
@@ -151,7 +152,7 @@
         public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
             //Purposefull fire and forget
-            _localTask.ContinueWith(previous =>
+            _localTask = _localTask.ContinueWith(previous =>
             {
                 var device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
 
@@ -180,6 +181,7 @@
                             //TODO add a new sensor to the device! 
                         }
                     }
+
                     //this is meant to be fire-forget, that's cool 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
@@ -274,7 +276,7 @@
         private void SaveBufferedReadings(object sender, object e)
         {
             Toast.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
-            _localTask.ContinueWith(previous =>
+            _localTask = _localTask.ContinueWith(previous =>
             {
                 var settings = Settings.Instance;
 
@@ -374,7 +376,7 @@
 
         private void HardwareChanged(string value)
         {
-            _localTask.ContinueWith(previous => { LoadData(); });
+            _localTask = _localTask.ContinueWith(previous => { LoadData(); });
         }
 
 
