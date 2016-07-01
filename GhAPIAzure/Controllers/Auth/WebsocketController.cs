@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 using System.Web.Http;
-using System.Collections.Concurrent;
 using System.Web.WebSockets;
 using System.Threading.Tasks;
 using System.Net.WebSockets;
@@ -13,14 +12,14 @@ using System.Text;
 using System.Threading;
 using DbStructure;
 using Swashbuckle.Swagger.Annotations;
+using GhAPIAzure.WebSockets;
 
 namespace GhAPIAzure.Controllers.Auth
 {
     public class WebsocketController : BaseController
     {
 
-        //public static ConcurrentDictionary<Guid, ConcurrentBag<int>> UserCollection = new ConcurrentDictionary<Guid, ConcurrentBag<int>>();
-
+        
 
         // GET: api/SensorsHistory
         /// <summary>
@@ -36,7 +35,7 @@ namespace GhAPIAzure.Controllers.Auth
             if (HttpContext.Current.IsWebSocketRequest)
             {
                 
-                HttpContext.Current.AcceptWebSocketRequest((AspNetWebSocketContext ctx) =>WebSocketLoop(ctx, _UserID));
+                HttpContext.Current.AcceptWebSocketRequest((AspNetWebSocketContext ctx) => SocketManager.AddConnection(ctx, _UserID));
                 return Request.CreateResponse(HttpStatusCode.SwitchingProtocols);
             }
             else
@@ -44,59 +43,6 @@ namespace GhAPIAzure.Controllers.Auth
         }
 
 
-        private static async Task WebSocketLoop(AspNetWebSocketContext ctx, Guid userID)
-        {
-            WebSocket socket = ctx.WebSocket;
-            //Send the 'Hello' Message
-            
-            await socket.SendAsync(new ArraySegment<byte>(
-                Encoding.UTF8.GetBytes($"user {userID} is Connected to the Echo server!")),
-                WebSocketMessageType.Text, true, CancellationToken.None);
-
-            //Set up a simple send / receive loop
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
-            while (true)
-            {
-                var retVal = await socket.ReceiveAsync(buffer, CancellationToken.None);
-
-                if (retVal.CloseStatus != null)
-                {
-                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye", CancellationToken.None);
-
-                }
-                else //echo them message
-                {
-                    await socket.SendAsync(
-                        new ArraySegment<byte>(buffer.Array, 0, retVal.Count),
-                        retVal.MessageType,
-                        retVal.EndOfMessage,
-                        CancellationToken.None);
-                }
-            }
-
-        }
-
-
-
-        //private  ChatWebSocketHandler 
-        //{
-        //    private string _username;
-
-        //    public ChatWebSocketHandler(AspNetWebSocketContext ctx)
-        //    {
-        //        _username = username;
-        //    }
-
-        //    public override void OnOpen()
-        //    {
-        //        _chatClients.Add(this);
-        //    }
-
-        //    public override void OnMessage(string message)
-        //    {
-        //        _chatClients.Broadcast(_username + ": " + message);
-        //    }
-        //}
 
 
     }

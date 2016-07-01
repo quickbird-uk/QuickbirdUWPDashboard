@@ -58,7 +58,7 @@
                 Messenger.Instance.Suspending.Subscribe(_suspendAction);
                 Messenger.Instance.Resuming.Subscribe(_resumeAction);
 
-                var it = Internet.WebSocketConnection.Instance; 
+
             }
             else
             {

@@ -14,6 +14,7 @@
     using Models;
     using Util;
     using Views;
+    using Internet;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
@@ -26,6 +27,8 @@
         private Manager _networking;
         private bool _notPrelaunchSuspend;
         private Frame _rootFrame;
+
+        WebSocketConnection it = Internet.WebSocketConnection.Instance;
 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code

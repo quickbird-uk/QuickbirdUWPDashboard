@@ -78,11 +78,11 @@ namespace Quickbird.Internet
             string jsonData = JsonConvert.SerializeObject(toSend);
 
             if (Interlocked.Read(ref _connected) == 1)
-            {
-                _messageWriter.WriteString(jsonData);
+            {              
                 try
                 {
                     // Send the data as one complete message.
+                    _messageWriter.WriteString(jsonData);
                     await _messageWriter.StoreAsync();
                     return true; 
                 }
@@ -108,6 +108,13 @@ namespace Quickbird.Internet
                     {
                         reader.UnicodeEncoding = UnicodeEncoding.Utf8;
                         string read = reader.ReadString(reader.UnconsumedBufferLength);
+                        List<Messenger.SensorReading> sensorReadings = JsonConvert.DeserializeObject<List<Messenger.SensorReading>>(read); 
+                        if(sensorReadings != null)
+                        {
+                            #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues
+                            Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true);
+                            #pragma warning restore CS4014
+                        }
                         Debug.WriteLine(read);
                     }
                 }
