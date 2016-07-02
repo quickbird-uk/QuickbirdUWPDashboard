@@ -31,7 +31,7 @@ namespace Quickbird.Internet
         int _reconnectionAttempt; //Used for exponenetial backoff timer 
 
         private static long _AppRunning = 1; //1 stands for running, 0 for suspended;  
-
+ 
 
 
 
@@ -63,6 +63,14 @@ namespace Quickbird.Internet
             _suspendAction = Suspend;
             Messenger.Instance.Suspending.Subscribe(_suspendAction);
             Messenger.Instance.Resuming.Subscribe(_resumeAction);
+
+            JsonConvert.DefaultSettings = () =>
+            {
+                var settings = new JsonSerializerSettings();
+                settings.Converters.Add(new StructJsonConverter());
+                return settings;
+            };
+
 
             _ReconnectTimer = new Timer(Connect, null, 1000, Timeout.Infinite);
         }
