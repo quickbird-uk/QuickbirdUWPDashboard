@@ -40,16 +40,14 @@ namespace GhAPIAzure.WebSockets
         /// <returns></returns>
         public async Task Broadcast(ArraySegment<byte> data, Guid exceptFor)
         {
-            Task[] tasks;
+            List<Task> tasks = new List<Task>(); 
+
             lock (appConnections)
             {
-                tasks = new Task[appConnections.Count];
                 for (int i = 0; i < appConnections.Count; i++)
                 {
                     if (appConnections[i].AppConID != exceptFor)
-                        tasks[i] = (appConnections[i].SendData(data)); //FireAnd forget at the moment. This is how it should be! 
-                    else
-                        tasks[i] = Task.CompletedTask; 
+                        tasks.Add((appConnections[i].SendData(data)));
                 }
             }
             await Task.WhenAll(tasks);

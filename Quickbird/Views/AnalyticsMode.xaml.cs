@@ -39,7 +39,7 @@ namespace Quickbird.Views
             //this.InitializeComponent();
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             //base.OnNavigatedTo(e);
             //Frame.Margin = new Thickness(0, 0, 0, 0);

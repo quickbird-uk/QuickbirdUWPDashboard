@@ -123,7 +123,7 @@ namespace Quickbird.Internet
                             Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true);
                             #pragma warning restore CS4014
                         }
-                        Debug.WriteLine(read);
+                        //Debug.WriteLine(read);
                     }
                 }
                 catch (Exception ex)

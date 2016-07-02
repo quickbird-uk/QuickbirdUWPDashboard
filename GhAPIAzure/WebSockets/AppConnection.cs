@@ -10,7 +10,7 @@ using System.Web.WebSockets;
 
 namespace GhAPIAzure.WebSockets
 {
-    public class AppConnection
+    public class AppConnection : IDisposable
     {
         public readonly Guid UserId;
         public readonly Guid AppConID = Guid.NewGuid();
@@ -19,17 +19,19 @@ namespace GhAPIAzure.WebSockets
         public readonly Task GetDataTask;
 
         private WebSocket socket;
+        private CancellationTokenSource _cancellation = new CancellationTokenSource();
 
-        private ConcurrentQueue<ArraySegment<byte>> SendQueue = new ConcurrentQueue<ArraySegment<byte>>(); 
 
         public AppConnection(AspNetWebSocketContext ctx, Guid userId, BroadcastContext broadcastContext)
         {
             UserId = userId;
             socket = ctx.WebSocket;
-            GetDataTask = RecieveLoop();
             _broadcastContext = broadcastContext;
+            _cancellation.Token.Register(SendCloseAndDispose);
+            GetDataTask = RecieveLoop();
         }
 
+        //TODO: detect multiple threads trying to send
         /// <summary>
         /// This point is entered by foreign threads
         /// </summary>
@@ -37,7 +39,21 @@ namespace GhAPIAzure.WebSockets
         /// <returns></returns>
         public async Task SendData(ArraySegment<byte> data)
         {
-            await socket?.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None);
+            try
+            {
+                var Timeout = new CancellationTokenSource(700);
+                await socket?.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None);
+                if (Timeout.IsCancellationRequested)
+                {
+                    _cancellation.Cancel();
+                }
+                else
+                    Timeout.Dispose();
+                }
+            catch
+            { //if there is an error, setup the socket for disposal 
+                _cancellation.Cancel();
+            }
         }
 
         private async Task RecieveLoop()
@@ -47,27 +63,79 @@ namespace GhAPIAzure.WebSockets
 
             while (true)
             {
-                WebSocketReceiveResult retVal = await socket.ReceiveAsync(buffer, CancellationToken.None);
-
-                if (retVal.CloseStatus != null)
+                WebSocketReceiveResult retVal = null; 
+                try
                 {
-                    //new CancellationTokenSource(100).Token; 
-                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye", CancellationToken.None);
-                    socket.Dispose();
-                    socket = null; 
-                    _broadcastContext.RemoveAppConnection(this);
-                    return; 
+                    retVal = await socket.ReceiveAsync(buffer, _cancellation.Token);
+                }
+                catch
+                {
+                    _cancellation.Cancel();
+                }
+
+                if (retVal?.CloseStatus != null)
+                {
+                    _cancellation.Cancel(); 
                 }
                 else  // Broadcast to all peers! 
-                {
-                    //await socket.SendAsync(new ArraySegment<byte>(buffer.Array, 0, retVal.Count),
-                    //    retVal.MessageType, retVal.EndOfMessage, CancellationToken.None);  
-                                  
+                {                                                   
                     await _broadcastContext.Broadcast(new ArraySegment<byte>(buffer.Array, 0, retVal.Count), AppConID); 
                 }
             }
 
         }
+
+
+        public async void SendCloseAndDispose()
+        {
+            var timeout = new CancellationTokenSource(500);
+            try
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye", timeout.Token);
+            }
+            catch { }
+            timeout.Dispose();
+            Dispose(); 
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects).
+                    _broadcastContext?.RemoveAppConnection(this);
+                }
+
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                socket?.Dispose();
+                socket = null;
+                disposedValue = true;
+            }
+        }
+
+
+        ~AppConnection()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void  Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            //uncomment the following line if the finalizer is overridden above.
+            GC.SuppressFinalize(this);
+        }
+        #endregion
+
+
 
     }
 }

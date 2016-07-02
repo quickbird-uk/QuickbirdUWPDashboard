@@ -151,7 +151,7 @@ namespace Quickbird.LocalNetworking
                         Debug.WriteLine(e.RemoteEndPoint.ToString());
                     }
                 }
-                catch(Exception exception)
+                catch
                 {
                     Debug.WriteLine("Got a weired broadcast from " + recievedFrom.Address); 
                 }

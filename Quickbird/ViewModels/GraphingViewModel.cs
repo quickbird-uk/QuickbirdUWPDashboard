@@ -36,7 +36,7 @@ namespace Quickbird.ViewModels
         /* This data applies to the chosen crop cycle only*/
         private CropCycle _selectedCropCycle;
         private IEnumerable<IGrouping<string, SensorTuple>> _sensors;
-        private DateTimeOffset _selectedStartTime;
+
         private DateTimeOffset? _selectedEndTime;
         private bool _currentlyRunning = true;
         private TimeSpan _graphPeriod;
@@ -271,7 +271,6 @@ namespace Quickbird.ViewModels
                     && sh.TimeStamp > _selectedCropCycle.StartDate &&
                     sh.TimeStamp < endDate).ToListAsync();
 
-            TimeSpan dataPeriod; 
 
             foreach (SensorTuple tuple in SensorsToGraph)
             {
@@ -373,7 +372,7 @@ namespace Quickbird.ViewModels
                 _refresher?.Stop();
                 _db?.Dispose();
             }
-            catch(Exception e)
+            catch
             {
 
             }
