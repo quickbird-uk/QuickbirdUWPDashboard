@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Quickbird.Internet
 {
-    public class StructJsonConverter : JsonConverter
+    public class SensorReadingsJsConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

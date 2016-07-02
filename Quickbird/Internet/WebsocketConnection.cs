@@ -64,12 +64,12 @@ namespace Quickbird.Internet
             Messenger.Instance.Suspending.Subscribe(_suspendAction);
             Messenger.Instance.Resuming.Subscribe(_resumeAction);
 
-            JsonConvert.DefaultSettings = () =>
-            {
-                var settings = new JsonSerializerSettings();
-                settings.Converters.Add(new StructJsonConverter());
-                return settings;
-            };
+            //JsonConvert.DefaultSettings = () =>
+            //{
+            //    var settings = new JsonSerializerSettings();
+            //    settings.Converters.Add(new SensorReadingsJsConverter());
+            //    return settings;
+            //};
 
 
             _ReconnectTimer = new Timer(Connect, null, 1000, Timeout.Infinite);
