@@ -16,11 +16,11 @@ using Quickbird.Util;
 namespace Quickbird.ViewModels
 {
     using Models;
+    using System.Threading.Tasks;
     using Util;
 
-    public class GraphingViewModel : ViewModelBase
+    public class GraphingViewModel : ViewModelBase, IDisposable 
     {
-        private string _title = "Graphs";
         private MainDbContext _db = null;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
@@ -61,17 +61,16 @@ namespace Quickbird.ViewModels
             //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame. 
             //Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
 
-            //Settings settings = new Settings();
-            //settings.UnsetCreds(); 
 
             //LoadData
-            LoadCache(); 
+            LoadCache();  
         }
 
         public void LoadCache(string obj)
         {
             LoadCache(); 
         }
+
 
         public void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
         {
@@ -113,19 +112,29 @@ namespace Quickbird.ViewModels
         /// Refreshed Cache
         /// </summary>
         private async void LoadCache()
-        {
-            var dbLocations = await _db.Locations
-                .Include(loc => loc.CropCycles)
-                .Include(loc => loc.Devices)
-                .AsNoTracking().ToListAsync();
+        { 
+            var dbFetchTask = Task.Run(() =>
+            {
+                var dbLocationsRet = _db.Locations
+                    .Include(loc => loc.CropCycles)
+                    .Include(loc => loc.Devices)
+                    .AsNoTracking().ToList();
 
-            var sensorList = await _db.Sensors
-                .Include(sen => sen.SensorType)
-                .Include(sen => sen.SensorType.Place)
-                .Include(sen => sen.SensorType.Param)
-                .Include(sen => sen.SensorType.Subsystem)
-                .AsNoTracking().ToListAsync(); //Need to edit 
-            
+                var sensorListRet = _db.Sensors
+                    .Include(sen => sen.SensorType)
+                    .Include(sen => sen.SensorType.Place)
+                    .Include(sen => sen.SensorType.Param)
+                    .Include(sen => sen.SensorType.Subsystem)
+                    .AsNoTracking().ToList(); //Need to edit 
+
+                return new Tuple<List<Location>, List<Sensor>>(dbLocationsRet, sensorListRet); 
+            });
+
+            var result = await dbFetchTask;
+            List<Location> dbLocations = result.Item1;
+            List<Sensor> sensorList = result.Item2; 
+
+
             List<CroprunTuple> cache = 
                 new List<CroprunTuple>();
 
@@ -151,17 +160,6 @@ namespace Quickbird.ViewModels
             }
             Cache = cache; 
             
-        }
-
-        public string Title
-        {
-            get { return _title; }
-            set
-            {
-                if(value == _title) return;
-                _title = value;
-                OnPropertyChanged();
-            }
         }
 
         public List<KeyValuePair<CropCycle, string>> CropRunList
@@ -272,7 +270,7 @@ namespace Quickbird.ViewModels
                     sh.TimeStamp < endDate).ToListAsync();
 
 
-            foreach (SensorTuple tuple in SensorsToGraph)
+            Parallel.ForEach(SensorsToGraph, (tuple) =>
             {
                 var shCollection = sensorsHistories.Where(sh => sh.SensorID == tuple.sensor.ID);
                 List<BindableDatapoint> datapointCollection = new List<BindableDatapoint>(); 
@@ -292,7 +290,14 @@ namespace Quickbird.ViewModels
 
                
                 tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(ordered); 
-            } 
+            } );
+        }
+
+        public void Dispose()
+        {
+            
+            _refresher?.Stop();
+            _db?.Dispose();
         }
 
         public bool LiveCropRun
@@ -364,20 +369,6 @@ namespace Quickbird.ViewModels
         }
 
 
-
-        //Destructor
-        ~GraphingViewModel(){
-            try
-            {
-                _refresher?.Stop();
-                _db?.Dispose();
-            }
-            catch
-            {
-
-            }
-            
-        }
 
         public class SensorTuple : ViewModelBase
         {
