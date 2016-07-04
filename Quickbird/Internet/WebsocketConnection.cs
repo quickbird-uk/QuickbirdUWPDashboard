@@ -36,8 +36,6 @@ namespace Quickbird.Internet
         public event PropertyChangedEventHandler PropertyChanged;
         const string SocketCloseMessage = "AppIsSuspending";
 
-        private static ConcurrentQueue<Func<bool>> QueuedActions; 
-
         public enum ConnectionState
         {
             /// <summary>
