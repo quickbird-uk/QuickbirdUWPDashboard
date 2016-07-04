@@ -45,14 +45,20 @@ namespace Quickbird.ViewModels
         private bool _realtimeMode; 
 
         //Probaablyt don't need this
-        private DispatcherTimer _refresher = null; 
+        private DispatcherTimer _refresher = null;
 
         //Other stuff
         //Hour Long Buffer
         //Histrotical Buffer 
 
-        public GraphingViewModel(){
+        private Action _pauseChart;
+        private Action _resumeChart; 
+
+        public GraphingViewModel(Action PauseChart, Action ResumeChart)
+        {
             _db = new MainDbContext();
+            _pauseChart = PauseChart;
+            _resumeChart = ResumeChart;  
 
             _recieveDatapointAction = ReceiveDatapoint;
             _loadCacheAction = LoadCache;
@@ -60,7 +66,6 @@ namespace Quickbird.ViewModels
 
             //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame. 
             //Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
-
 
             //LoadData
             LoadCache();  
@@ -76,6 +81,8 @@ namespace Quickbird.ViewModels
         {
             if (SensorsToGraph != null)
             {
+                _pauseChart.Invoke(); 
+
                 bool Added = false; 
                 foreach (Messenger.SensorReading reading in readings)
                 {
@@ -90,8 +97,8 @@ namespace Quickbird.ViewModels
                             tuple.hourlyDatapoints.Add(datapoint);
 
                             //Remove datapoints if we are storing more than an hour of them
-                            if (tuple.historicalDatapoints.Count > 3000)
-                                tuple.historicalDatapoints.RemoveAt(0);
+                            if (tuple.hourlyDatapoints.Count > 3000)
+                                tuple.hourlyDatapoints.RemoveAt(0);
                         }
 
                     }
@@ -105,6 +112,8 @@ namespace Quickbird.ViewModels
                         tupleForChartUpdate.Axis.Maximum = tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
                     }
                 }
+
+                _resumeChart.Invoke();
             }
         }
 
@@ -295,7 +304,7 @@ namespace Quickbird.ViewModels
 
         public void Dispose()
         {
-            
+            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_recieveDatapointAction); 
             _refresher?.Stop();
             _db?.Dispose();
         }

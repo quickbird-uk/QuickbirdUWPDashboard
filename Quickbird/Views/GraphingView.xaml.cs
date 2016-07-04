@@ -16,30 +16,39 @@
     using Windows.UI.Xaml.Media;
     using Windows.UI;
 
-    /// <summary>
-    ///     An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
+     /// <summary>
+     /// Never cahce this page, becuase it's view model does not refresh itself when new data comes in.
+     /// The graphing code is a total mess 
+     /// </summary>
     public sealed partial class GraphingView : Page
     {
-        private GraphingViewModel ViewModel = new GraphingViewModel();
+        private GraphingViewModel ViewModel;
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            ChartView.ResumeSeriesNotification();
+            if (ViewModel == null)
+            {
+                ViewModel = new GraphingViewModel(ChartView.SuspendSeriesNotification, ChartView.ResumeSeriesNotification);
+            }
         }
 
         public GraphingView()
         {
             InitializeComponent();
-            this.NavigationCacheMode = NavigationCacheMode.Required; 
+            if (ViewModel == null)
+            {
+                ViewModel = new GraphingViewModel(ChartView.SuspendSeriesNotification, ChartView.ResumeSeriesNotification);
+            }
             ViewModel.SensorsToGraph.CollectionChanged += EditChart;           
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            ChartView.SuspendSeriesNotification();
+            ViewModel.Dispose();
+            ViewModel = null;             
         }
+
 
 
 
@@ -50,14 +59,12 @@
             // THis is broken
             // You should two way bind box.selecteditem to ViewModel.SelectedCropCycle.
             ComboBox box = (ComboBox) sender;
-            if (box != null)
-            {
-                KeyValuePair<CropCycle, string> selection = (KeyValuePair<CropCycle, string>)box.SelectedItem;
-                ViewModel.SelectedCropCycle = selection.Key;
-                StartDatePicker.Date = ViewModel.CycleStartTime;
-                EndDatePicker.Date = ViewModel.CycleEndTime;
-                ChartView.ResumeSeriesNotification();
-            }
+            KeyValuePair<CropCycle, string> selection = (KeyValuePair<CropCycle, string>)box.SelectedItem;
+            ViewModel.SelectedCropCycle = selection.Key;
+            StartDatePicker.Date = ViewModel.CycleStartTime;
+            EndDatePicker.Date = ViewModel.CycleEndTime;
+                
+            ChartView.ResumeSeriesNotification();
         }
 
 
@@ -76,8 +83,7 @@
         }
 
         private void EditChart(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            ChartView.SuspendSeriesNotification();
+        {            
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 foreach (var item in e.NewItems)
@@ -103,7 +109,6 @@
                     AddToChart(sensorTuple);
                 }
             }
-            ChartView.ResumeSeriesNotification();
         }
 
         private void AddToChart(GraphingViewModel.SensorTuple tuple)
@@ -112,8 +117,9 @@
             if (tuple.sensor.SensorTypeID == 19)
             {
                 var series = new AreaSeries();
-                series.Interior = new SolidColorBrush { Color = Colors.PaleGreen, Opacity = 0.5 }; 
+                series.Interior = new SolidColorBrush { Color = Colors.LightBlue, Opacity = 0.5 }; 
                 series.YBindingPath = "value";
+                series.CompositeMode = ElementCompositeMode.MinBlend;
                 chartSeries = series;
             }
             else
@@ -147,7 +153,6 @@
 
         private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            ChartView.SuspendSeriesNotification();
             if (args.NewDate.HasValue)
             {
                 if (args.NewDate.Value.LocalDateTime.Date == ViewModel.CycleEndTime.Date)
@@ -160,12 +165,10 @@
                 }
                 ViewModel.ChosenGraphPeriod = (DateTime)DateAxis.Maximum - (DateTime)DateAxis.Minimum;
             }
-            ChartView.ResumeSeriesNotification();
         }
 
         private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            ChartView.SuspendSeriesNotification();
             if (args.NewDate.HasValue)
             {
                 if (args.NewDate.Value.LocalDateTime.Date > ViewModel.CycleStartTime.LocalDateTime)
@@ -178,7 +181,6 @@
                 }
                 ViewModel.ChosenGraphPeriod = (DateTime)DateAxis.Maximum - (DateTime)DateAxis.Minimum; 
             }
-            ChartView.ResumeSeriesNotification();
         }
     }
 }
