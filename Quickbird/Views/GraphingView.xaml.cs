@@ -114,23 +114,27 @@
         private void AddToChart(GraphingViewModel.SensorTuple tuple)
         {
             ChartSeries chartSeries;
+            //Water level sensor
             if (tuple.sensor.SensorTypeID == 19)
             {
                 var series = new AreaSeries();
                 series.Interior = new SolidColorBrush { Color = Colors.LightBlue, Opacity = 0.5 }; 
                 series.YBindingPath = "value";
+                //By using the darkest of all values, we let other charts draw over the level area chart 
                 series.CompositeMode = ElementCompositeMode.MinBlend;
                 chartSeries = series;
             }
             else
             {
+                //We could use bitmapLine series on really slow machines. 
+                //It would be perfect for phones because they have very high DPI and the aliasing is less of an issue
                 var series = new FastLineSeries();
                 series.YBindingPath = "value";
                 chartSeries = series; 
             }
             chartSeries.ItemsSource = tuple.historicalDatapoints;
             chartSeries.EnableAnimation = true;
-            chartSeries.AnimationDuration = TimeSpan.FromMilliseconds(150); 
+            chartSeries.AnimationDuration = TimeSpan.FromMilliseconds(200); 
             chartSeries.XBindingPath = "timestamp";
 
             tuple.ChartSeries = chartSeries;
