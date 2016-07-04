@@ -28,8 +28,6 @@
         private bool _notPrelaunchSuspend;
         private Frame _rootFrame;
 
-        WebSocketConnection it = Internet.WebSocketConnection.Instance;
-
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
         ///     executed, and as such is the logical equivalent of main() or WinMain().

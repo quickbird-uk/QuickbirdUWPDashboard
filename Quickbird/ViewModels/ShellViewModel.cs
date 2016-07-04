@@ -20,6 +20,8 @@
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
 
+        
+
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
         /// </summary>
@@ -37,6 +39,8 @@
         /// <param name="contentFrame">The frame that should be used for navigations.</param>
         public ShellViewModel(Frame contentFrame)
         {
+            Internet.WebSocketConnection.Instance.TryStart(); 
+
             _contentFrame = contentFrame;
             IsInternetAvailable = Internet.Request.IsInternetAvailable();
 

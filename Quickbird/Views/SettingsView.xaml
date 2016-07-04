@@ -43,7 +43,8 @@
             Grid.Column="1"
             Padding="5">
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Network" />
-            <StackPanel Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}">
+            <StackPanel Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}" 
+                        Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
                 <TextBlock Text="No conflicts detected."
                     TextWrapping="WrapWholeWords"
@@ -53,12 +54,17 @@
                     TextWrapping="WrapWholeWords"
                     Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource TrueVisible}, Mode=OneWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
                 <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
                 <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
+            </StackPanel>
+            <StackPanel Padding="0, 15, 0, 0">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Sign Out" />
+                <TextBlock Text="Sings you out on all your computers" TextWrapping="WrapWholeWords" />
+                <Button x:Name="SignOutButton" Width="60" Height="20" Padding="15" Content="Sign Out" Click="Button_Click"/>
             </StackPanel>
         </StackPanel>
     </Grid>
