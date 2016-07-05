@@ -147,7 +147,13 @@
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)
         {
-            var dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+            var dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
+            if (dispatcher == null)
+            {
+                Log.ShouldNeverHappen($"{this.GetType().Name} - CoreApplication.GetCurrentView()?.Dispatcher failed.");
+                throw new Exception("No currentview available for dispatcher.");
+            }
+
             var completer = new TaskCompletionSource<bool>();
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>

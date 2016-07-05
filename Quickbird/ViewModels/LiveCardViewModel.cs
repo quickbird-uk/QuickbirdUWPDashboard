@@ -2,14 +2,13 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using DbStructure;
-    using Util;
     using MoreLinq;
+    using Util;
 
     public class LiveCardViewModel : ViewModelBase
     {
@@ -58,7 +57,13 @@
             PlacementId = poco.SensorType.PlaceID;
             ParameterID = poco.SensorType.ParamID;
             SensorTypeID = poco.SensorTypeID;
-            _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+            _dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
+            if (_dispatcher == null)
+            {
+                Log.ShouldNeverHappen($"{GetType().Name} - CoreApplication.GetCurrentView()?.Dispatcher failed.");
+                throw new Exception("No currentview available for dispatcher.");
+            }
+
             _dataUpdater = async readings =>
             {
                 var ofThisSensor = readings.Where(r => r.SensorId == poco.ID).ToList();
@@ -254,7 +259,7 @@
         }
 
         /// <summary>
-        /// Update the age status message according to how old it is.
+        ///     Update the age status message according to how old it is.
         /// </summary>
         private void UpdateAgeStatusMessage()
         {
@@ -291,7 +296,7 @@
         }
 
         /// <summary>
-        /// Only updates the UI if the value is newer.
+        ///     Only updates the UI if the value is newer.
         /// </summary>
         /// <param name="value">The value to display.</param>
         /// <param name="time">The datestamp of the reading.</param>
@@ -307,7 +312,7 @@
         }
 
         /// <summary>
-        /// Updates the basic data on the live card.
+        ///     Updates the basic data on the live card.
         /// </summary>
         /// <param name="poco"></param>
         public void Update(Sensor poco)

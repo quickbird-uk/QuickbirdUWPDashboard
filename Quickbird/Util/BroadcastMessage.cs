@@ -71,7 +71,9 @@
             _subscribers.RemoveAll(deadActions.Contains);
 
             CoreDispatcher dispatcher = null;
-            if (useCoreDispatcher) dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+            if (useCoreDispatcher) dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
+            if(dispatcher == null)
+                Log.ShouldNeverHappen($"Broadcast invoke cant get dispatcher for {typeof(T)}");
 
             // Special mode when the param is a TaskCompletionSource<object> and you want it to be set when all the actions complete.
             if (insertCompletionSource)
@@ -91,7 +93,8 @@
 
                     if (useCoreDispatcher)
                     {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => completingAction(completer));
+                        if (dispatcher != null)
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => completingAction(completer));
                     }
                     else
                     {
