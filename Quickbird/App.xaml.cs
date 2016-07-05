@@ -59,11 +59,11 @@
             if (_rootFrame == null)
             {
                 // Creates a frame and shoves it in the provided default window.
-                _rootFrame = Window.Current.Content as Frame;
                 _rootFrame = new Frame();
                 _rootFrame.NavigationFailed += OnNavigationFailed;
                 Window.Current.Content = _rootFrame;
                 Window.Current.VisibilityChanged += OnVisibilityChanged;
+                Messenger.Instance.Dispatcher = Window.Current.Dispatcher;
             }
 
             // If the user launches the app when it is already open, just bring it to foreground.

@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using DbStructure;
@@ -57,12 +56,10 @@
             PlacementId = poco.SensorType.PlaceID;
             ParameterID = poco.SensorType.ParamID;
             SensorTypeID = poco.SensorTypeID;
-            _dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
+
+            _dispatcher = Messenger.Instance.Dispatcher;
             if (_dispatcher == null)
-            {
-                Log.ShouldNeverHappen($"{GetType().Name} - CoreApplication.GetCurrentView()?.Dispatcher failed.");
-                throw new Exception("No currentview available for dispatcher.");
-            }
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
 
             _dataUpdater = async readings =>
             {

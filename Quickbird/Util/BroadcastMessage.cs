@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
 
     /// <summary>
@@ -71,9 +70,9 @@
             _subscribers.RemoveAll(deadActions.Contains);
 
             CoreDispatcher dispatcher = null;
-            if (useCoreDispatcher) dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
-            if(dispatcher == null)
-                Log.ShouldNeverHappen($"Broadcast invoke cant get dispatcher for {typeof(T)}");
+            if (useCoreDispatcher) dispatcher = Messenger.Instance.Dispatcher;
+            if (dispatcher == null)
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}");
 
             // Special mode when the param is a TaskCompletionSource<object> and you want it to be set when all the actions complete.
             if (insertCompletionSource)
@@ -112,7 +111,8 @@
                 {
                     if (useCoreDispatcher)
                     {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
+                        if (dispatcher != null)
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
                     }
                     else
                     {

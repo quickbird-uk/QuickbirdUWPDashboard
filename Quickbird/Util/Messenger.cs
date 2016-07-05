@@ -3,12 +3,15 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
 
     /// <summary>
     ///     A middleman class for passing information between parts of the program.
     /// </summary>
     public class Messenger
     {
+        public CoreDispatcher Dispatcher { get; set; }
+
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
 
         public BroadcastMessage<IEnumerable<SensorReading>> NewSensorDataPoint { get; } =

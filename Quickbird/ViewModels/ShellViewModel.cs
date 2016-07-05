@@ -147,12 +147,9 @@
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)
         {
-            var dispatcher = CoreApplication.GetCurrentView()?.Dispatcher;
+            var dispatcher = Messenger.Instance.Dispatcher;
             if (dispatcher == null)
-            {
-                Log.ShouldNeverHappen($"{this.GetType().Name} - CoreApplication.GetCurrentView()?.Dispatcher failed.");
-                throw new Exception("No currentview available for dispatcher.");
-            }
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
 
             var completer = new TaskCompletionSource<bool>();
 
@@ -182,11 +179,32 @@
             }
         }
 
+        private string _error = "";
+
+        public string Error
+        {
+            get { return _error; }
+            set
+            {
+                if (value == _error) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
+
         private async void FirstUpdate()
         {
             Debug.WriteLine("Running First Update");
 
-            await Update();
+            try
+            {
+                await Update();
+            }
+            catch (Exception e)
+            {
+                Error = e.ToString();
+                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
+            }
 
             if (ShellListViewModels.Count > 0)
             {

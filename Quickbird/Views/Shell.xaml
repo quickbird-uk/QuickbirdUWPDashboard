@@ -113,7 +113,7 @@
 
                 <!--  Pane Footer  -->
                 <StackPanel Grid.Row="2">
-
+                    <TextBlock Text="{x:Bind ViewModel.Error, Mode=OneWay, FallbackValue=x}" TextWrapping="Wrap" />
                     <!--  Add Crop Button  -->
                     <Button x:Name="AddCropButton"
                         Background="DodgerBlue"
