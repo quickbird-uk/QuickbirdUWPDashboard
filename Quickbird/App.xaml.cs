@@ -7,6 +7,7 @@
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
     using Windows.ApplicationModel.ExtendedExecution;
+    using Windows.Storage;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
@@ -109,7 +110,17 @@
                 // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
                 _notPrelaunchSuspend = true;
 
-                RootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
+                Type pageType;
+                if (Settings.Instance.CredsSet)
+                {
+                    pageType = typeof(Shell);
+
+                }
+                else
+                {
+                    pageType = typeof(LandingPage);
+                }
+                RootFrame.Navigate(pageType);
 
                 Window.Current.Activate();
 
@@ -301,6 +312,17 @@
 
             // Wait for any requests already started
             await AwaitAllSessionTasks().ConfigureAwait(false);
+        }
+
+        public async Task SignOut()
+        {
+            await EndSession();
+
+            Settings.Instance.UnsetCreds();
+
+            // Delete the database.
+            var localFolder = ApplicationData.Current.LocalFolder;
+            await (await localFolder.GetItemAsync(MainDbContext.FileName)).DeleteAsync();
         }
 
         public void AddSessionTask(Task newTask)

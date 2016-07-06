@@ -18,8 +18,6 @@
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            var frame = e.Parameter as Frame;
-            ViewModel.SetMainAppFrame(frame);
         }
     }
 }

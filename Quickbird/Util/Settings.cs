@@ -3,6 +3,7 @@
     using System;
     using System.ComponentModel;
     using System.Runtime.CompilerServices;
+    using Windows.Foundation.Collections;
     using Windows.Storage;
     using JetBrains.Annotations;
 
@@ -12,6 +13,10 @@
     /// </summary>
     internal class Settings : INotifyPropertyChanged
     {
+        public delegate void ChangeHandler();
+
+        public event ChangeHandler CredsChanged; 
+
         /// <summary>
         ///     Enum for choosing where a property that you want to delete exists.
         /// </summary>
@@ -31,6 +36,16 @@
         {
             _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
+
+            _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
+        }
+
+        private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
+        {
+            if (sender.ContainsKey(nameof(CredToken)))
+            {
+                CredsChanged?.Invoke();
+            }
         }
 
         /// <summary>

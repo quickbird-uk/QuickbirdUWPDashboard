@@ -1,7 +1,10 @@
 ﻿namespace Quickbird.Views
 {
+    using System;
+    using System.Threading.Tasks;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Navigation;
+    using Util;
     using ViewModels;
 
     /// <summary>
@@ -23,7 +26,14 @@
             Frame.BackStack.Clear();
             ViewModel = new ShellViewModel(ContentFrame, Frame);
             Bindings.Update();
-            ((App)Application.Current).StartSession();
+            var t = Task.Run(() => ((App) Application.Current).StartSession());
+            ((App)Application.Current).AddSessionTask(t);
+            Settings.Instance.CredsChanged += OnCredsChanged;
+        }
+
+        private void OnCredsChanged()
+        {
+            ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView), true);
         }
 
         protected override async void OnNavigatedFrom(NavigationEventArgs e)

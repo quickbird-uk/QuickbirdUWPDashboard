@@ -63,9 +63,7 @@
             <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Sign Out" />
                 <TextBlock TextWrapping="WrapWholeWords">If you have signed into Windows using a Microsoft account this will sign out any other computer signd in on the same Microsoft account.</TextBlock>
-                <Button
-                    Click="{x:Bind ViewModel.SignOut}"
-                    Content="Sign Out"/>
+                <Button Click="{x:Bind ViewModel.SignOut}" Content="Sign Out" />
             </StackPanel>
         </StackPanel>
     </Grid>
