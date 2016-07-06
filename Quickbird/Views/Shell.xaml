@@ -131,10 +131,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Add Crop" />
                         </Grid>
                     </Button>
@@ -155,10 +152,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Archive" />
                         </Grid>
                     </Button>
@@ -179,10 +173,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Graphs" />
                         </Grid>
                     </Button>
@@ -203,10 +194,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="&#xE713;" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Settings" />
                         </Grid>
                     </Button>

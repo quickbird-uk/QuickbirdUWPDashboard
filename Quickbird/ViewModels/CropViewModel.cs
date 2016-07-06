@@ -10,7 +10,7 @@
 
     public class CropViewModel : ViewModelBase
     {
-        private const string ShowNotificationsString = "Show Notifications";
+        private const string ShowNotificationsString = "Journal";
         private readonly DashboardViewModel _dashboardViewModel;
 
         private readonly Guid _id;
@@ -20,16 +20,18 @@
         private Frame _cropContentFrame;
         private string _cropName;
 
+        private bool _isInternetAvailable;
+
         private bool _isNotificationsOpen;
         private string _notificationsButtonText = ShowNotificationsString;
         private string _notificationsCount = "0";
         private string _plantingDate;
 
         private bool _syncButtonEnabled = true;
+        private bool _syncing;
         private string _varietyName;
         private string _yield;
-        private bool _isInternetAvailable;
-        private bool _syncing;
+
 
         public CropViewModel(CropCycle cropCycle)
         {
@@ -150,6 +152,17 @@
             }
         }
 
+        public bool IsInternetAvailable
+        {
+            get { return _isInternetAvailable; }
+            set
+            {
+                if (value == _isInternetAvailable) return;
+                _isInternetAvailable = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void SetContentFrame(Frame contentFrame)
         {
             _cropContentFrame = contentFrame;
@@ -191,7 +204,7 @@
         private void OpenNotifications()
         {
             IsNotificationsOpen = true;
-            NotificationsButtonText = "Hide Notifications";
+            NotificationsButtonText = "Hide Journal";
         }
 
         private void CloseNotifications()
@@ -212,10 +225,10 @@
             if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
 
             var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
-            if(postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
+            if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
 
             _syncing = false;
-            if(_isInternetAvailable)
+            if (_isInternetAvailable)
                 SyncButtonEnabled = true;
         }
 
@@ -227,15 +240,12 @@
                 SyncButtonEnabled = true;
             }
 
-            _isInternetAvailable = isInternetAvailable;
+            IsInternetAvailable = isInternetAvailable;
 
             if (!isInternetAvailable)
             {
                 SyncButtonEnabled = false;
             }
-
-
-
         }
     }
 }

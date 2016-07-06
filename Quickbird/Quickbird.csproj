@@ -150,6 +150,7 @@
     <Compile Include="Views\ArchiveView.xaml.cs">
       <DependentUpon>ArchiveView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Converters\BoolString.cs" />
     <Compile Include="Views\CropView.xaml.cs">
       <DependentUpon>CropView.xaml</DependentUpon>
     </Compile>
