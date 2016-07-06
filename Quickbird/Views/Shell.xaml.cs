@@ -11,16 +11,17 @@
         public Shell()
         {
             InitializeComponent();
-            ViewModel = new ShellViewModel(ContentFrame);
             Bindings.Update();
         }
 
-        public ShellViewModel ViewModel { get; }
+        public ShellViewModel ViewModel { get; private set; }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             // Shell frame shouldn't have any backstack history.
             Frame.BackStack.Clear();
+            ViewModel = new ShellViewModel(ContentFrame, Frame);
+            Bindings.Update();
         }
     }
 }

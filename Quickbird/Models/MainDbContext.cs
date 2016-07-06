@@ -8,6 +8,8 @@
 
     public class MainDbContext : DbContext
     {
+        public const string FileName = "maindb.db";
+
         public DbSet<CropCycle> CropCycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
         public DbSet<Device> Devices { get; set; }
@@ -29,7 +31,7 @@
         /// <param name="optionsBuilder"></param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Filename=maindb.db");
+            optionsBuilder.UseSqlite($"Filename={FileName}");
         }
 
         /// <summary>

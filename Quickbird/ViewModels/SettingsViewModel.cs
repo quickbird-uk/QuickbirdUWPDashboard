@@ -1,19 +1,24 @@
 ﻿namespace Quickbird.ViewModels
 {
     using System;
-    using System.Diagnostics;
     using System.Threading.Tasks;
+    using Windows.Storage;
     using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Internet;
     using LocalNetworking;
+    using Models;
     using Util;
+    using Views;
 
     public class SettingsViewModel : ViewModelBase
     {
+        private static DateTimeOffset _lastConflictDetected = DateTimeOffset.MinValue;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
 
         private bool _isNetworkConflict;
-        private static DateTimeOffset _lastConflictDetected = DateTimeOffset.MinValue;
+        private Frame _mainAppFrame;
 
         public SettingsViewModel()
         {
@@ -62,10 +67,52 @@
             }
         }
 
+        /// <summary>
+        ///     Signs out the twitter account by deleteing the creds, deleteing the database, stopping the live data and navigating
+        ///     back to the landing page.
+        /// </summary>
+        public async void SignOut()
+        {
+            try
+            {
+                await WebSocketConnection.Instance.Stop();
+            }
+            catch (Exception e)
+            {
+                Log.ShouldNeverHappen($"WebSocketConnection.Instance.Stop() in SettingsViewModel.SignOut() failed: {e}");
+            }
+
+            Settings.Instance.UnsetCreds();
+            DeviceManagementEnabled = false;
+
+            // Delete the database.
+            var localFolder = ApplicationData.Current.LocalFolder;
+            await (await localFolder.GetItemAsync(MainDbContext.FileName)).DeleteAsync();
+
+            if (_mainAppFrame == null)
+            {
+                await Task.Delay(1000);
+                if (_mainAppFrame == null)
+                {
+                    Log.ShouldNeverHappen(
+                        "SettingsViewModel._mainAppFrame is null, this should have been set in the ctor.");
+                    // Crashing the app is one way of going back to the first screen :D
+                    throw new Exception("SettingsViewModel._mainAppFrame was never set to a proper value.");
+                }
+            }
+
+            _mainAppFrame.Navigate(typeof(LandingPage));
+        }
+
         private void LocalNetworkConflictDetected(string ip)
         {
             IsNetworkConflict = true;
             _lastConflictDetected = DateTimeOffset.Now;
+        }
+
+        public void SetMainAppFrame(Frame frame)
+        {
+            _mainAppFrame = frame;
         }
     }
 }

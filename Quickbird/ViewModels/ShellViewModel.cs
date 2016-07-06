@@ -15,6 +15,7 @@
     public class ShellViewModel : ViewModelBase
     {
         private readonly Frame _contentFrame;
+        private readonly Frame _mainAppFrame;
 
         private readonly bool _killTimer = false;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
@@ -36,12 +37,14 @@
         /// <summary>
         ///     Initialise the shell.
         /// </summary>
-        /// <param name="contentFrame">The frame that should be used for navigations.</param>
-        public ShellViewModel(Frame contentFrame)
+        /// <param name="contentFrame">The frame insided the shell used for most navigations.</param>
+        /// <param name="mainAppFrame">The frame containing the shell, only used on sign-out navigation.</param>
+        public ShellViewModel(Frame contentFrame, Frame mainAppFrame)
         {
             Internet.WebSocketConnection.Instance.TryStart(); 
 
             _contentFrame = contentFrame;
+            _mainAppFrame = mainAppFrame;
             IsInternetAvailable = Internet.Request.IsInternetAvailable();
 
             UpdateInternetInViewModels(IsInternetAvailable);
@@ -294,7 +297,7 @@
         public void NavToSettingsView()
         {
             if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
-                _contentFrame.Navigate(typeof(SettingsView));
+                _contentFrame.Navigate(typeof(SettingsView), _mainAppFrame);
         }
     }
 }
