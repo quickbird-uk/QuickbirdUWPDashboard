@@ -1,8 +1,6 @@
 ﻿namespace Quickbird.ViewModels
 {
     using System;
-    using System.Diagnostics;
-    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DbStructure.User;
     using Util;
@@ -32,7 +30,11 @@
         private string _varietyName;
         private string _yield;
 
-
+        /// <summary>
+        ///     All the data in this ViewModel is pumped in from the ShellListViewModel, the only thing that will ever call this
+        ///     contructor. As a result this is a very simple bindable datamodel.
+        /// </summary>
+        /// <param name="cropCycle"></param>
         public CropViewModel(CropCycle cropCycle)
         {
             _id = cropCycle.ID;
@@ -218,14 +220,7 @@
             _syncing = true;
             SyncButtonEnabled = false;
 
-            var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
-            if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
-
-            var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
-            if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
-
-            var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
-            if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
+            await DatabaseHelper.Instance.Sync();
 
             _syncing = false;
             if (_isInternetAvailable)
@@ -246,6 +241,12 @@
             {
                 SyncButtonEnabled = false;
             }
+        }
+
+        public override void Kill()
+        {
+            //All the data in this ViewModel is pumped in from the ShellListViewModel.
+            _dashboardViewModel.Kill();
         }
     }
 }

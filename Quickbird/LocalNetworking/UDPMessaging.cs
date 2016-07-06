@@ -16,6 +16,7 @@ using System.Threading;
 
 namespace Quickbird.LocalNetworking
 {
+    using Windows.UI.Core;
     using Util;
 
     /// <summary>
@@ -48,12 +49,16 @@ namespace Quickbird.LocalNetworking
             }
             else
             {
-                UdpBroadcastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(BroadcastIntervalSeconds) };
-                UdpBroadcastTimer.Tick += UDPBroadcast;
-                UdpBroadcastTimer.Start();
+                Task.Run(() => 
+                ((App)Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    UdpBroadcastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(BroadcastIntervalSeconds) };
+                    UdpBroadcastTimer.Tick += UDPBroadcast;
+                    UdpBroadcastTimer.Start();
+                }));
 
                 _udpSocket.Bind(remoteEndPoint);
-                ///this event is used to give all the parameters to WSystem.net api
+                //this event is used to give all the parameters to WSystem.net api
                 SocketAsyncEventArgs e = new SocketAsyncEventArgs();
                 byte[] buffer = new byte[1024];
                 e.SetBuffer(buffer, 0, buffer.Length);

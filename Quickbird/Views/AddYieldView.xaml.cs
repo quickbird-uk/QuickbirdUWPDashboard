@@ -41,6 +41,11 @@ namespace Quickbird.Views
             }
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            ViewModel.Kill();
+        }
+
         private void TextBox_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
         {
             ViewModel.UserEnteredText = sender.Text;

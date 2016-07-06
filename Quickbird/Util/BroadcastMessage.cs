@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
 
     /// <summary>
     ///     Broacast a message to multiple subscribers.
@@ -70,7 +71,7 @@
             _subscribers.RemoveAll(deadActions.Contains);
 
             CoreDispatcher dispatcher = null;
-            if (useCoreDispatcher) dispatcher = Messenger.Instance.Dispatcher;
+            if (useCoreDispatcher) dispatcher = ((App)Application.Current).Dispatcher;
             if (dispatcher == null)
                 Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}");
 

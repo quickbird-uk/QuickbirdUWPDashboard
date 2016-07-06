@@ -61,8 +61,10 @@
             {
                 if (value == Settings.Instance.LocalDeviceManagementEnabled) return;
                 Settings.Instance.LocalDeviceManagementEnabled = value;
-                // While we cany guarantee the order of the messenger invokes, the actual settings value will be correct so we don't care.
-                Task.Run(() => Messenger.Instance.DeviceManagementEnableChanged.Invoke(null));
+
+                // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
+                Task.Run(() => ((App) Application.Current).StartOrKillNetworkManagerBasedOnSettings());
+
                 OnPropertyChanged();
             }
         }
@@ -113,6 +115,11 @@
         public void SetMainAppFrame(Frame frame)
         {
             _mainAppFrame = frame;
+        }
+
+        public override void Kill()
+        {
+            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
         }
     }
 }

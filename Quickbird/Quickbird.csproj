@@ -133,7 +133,6 @@
     <Compile Include="ViewModels\GraphingViewModel.cs" />
     <Compile Include="ViewModels\LandingPageViewModel.cs" />
     <Compile Include="ViewModels\LiveCardViewModel.cs" />
-    <Compile Include="ViewModels\MainPageViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\ShellListViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
@@ -166,9 +165,6 @@
     </Compile>
     <Compile Include="Views\LiveCard.xaml.cs">
       <DependentUpon>LiveCard.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
@@ -290,10 +286,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\LiveCard.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

@@ -25,7 +25,6 @@
 
         public Guid CropRunId { get; }
 
-
         public string CropName
         {
             get { return _cropName; }
@@ -47,7 +46,6 @@
                 OnPropertyChanged();
             }
         }
-
 
         public string BoxName
         {
@@ -106,6 +104,11 @@
         public void UpdateInternetStatus(bool isInternetAvailable)
         {
             CropViewModel.UpdateInternetStatus(isInternetAvailable);
+        }
+
+        public override void Kill()
+        {
+            _cropViewModel.Kill();
         }
     }
 }

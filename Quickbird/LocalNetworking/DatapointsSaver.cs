@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
     using DbStructure;
     using DbStructure.Global;
@@ -27,7 +28,7 @@
         private List<KeyValuePair<Relay, List<RelayDatapoint>>> _relayBuffer =
             new List<KeyValuePair<Relay, List<RelayDatapoint>>>();
 
-        private readonly DispatcherTimer _saveTimer;
+        private DispatcherTimer _saveTimer;
         private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
         private List<SensorHistory> _sensorDays = new List<SensorHistory>();
         //Local Cache
@@ -43,10 +44,13 @@
             if (_Instance == null)
             {
                 _Instance = this;
-
-                _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
-                _saveTimer.Tick += SaveBufferedReadings;
-                _saveTimer.Start();
+                Task.Run(() =>
+                ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(_saveIntervalSeconds)};
+                    _saveTimer.Tick += SaveBufferedReadings;
+                    _saveTimer.Start();
+                }));
 
                 _onHardwareChanged = HardwareChanged;
                 Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged);

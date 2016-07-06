@@ -4,6 +4,7 @@
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
@@ -17,7 +18,7 @@
         private readonly Frame _contentFrame;
         private readonly Frame _mainAppFrame;
 
-        private readonly bool _killTimer = false;
+        private bool _killTimer = false;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
 
@@ -34,6 +35,21 @@
         private object _selectedShellListViewModel;
         private bool _isInternetAvailable;
 
+        public override void Kill()
+        {
+            _killTimer = true;
+
+            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+            Messenger.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+            _internetCheckTimer.Stop();
+
+            foreach (var shellListViewModel in ShellListViewModels)
+            {
+                shellListViewModel.Kill();
+            }
+        }
+
         /// <summary>
         ///     Initialise the shell.
         /// </summary>
@@ -41,25 +57,24 @@
         /// <param name="mainAppFrame">The frame containing the shell, only used on sign-out navigation.</param>
         public ShellViewModel(Frame contentFrame, Frame mainAppFrame)
         {
-            Internet.WebSocketConnection.Instance.TryStart(); 
-
             _contentFrame = contentFrame;
             _mainAppFrame = mainAppFrame;
             IsInternetAvailable = Internet.Request.IsInternetAvailable();
 
             UpdateInternetInViewModels(IsInternetAvailable);
 
-            var internetCheckTimer = new DispatcherTimer()
+            _internetCheckTimer = new DispatcherTimer()
             {
                 Interval = TimeSpan.FromSeconds(5)
             };
 
-            internetCheckTimer.Tick += (sender, o) =>
+            _internetCheckTimer.Tick += (sender, o) =>
             {
                 IsInternetAvailable = Internet.Request.IsInternetAvailable();
             };
-            DispatcherTimers.Add(internetCheckTimer);
-            internetCheckTimer.Start();
+            DispatcherTimers.Add(_internetCheckTimer);
+
+            _internetCheckTimer.Start();
 
             FirstUpdate();
 
@@ -122,15 +137,7 @@
                 // Disables the sync button in every CropView (there is one for each crop).
                 await SetSyncEnabled(false);
 
-                var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
-                if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
-
-                var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
-                if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
-
-                var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
-                if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
-
+                await DatabaseHelper.Instance.Sync();
 
                 await SetSyncEnabled(true);
 
@@ -139,7 +146,10 @@
                 //Run timer at the end so that the program starts with an update.
                 // Use a delay to space out syncs, stops it from being reentrant.
                 // We don't care about the exact timing.
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                if (_killTimer) return; //Make sure we've not been told to kill between awaits.
+                _updateDelayCancellationToken = new CancellationToken();
+                _updateDelay = Task.Delay(TimeSpan.FromMinutes(1), _updateDelayCancellationToken);
+                await _updateDelay;
             }
         }
 
@@ -150,7 +160,7 @@
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)
         {
-            var dispatcher = Messenger.Instance.Dispatcher;
+            var dispatcher = ((App)Application.Current).Dispatcher;
             if (dispatcher == null)
                 Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
 
@@ -183,6 +193,9 @@
         }
 
         private string _error = "";
+        private DispatcherTimer _internetCheckTimer;
+        private Task _updateDelay;
+        private CancellationToken _updateDelayCancellationToken;
 
         public string Error
         {

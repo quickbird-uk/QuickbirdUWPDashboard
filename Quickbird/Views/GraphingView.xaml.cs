@@ -45,7 +45,7 @@
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            ViewModel.Dispose();
+            ViewModel.Kill();
             ViewModel = null;             
         }
 

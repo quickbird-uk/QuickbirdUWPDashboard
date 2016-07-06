@@ -141,7 +141,7 @@ namespace Quickbird.Internet
             {
                 var completion = new TaskCompletionSource<object>();
                 Suspend(completion);
-                await completion.Task;
+                await completion.Task; //TODO: can we configurawait(false) here?
 
                 while ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
                 (long)ConnectionState.Stopped,

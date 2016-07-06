@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Windows.UI.Xaml;
     using DbStructure;
     using DbStructure.Global;
     using DbStructure.User;
@@ -48,6 +49,7 @@
         {
             var contTask = _lastTask.ContinueWith(_ => workForNextTask());
             _lastTask = contTask;
+            ((App)Application.Current).AddSessionTask(contTask);
             return contTask;
         }
 
@@ -145,6 +147,18 @@
             }
 
             return result;
+        }
+
+        public async Task Sync()
+        {
+            var updateErrors = await GetUpdatesFromServerAsync();
+            if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
+
+            var postErrors = await PostUpdatesAsync();
+            if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
+
+            var postHistErrors = await PostHistoryAsync();
+            if (postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
         }
 
         /// <summary>
@@ -492,13 +506,13 @@
             }
         }
 
-        public async Task<List<string>> PostUpdatesAsync()
+        private async Task<List<string>> PostUpdatesAsync()
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostUpdateToServerAsync));
             return await await cont.ConfigureAwait(false);
         }
 
-        public async Task<string> PostHistoryAsync()
+        private async Task<string> PostHistoryAsync()
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostHistoryChangesAsync));
             return await await cont.ConfigureAwait(false);

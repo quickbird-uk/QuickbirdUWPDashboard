@@ -51,7 +51,7 @@ namespace Quickbird.ViewModels
             }
             CropCycles.OrderBy(cc => cc.StartDate); 
             //Group the Crop Cycles
-            OnPropertyChanged("CropCycles");
+            OnPropertyChanged(nameof(CropCycles));
         }
 
         public ObservableCollection<CropCyclePresenter> CropCycles { get; set; } = new ObservableCollection<CropCyclePresenter>();
@@ -168,5 +168,9 @@ namespace Quickbird.ViewModels
             public string Duration { get; set; }            
         }
 
+        public override void Kill()
+        {
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+        }
     }
 }

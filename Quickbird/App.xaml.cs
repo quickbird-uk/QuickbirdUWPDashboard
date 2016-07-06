@@ -1,33 +1,34 @@
 ﻿namespace Quickbird
 {
     using System;
+    using System.Collections.Concurrent;
+    using System.Linq;
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
     using Windows.ApplicationModel.ExtendedExecution;
-    using Windows.Storage;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
+    using Internet;
     using LocalNetworking;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
     using Views;
-    using Internet;
 
     /// <summary>
     ///     Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    sealed partial class App : Application
+    public sealed partial class App : Application
     {
-        private ExtendedExecutionSession _extendedExecutionSession;
-        private Action<object> _manageLocalNetworkChangeEvent;
+        private readonly ConcurrentQueue<Task> _activeSessionTasks = new ConcurrentQueue<Task>();
 
+        private readonly object _networkingLock = new object();
+        private ExtendedExecutionSession _extendedExecutionSession;
         private Manager _networking;
         private bool _notPrelaunchSuspend;
-        private Frame _rootFrame;
 
         /// <summary>
         ///     Initializes the singleton application object.  This is the first line of authored code
@@ -40,10 +41,18 @@
             Resuming += OnResuming;
         }
 
+        public Frame RootFrame { get; private set; }
+
+        /// <summary>
+        ///     The UI dispatcher for this app. This ensures that the correct dispatcher is acquired in both kiosk and normal apps.
+        /// </summary>
+        public CoreDispatcher Dispatcher { get; private set; }
+
         private async void OnResuming(object sender, object e)
         {
             Toast.Debug("OnResuming", "");
             var completer = new TaskCompletionSource<object>();
+            AddSessionTask(completer.Task);
             await Messenger.Instance.Resuming.Invoke(completer, true, true);
             await completer.Task;
         }
@@ -57,14 +66,14 @@
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             // Only initialise if the program is not already open.
-            if (_rootFrame == null)
+            if (RootFrame == null)
             {
                 // Creates a frame and shoves it in the provided default window.
-                _rootFrame = new Frame();
-                _rootFrame.NavigationFailed += OnNavigationFailed;
-                Window.Current.Content = _rootFrame;
+                RootFrame = new Frame();
+                RootFrame.NavigationFailed += OnNavigationFailed;
+                Window.Current.Content = RootFrame;
                 Window.Current.VisibilityChanged += OnVisibilityChanged;
-                Messenger.Instance.Dispatcher = Window.Current.Dispatcher;
+                Dispatcher = Window.Current.Dispatcher;
             }
 
             // If the user launches the app when it is already open, just bring it to foreground.
@@ -89,22 +98,18 @@
 
             // _rootFrame will only ever be null here once.
             // If there is no content the app was prelaunched and we must navigate and begin the session.
-            if (_rootFrame.Content == null)
+            if (RootFrame.Content == null)
             {
                 using (var db = new MainDbContext())
                 {
                     db.Database.Migrate();
                 }
 
-                _manageLocalNetworkChangeEvent = StartLocalNetworkManagerIfSettingsAllow;
-                Messenger.Instance.DeviceManagementEnableChanged.Subscribe(_manageLocalNetworkChangeEvent);
-                StartLocalNetworkManagerIfSettingsAllow();
-
                 // Page navigation is somthing we do immediately after prelaunch is over.
                 // Any suspend before this point could be assumed to be a part of prelaunch and be ignored.
                 _notPrelaunchSuspend = true;
 
-                _rootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
+                RootFrame.Navigate(Settings.Instance.CredsSet ? typeof(Shell) : typeof(LandingPage));
 
                 Window.Current.Activate();
 
@@ -116,24 +121,40 @@
         /// <summary>
         ///     Starts or kills the local device network if the settings permit it.
         /// </summary>
-        /// <param name="throwAway">An atefact of the BroadcastMessenger class, not used.</param>
-        private void StartLocalNetworkManagerIfSettingsAllow(object throwAway = null)
+        public async Task StartOrKillNetworkManagerBasedOnSettings()
         {
             if (Settings.Instance.LocalDeviceManagementEnabled)
             {
-                // If it has already started, leave it alone.
-                if (_networking == null)
-                    _networking = new Manager();
+                await Task.Run(() =>
+                {
+                    lock (_networkingLock)
+                    {
+                        // If it has already started, leave it alone.
+                        if (_networking == null)
+                            _networking = new Manager();
+                    }
+                }).ConfigureAwait(false);
             }
             else
             {
-                // Shut it down if it has started.
-                if (_networking != null)
+                await KillNetworkManager().ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        ///     Kills the network manager.
+        /// </summary>
+        private async Task KillNetworkManager()
+        {
+            await Task.Run(() =>
+            {
+                lock (_networkingLock)
                 {
+                    if (_networking == null) return;
                     _networking.Dispose();
                     _networking = null;
                 }
-            }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -230,6 +251,7 @@
             // The deferral allows code to be awaited in this method.
             var deferral = e.SuspendingOperation.GetDeferral();
             var completer = new TaskCompletionSource<object>();
+            AddSessionTask(completer.Task);
             await Messenger.Instance.Suspending.Invoke(completer, true, true);
             await completer.Task;
 
@@ -260,6 +282,62 @@
 
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task StartSession()
+        {
+            WebSocketConnection.Instance.TryStart();
+            await StartOrKillNetworkManagerBasedOnSettings();
+        }
+
+        public async Task EndSession()
+        {
+            // Kills Datapointsaver
+            await KillNetworkManager().ConfigureAwait(false);
+
+            // Kill live data streaming
+            await WebSocketConnection.Instance.Stop().ConfigureAwait(false);
+
+            // Wait for any requests already started
+            await AwaitAllSessionTasks().ConfigureAwait(false);
+        }
+
+        public void AddSessionTask(Task newTask)
+        {
+            _activeSessionTasks.Enqueue(newTask);
+
+            ClearCompletedSessionTasks();
+        }
+
+        private void ClearCompletedSessionTasks()
+        {
+            Task task;
+            while (_activeSessionTasks.TryPeek(out task))
+            {
+                if (task.IsCanceled || task.IsCompleted || task.IsFaulted)
+                {
+                    _activeSessionTasks.TryDequeue(out task);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        public bool HaveAllSessionTasksFinished()
+        {
+            ClearCompletedSessionTasks();
+            return !_activeSessionTasks.Any();
+        }
+
+        public async Task AwaitAllSessionTasks()
+        {
+            Task task;
+            while (_activeSessionTasks.TryDequeue(out task))
+            {
+                await task;
             }
         }
     }

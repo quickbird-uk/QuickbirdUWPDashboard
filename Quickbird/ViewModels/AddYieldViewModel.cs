@@ -16,8 +16,8 @@ namespace Quickbird.ViewModels
 
     public class AddYieldViewModel : ViewModelBase
     {
-        MainDbContext _db = new MainDbContext();
-        private Guid _cropCycleID;
+        private readonly MainDbContext _db = new MainDbContext();
+        private readonly Guid _cropCycleID;
         private Windows.UI.Xaml.Visibility _errorVisibility = Windows.UI.Xaml.Visibility.Collapsed;
         private Windows.UI.Xaml.Media.SolidColorBrush _textBoxColour = new Windows.UI.Xaml.Media.SolidColorBrush
         {
@@ -187,6 +187,11 @@ namespace Quickbird.ViewModels
                 OnPropertyChanged();
             }
         }
-            
+
+        public override void Kill()
+        {
+            _db.Dispose();
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+        }
     }
 }

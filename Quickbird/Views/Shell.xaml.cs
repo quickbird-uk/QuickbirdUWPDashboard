@@ -1,5 +1,6 @@
 ﻿namespace Quickbird.Views
 {
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Navigation;
     using ViewModels;
 
@@ -18,10 +19,16 @@
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // Shell frame shouldn't have any backstack history.
+            // Can't allow back transitions to the landing or update pages.
             Frame.BackStack.Clear();
             ViewModel = new ShellViewModel(ContentFrame, Frame);
             Bindings.Update();
+            ((App)Application.Current).StartSession();
+        }
+
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            await ((App)Application.Current).EndSession();
         }
     }
 }

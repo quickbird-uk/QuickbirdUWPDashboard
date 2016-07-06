@@ -48,6 +48,7 @@
         private string _unitName = "sensor type";
         private string _units = "Units";
         private string _value = "?";
+        private readonly DispatcherTimer _ageStatusUpdateTime;
 
         public LiveCardViewModel(Sensor poco)
         {
@@ -57,7 +58,7 @@
             ParameterID = poco.SensorType.ParamID;
             SensorTypeID = poco.SensorTypeID;
 
-            _dispatcher = Messenger.Instance.Dispatcher;
+            _dispatcher = ((App)Application.Current).Dispatcher;
             if (_dispatcher == null)
                 Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
 
@@ -73,15 +74,15 @@
                 }
             };
 
-            var ageStatusUpdateTime = new DispatcherTimer
+            _ageStatusUpdateTime = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
 
-            ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
-            ageStatusUpdateTime.Start();
+            _ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            _ageStatusUpdateTime.Start();
 
-            DispatcherTimers.Add(ageStatusUpdateTime);
+            DispatcherTimers.Add(_ageStatusUpdateTime);
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
@@ -355,6 +356,12 @@
         private string FormatValue(double value)
         {
             return string.Format(value < 10 ? "{0:0.0}" : "{0:0}", value);
+        }
+
+        public override void Kill()
+        {
+            _ageStatusUpdateTime.Stop();
+            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_dataUpdater);
         }
     }
 }
