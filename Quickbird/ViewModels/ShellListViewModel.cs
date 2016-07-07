@@ -23,6 +23,19 @@
             Update(cropCycle);
         }
 
+        private bool _isSelected;
+
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set
+            {
+                if (value == _isSelected) return;
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
         public Guid CropRunId { get; }
 
         public string CropName

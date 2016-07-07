@@ -31,6 +31,8 @@
             ViewModel = new ShellViewModel(ContentFrame);
             Bindings.Update();
 
+            ViewModel.FirstUpdate();
+
             var t = Task.Run(() => ((App) Application.Current).StartSession());
             ((App) Application.Current).AddSessionTask(t);
 

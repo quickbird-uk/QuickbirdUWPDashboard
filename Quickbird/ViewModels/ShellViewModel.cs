@@ -53,9 +53,7 @@
             DispatcherTimers.Add(_internetCheckTimer);
 
             _internetCheckTimer.Start();
-
-            FirstUpdate();
-
+            
             _syncTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMinutes(1)
@@ -136,14 +134,11 @@
             }
         }
 
-        public void ListItemClickedOrChanged()
+        public void ListItemClicked(object sender, ItemClickEventArgs e)
         {
-            var item = SelectedShellListViewModel as ShellListViewModel;
-            if (item == null)
-            {
-                _contentFrame.Navigate(typeof(AddCropCycleView));
-            }
-            else
+            var item = e.ClickedItem as ShellListViewModel;
+            Debug.WriteLine($"ListItemClicked: {item?.BoxName ?? "null"}");
+            if (item != null)
             {
                 _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
             }
@@ -152,22 +147,26 @@
         public void NavToAddNewView()
         {
             _contentFrame.Navigate(typeof(AddCropCycleView));
+            SelectedShellListViewModel = null;
         }
 
         public void NavToArchiveView()
         {
             _contentFrame.Navigate(typeof(ArchiveView));
+            SelectedShellListViewModel = null;
         }
 
         public void NavToGraphingView()
         {
             _contentFrame.Navigate(typeof(GraphingView));
+            SelectedShellListViewModel = null;
         }
 
         public void NavToSettingsView()
         {
             if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
                 _contentFrame.Navigate(typeof(SettingsView));
+            SelectedShellListViewModel = null;
         }
 
         public void ToggleNav()
@@ -185,7 +184,7 @@
             }
         }
 
-        private async void FirstUpdate()
+        public async void FirstUpdate()
         {
             Debug.WriteLine("Running First Update");
 
@@ -199,6 +198,7 @@
                 Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
             }
 
+
             if (ShellListViewModels.Count > 0)
             {
                 var item = ShellListViewModels[0].CropViewModel;
@@ -206,7 +206,10 @@
                 SelectedShellListViewModel = item;
             }
             else
+            {
                 _contentFrame.Navigate(typeof(AddCropCycleView));
+                SelectedShellListViewModel = null;
+            }
         }
 
         private void OnInternetCheckTimerTick(object sender, object o)
@@ -292,6 +295,30 @@
                 else
                 {
                     item.Update(cropCycle);
+                }
+            }
+
+            // Navigate away if the currently selected cropcycle has been removed.
+            if (!ShellListViewModels.Contains(SelectedShellListViewModel))
+            {
+                if (_contentFrame.Content is Dashboard)
+                {
+                    if (ShellListViewModels.Any())
+                    {
+                        var item = ShellListViewModels[0].CropViewModel;
+                        _contentFrame.Navigate(typeof(CropView), item);
+                        SelectedShellListViewModel = item;
+                    }
+                    else
+                    {
+                        _contentFrame.Navigate(typeof(AddCropCycleView));
+                        SelectedShellListViewModel = null;
+                    }
+                }
+                else
+                {
+                    // It should already be null.
+                    SelectedShellListViewModel = null;
                 }
             }
 
