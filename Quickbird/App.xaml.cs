@@ -328,7 +328,8 @@
                 _notPrelaunchSuspend = true;
 
                 Type pageType;
-                if (Settings.Instance.CredsSet)
+                var settings = Settings.Instance;
+                if (settings.CredsSet)
                 {
                     pageType = typeof(Shell);
                 }

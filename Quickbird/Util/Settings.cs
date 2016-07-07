@@ -30,6 +30,7 @@
         private Guid _credStableSid;
         private string _credToken;
         private string _credUserId;
+        private ApplicationDataCompositeValue _combinedCreds;
 
         /// <summary>
         ///     Creata a new settings obbject that gives acces to local and roaming settings.
@@ -41,10 +42,12 @@
 
             if (!_roamingSettings.Values.ContainsKey(nameof(CombinedCredentials)))
             {
-                _roamingSettings.Values[nameof(CombinedCredentials)] = new ApplicationDataCompositeValue();
+                _combinedCreds = new ApplicationDataCompositeValue();
+                _roamingSettings.Values[nameof(CombinedCredentials)] = _combinedCreds;
             }
             else
             {
+                _combinedCreds = CombinedCredentials;
                 UpdateCredPropsFromCombined();
             }
             _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
@@ -57,7 +60,7 @@
             {
                 if (value == CredsSet) return;
                 _credsSet = value;
-                CombinedCredentials[nameof(CredsSet)] = value;
+                _combinedCreds[nameof(CredsSet)] = value;
                 OnPropertyChanged();
             }
         }
@@ -69,7 +72,7 @@
             {
                 if (value == CredStableSid) return;
                 _credStableSid = value;
-                CombinedCredentials[nameof(CredStableSid)] = value;
+                _combinedCreds[nameof(CredStableSid)] = value;
                 OnPropertyChanged();
             }
         }
@@ -84,7 +87,7 @@
             {
                 if (value == CredToken) return;
                 _credToken = value;
-                CombinedCredentials[nameof(CredToken)] = value;
+                _combinedCreds[nameof(CredToken)] = value;
                 OnPropertyChanged();
             }
         }
@@ -99,7 +102,7 @@
             {
                 if (value == CredUserId) return;
                 _credUserId = value;
-                CombinedCredentials[nameof(CredUserId)] = value;
+                _combinedCreds[nameof(CredUserId)] = value;
                 OnPropertyChanged();
             }
         }
@@ -169,7 +172,6 @@
             get { return Get(_roamingSettings, default(ApplicationDataCompositeValue)); }
             set
             {
-                if (value == CombinedCredentials) return;
                 Set(_roamingSettings, value);
                 UpdateCredPropsFromCombined();
                 OnPropertyChanged();
@@ -210,6 +212,8 @@
             CredUserId = userId;
             CredStableSid = stableSid;
             CredsSet = true;
+
+            CombinedCredentials = _combinedCreds;
         }
 
         public void UnsetCreds()
@@ -267,10 +271,10 @@
 
             //This would trigger an infinite loop if the simple variable didn't check to see if the value is the same on setting.
 
-            if (cc.ContainsKey(nameof(CredsSet))) CredsSet = (bool) cc[nameof(CredsSet)];
-            if (cc.ContainsKey(nameof(CredToken))) CredToken = (string) cc[nameof(CredToken)];
-            if (cc.ContainsKey(nameof(CredUserId))) CredUserId = (string) cc[nameof(CredUserId)];
-            if (cc.ContainsKey(nameof(CredStableSid))) CredStableSid = (Guid) cc[nameof(CredStableSid)];
+            if (cc.ContainsKey(nameof(CredsSet))) _credsSet = (bool) cc[nameof(CredsSet)];
+            if (cc.ContainsKey(nameof(CredToken))) _credToken = (string) cc[nameof(CredToken)];
+            if (cc.ContainsKey(nameof(CredUserId))) _credUserId = (string) cc[nameof(CredUserId)];
+            if (cc.ContainsKey(nameof(CredStableSid))) _credStableSid = (Guid) cc[nameof(CredStableSid)];
         }
 
         private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
@@ -278,7 +282,7 @@
             if (sender.ContainsKey(nameof(CombinedCredentials)))
             {
                 UpdateCredPropsFromCombined();
-
+                _combinedCreds = CombinedCredentials;
                 CredsChanged?.Invoke();
             }
         }

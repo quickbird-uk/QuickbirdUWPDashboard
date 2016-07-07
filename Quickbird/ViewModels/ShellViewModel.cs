@@ -4,7 +4,6 @@
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
@@ -19,6 +18,7 @@
         private readonly DispatcherTimer _internetCheckTimer;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
+        private readonly DispatcherTimer _syncTimer;
 
 
         /// <summary>
@@ -31,12 +31,7 @@
         private bool _isInternetAvailable;
 
         private bool _isNavOpen = true;
-
-        private bool _killSyncTimer;
-
         private object _selectedShellListViewModel;
-        private Task _updateDelay;
-        private CancellationToken _updateDelayCancellationToken;
 
         /// <summary>
         ///     Initialise the shell.
@@ -54,14 +49,21 @@
                 Interval = TimeSpan.FromSeconds(5)
             };
 
-            _internetCheckTimer.Tick += (sender, o) => { IsInternetAvailable = Request.IsInternetAvailable(); };
+            _internetCheckTimer.Tick += OnInternetCheckTimerTick;
             DispatcherTimers.Add(_internetCheckTimer);
 
             _internetCheckTimer.Start();
 
             FirstUpdate();
 
-            Task.Run(() => RunSyncTimer());
+            _syncTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMinutes(1)
+            };
+
+            _syncTimer.Tick += OnSyncTimerTick;
+            DispatcherTimers.Add(_syncTimer);
+            _syncTimer.Start();
 
             _updateAction = async s => await Update();
 
@@ -71,8 +73,27 @@
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
         }
 
-        public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
-            new ObservableCollection<ShellListViewModel>();
+        public string Error
+        {
+            get { return _error; }
+            set
+            {
+                if (value == _error) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsInternetAvailable
+        {
+            get { return _isInternetAvailable; }
+            set
+            {
+                if (IsInternetAvailable == value) return;
+                _isInternetAvailable = value;
+                UpdateInternetInViewModels(value);
+            }
+        }
 
         public bool IsNavOpen
         {
@@ -96,36 +117,18 @@
             }
         }
 
-        public bool IsInternetAvailable
-        {
-            get { return _isInternetAvailable; }
-            set
-            {
-                if (IsInternetAvailable == value) return;
-                _isInternetAvailable = value;
-                UpdateInternetInViewModels(value);
-            }
-        }
-
-        public string Error
-        {
-            get { return _error; }
-            set
-            {
-                if (value == _error) return;
-                _error = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
+            new ObservableCollection<ShellListViewModel>();
 
         public override void Kill()
         {
-            _killSyncTimer = true;
-
             Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
             Messenger.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
             Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
             _internetCheckTimer.Stop();
+            _internetCheckTimer.Tick -= OnInternetCheckTimerTick;
+            _syncTimer.Stop();
+            _syncTimer.Tick -= OnSyncTimerTick;
 
             foreach (var shellListViewModel in ShellListViewModels)
             {
@@ -133,31 +136,100 @@
             }
         }
 
+        public void ListItemClickedOrChanged()
+        {
+            var item = SelectedShellListViewModel as ShellListViewModel;
+            if (item == null)
+            {
+                _contentFrame.Navigate(typeof(AddCropCycleView));
+            }
+            else
+            {
+                _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
+            }
+        }
+
+        public void NavToAddNewView()
+        {
+            _contentFrame.Navigate(typeof(AddCropCycleView));
+        }
+
+        public void NavToArchiveView()
+        {
+            _contentFrame.Navigate(typeof(ArchiveView));
+        }
+
+        public void NavToGraphingView()
+        {
+            _contentFrame.Navigate(typeof(GraphingView));
+        }
+
+        public void NavToSettingsView()
+        {
+            if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
+                _contentFrame.Navigate(typeof(SettingsView));
+        }
+
+        public void ToggleNav()
+        {
+            Debug.WriteLine("Toggle Nav.");
+            if (IsNavOpen)
+            {
+                Debug.WriteLine("Close.");
+                IsNavOpen = false;
+            }
+            else
+            {
+                Debug.WriteLine("Open.");
+                IsNavOpen = true;
+            }
+        }
+
+        private async void FirstUpdate()
+        {
+            Debug.WriteLine("Running First Update");
+
+            try
+            {
+                await Update();
+            }
+            catch (Exception e)
+            {
+                Error = e.ToString();
+                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
+            }
+
+            if (ShellListViewModels.Count > 0)
+            {
+                var item = ShellListViewModels[0].CropViewModel;
+                _contentFrame.Navigate(typeof(CropView), item);
+                SelectedShellListViewModel = item;
+            }
+            else
+                _contentFrame.Navigate(typeof(AddCropCycleView));
+        }
+
+        private void OnInternetCheckTimerTick(object sender, object o)
+        {
+            IsInternetAvailable = Request.IsInternetAvailable();
+        }
+
         /// <summary>
         ///     An infinite loop that uses a delay instead of a time so that it is not reentrant.
         /// </summary>
-        private async void RunSyncTimer()
+        private async void OnSyncTimerTick(object sender, object other)
         {
-            while (!_killSyncTimer)
-            {
-                Debug.WriteLine("Auto Sync started...");
-                // Disables the sync button in every CropView (there is one for each crop).
-                await SetSyncEnabled(false);
+            _syncTimer.Stop();
+            Debug.WriteLine("Auto Sync started...");
+            // Disables the sync button in every CropView (there is one for each crop).
+            await SetSyncEnabled(false);
 
-                await DatabaseHelper.Instance.Sync();
+            await DatabaseHelper.Instance.Sync();
 
-                await SetSyncEnabled(true);
+            await SetSyncEnabled(true);
 
-                Debug.WriteLine("...Auto Sync finished.");
-
-                //Run timer at the end so that the program starts with an update.
-                // Use a delay to space out syncs, stops it from being reentrant.
-                // We don't care about the exact timing.
-                if (_killSyncTimer) return; //Make sure we've not been told to kill between awaits.
-                _updateDelayCancellationToken = new CancellationToken();
-                _updateDelay = Task.Delay(TimeSpan.FromMinutes(1), _updateDelayCancellationToken);
-                await _updateDelay;
-            }
+            Debug.WriteLine("...Auto Sync finished.");
+            _syncTimer.Start();
         }
 
         /// <summary>
@@ -187,51 +259,6 @@
             });
 
             await completer.Task;
-        }
-
-        public void ListItemClickedOrChanged()
-        {
-            var item = SelectedShellListViewModel as ShellListViewModel;
-            if (item == null)
-            {
-                _contentFrame.Navigate(typeof(AddCropCycleView));
-            }
-            else
-            {
-                _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
-            }
-        }
-
-        private async void FirstUpdate()
-        {
-            Debug.WriteLine("Running First Update");
-
-            try
-            {
-                await Update();
-            }
-            catch (Exception e)
-            {
-                Error = e.ToString();
-                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
-            }
-
-            if (ShellListViewModels.Count > 0)
-            {
-                var item = ShellListViewModels[0].CropViewModel;
-                _contentFrame.Navigate(typeof(CropView), item);
-                SelectedShellListViewModel = item;
-            }
-            else
-                _contentFrame.Navigate(typeof(AddCropCycleView));
-        }
-
-        private void UpdateInternetInViewModels(bool isInternetAvailable)
-        {
-            foreach (var shellListViewModel in ShellListViewModels)
-            {
-                shellListViewModel.UpdateInternetStatus(isInternetAvailable);
-            }
         }
 
         private async Task Update()
@@ -271,40 +298,12 @@
             UpdateInternetInViewModels(IsInternetAvailable);
         }
 
-        public void ToggleNav()
+        private void UpdateInternetInViewModels(bool isInternetAvailable)
         {
-            Debug.WriteLine("Toggle Nav.");
-            if (IsNavOpen)
+            foreach (var shellListViewModel in ShellListViewModels)
             {
-                Debug.WriteLine("Close.");
-                IsNavOpen = false;
+                shellListViewModel.UpdateInternetStatus(isInternetAvailable);
             }
-            else
-            {
-                Debug.WriteLine("Open.");
-                IsNavOpen = true;
-            }
-        }
-
-        public void NavToGraphingView()
-        {
-            _contentFrame.Navigate(typeof(GraphingView));
-        }
-
-        public void NavToAddNewView()
-        {
-            _contentFrame.Navigate(typeof(AddCropCycleView));
-        }
-
-        public void NavToArchiveView()
-        {
-            _contentFrame.Navigate(typeof(ArchiveView));
-        }
-
-        public void NavToSettingsView()
-        {
-            if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
-                _contentFrame.Navigate(typeof(SettingsView));
         }
     }
 }
