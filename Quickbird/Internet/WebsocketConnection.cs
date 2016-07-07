@@ -24,14 +24,9 @@ namespace Quickbird.Internet
         public static WebSocketConnection Instance { get; } = new WebSocketConnection();
         private static MessageWebSocket _webSocket; //it is laso the subject of lock
         private static DataWriter _messageWriter;
-
+        private readonly object StoppingLock = new object();
         private static Timer _ReconnectTimer;
-        int _reconnectionAttempt; //Used for exponenetial backoff timer                                                               
-
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _resumeAction;
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _suspendAction;
+        int _reconnectionAttempt; //Used for exponenetial backoff timer         
 
         public event PropertyChangedEventHandler PropertyChanged;
         const string SocketCloseMessage = "AppIsSuspending";
@@ -84,9 +79,6 @@ namespace Quickbird.Internet
 
             Debug.WriteLine("Websocket Starting");
 
-            _resumeAction = Resume;
-            _suspendAction = Suspend;
-
             JsonConvert.DefaultSettings = () =>
             {
                 var settings = new JsonSerializerSettings();
@@ -110,10 +102,7 @@ namespace Quickbird.Internet
                 //Use is no signed in, return 
                 if (Settings.Instance.CredsSet == false)
                     return false;
-
-                Messenger.Instance.Suspending.Subscribe(_suspendAction);
-                Messenger.Instance.Resuming.Subscribe(_resumeAction);
-
+                
                 _ReconnectTimer = new Timer(TimerTick, null, 1000, Timeout.Infinite);
 
                 return true;
@@ -131,28 +120,29 @@ namespace Quickbird.Internet
         /// Not implemented
         /// </summary>
         /// <returns></returns>
-        public async Task Stop() 
+        public void  Stop() 
         {
-
-            if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
-                (long)ConnectionState.Stopped,
-                (long)ConnectionState.Supended)
-                != ConnectionState.Supended)
+            lock (StoppingLock)
             {
-                var completion = new TaskCompletionSource<object>();
-                Suspend(completion);
-                await completion.Task; //TODO: can we configurawait(false) here?
-
-                while ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
-                (long)ConnectionState.Stopped,
-                (long)ConnectionState.Supended)
-                != ConnectionState.Supended)
+                if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Stopped)
+                    return;
+                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
+                    (long)ConnectionState.Stopped,
+                    (long)ConnectionState.Supended)
+                    != ConnectionState.Supended)
                 {
-                    await Task.Delay(5);
+                    var completion = new TaskCompletionSource<object>();
+
+                    Suspend();
+
+                    while ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
+                    (long)ConnectionState.Stopped,
+                    (long)ConnectionState.Supended)
+                    != ConnectionState.Supended)
+                    {
+                    }
                 }
             }
-            
-
         }
 
         /// <summary>
@@ -262,7 +252,7 @@ namespace Quickbird.Internet
         /// These methids are linked to the messenger
         /// </summary>
         /// <param name="taskCompletionSource"></param>
-        private void Resume(TaskCompletionSource<object> taskCompletionSource)
+        public void Resume()
         {
             do
             {
@@ -271,12 +261,11 @@ namespace Quickbird.Internet
                     (long)ConnectionState.WillTryConnect) == ConnectionState.Supended)
                 {
                     ScheduleReconnection(true);
-                    taskCompletionSource.SetResult(null);
                 }
             } while ((ConnectionState)Interlocked.Read(ref _connectionState) == ConnectionState.SuspendScheduled); 
         }
 
-        private void Suspend(TaskCompletionSource<object> taskCompletionSource)
+        public void Suspend()
         {
             while (true)
             {
@@ -297,6 +286,10 @@ namespace Quickbird.Internet
                     (long)ConnectionState.Connecting) == ConnectionState.Connecting)
                 {
                     //Socket is currently connecting, set the flag and it will cleanup
+                    break;
+                }else if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Stopped)
+                {
+                    break;
                 }
                 else
                 {
@@ -304,7 +297,6 @@ namespace Quickbird.Internet
                 }
 
             }
-            taskCompletionSource.SetResult(null);
         }
 
         #endregion

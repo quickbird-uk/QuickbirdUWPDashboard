@@ -6,23 +6,20 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
+    using Internet;
     using Util;
     using Views;
 
     public class ShellViewModel : ViewModelBase
     {
         private readonly Frame _contentFrame;
-        private readonly Frame _mainAppFrame;
-
-        private bool _killTimer = false;
+        private readonly DispatcherTimer _internetCheckTimer;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
 
-        
 
         /// <summary>
         ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
@@ -30,55 +27,41 @@
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _updateAction;
 
-        private bool _isNavOpen = true;
-
-        private object _selectedShellListViewModel;
+        private string _error = "";
         private bool _isInternetAvailable;
 
-        public override void Kill()
-        {
-            _killTimer = true;
+        private bool _isNavOpen = true;
 
-            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
-            Messenger.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
-            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
-            _internetCheckTimer.Stop();
+        private bool _killSyncTimer;
 
-            foreach (var shellListViewModel in ShellListViewModels)
-            {
-                shellListViewModel.Kill();
-            }
-        }
+        private object _selectedShellListViewModel;
+        private Task _updateDelay;
+        private CancellationToken _updateDelayCancellationToken;
 
         /// <summary>
         ///     Initialise the shell.
         /// </summary>
         /// <param name="contentFrame">The frame insided the shell used for most navigations.</param>
-        /// <param name="mainAppFrame">The frame containing the shell, only used on sign-out navigation.</param>
-        public ShellViewModel(Frame contentFrame, Frame mainAppFrame)
+        public ShellViewModel(Frame contentFrame)
         {
             _contentFrame = contentFrame;
-            _mainAppFrame = mainAppFrame;
-            IsInternetAvailable = Internet.Request.IsInternetAvailable();
+            IsInternetAvailable = Request.IsInternetAvailable();
 
             UpdateInternetInViewModels(IsInternetAvailable);
 
-            _internetCheckTimer = new DispatcherTimer()
+            _internetCheckTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(5)
             };
 
-            _internetCheckTimer.Tick += (sender, o) =>
-            {
-                IsInternetAvailable = Internet.Request.IsInternetAvailable();
-            };
+            _internetCheckTimer.Tick += (sender, o) => { IsInternetAvailable = Request.IsInternetAvailable(); };
             DispatcherTimers.Add(_internetCheckTimer);
 
             _internetCheckTimer.Start();
 
             FirstUpdate();
 
-            Task.Run(() => RunUpdateTimer());
+            Task.Run(() => RunSyncTimer());
 
             _updateAction = async s => await Update();
 
@@ -86,8 +69,6 @@
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
             _localNetworkConflictAction = s => NavToSettingsView();
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
-
-            
         }
 
         public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
@@ -120,18 +101,44 @@
             get { return _isInternetAvailable; }
             set
             {
-                if(IsInternetAvailable == value) return;
+                if (IsInternetAvailable == value) return;
                 _isInternetAvailable = value;
                 UpdateInternetInViewModels(value);
+            }
+        }
+
+        public string Error
+        {
+            get { return _error; }
+            set
+            {
+                if (value == _error) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public override void Kill()
+        {
+            _killSyncTimer = true;
+
+            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+            Messenger.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+            _internetCheckTimer.Stop();
+
+            foreach (var shellListViewModel in ShellListViewModels)
+            {
+                shellListViewModel.Kill();
             }
         }
 
         /// <summary>
         ///     An infinite loop that uses a delay instead of a time so that it is not reentrant.
         /// </summary>
-        private async void RunUpdateTimer()
+        private async void RunSyncTimer()
         {
-            while (!_killTimer)
+            while (!_killSyncTimer)
             {
                 Debug.WriteLine("Auto Sync started...");
                 // Disables the sync button in every CropView (there is one for each crop).
@@ -146,7 +153,7 @@
                 //Run timer at the end so that the program starts with an update.
                 // Use a delay to space out syncs, stops it from being reentrant.
                 // We don't care about the exact timing.
-                if (_killTimer) return; //Make sure we've not been told to kill between awaits.
+                if (_killSyncTimer) return; //Make sure we've not been told to kill between awaits.
                 _updateDelayCancellationToken = new CancellationToken();
                 _updateDelay = Task.Delay(TimeSpan.FromMinutes(1), _updateDelayCancellationToken);
                 await _updateDelay;
@@ -160,9 +167,12 @@
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)
         {
-            var dispatcher = ((App)Application.Current).Dispatcher;
+            var dispatcher = ((App) Application.Current).Dispatcher;
             if (dispatcher == null)
+            {
                 Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
+                throw new Exception("The app dispatcher is missing: ShellViewModel.SetSyncEnabled()");
+            }
 
             var completer = new TaskCompletionSource<bool>();
 
@@ -189,22 +199,6 @@
             else
             {
                 _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
-            }
-        }
-
-        private string _error = "";
-        private DispatcherTimer _internetCheckTimer;
-        private Task _updateDelay;
-        private CancellationToken _updateDelayCancellationToken;
-
-        public string Error
-        {
-            get { return _error; }
-            set
-            {
-                if (value == _error) return;
-                _error = value;
-                OnPropertyChanged();
             }
         }
 
@@ -310,7 +304,7 @@
         public void NavToSettingsView()
         {
             if (_contentFrame.CurrentSourcePageType != typeof(SettingsView))
-                _contentFrame.Navigate(typeof(SettingsView), _mainAppFrame);
+                _contentFrame.Navigate(typeof(SettingsView));
         }
     }
 }

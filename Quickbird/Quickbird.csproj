@@ -118,6 +118,7 @@
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\BlockingDispatcher.cs" />
     <Compile Include="Util\BroadcastMessage.cs" />
     <Compile Include="Util\DatabaseHelper.cs" />
     <Compile Include="Util\Log.cs" />

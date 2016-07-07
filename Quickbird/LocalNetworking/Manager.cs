@@ -23,12 +23,7 @@
         private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private bool disposedValue; // To detect redundant calls
-
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _resumeAction;
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _suspendAction;
-
+        
         public Manager()
         {
             lock (_lock)
@@ -40,11 +35,6 @@
                     _udpMessaging = new UDPMessaging();
                     _datapointsSaver = new DatapointsSaver();
                     _mqttBroker.MessagePublished += MqttMessageRecieved;
-
-                    _resumeAction = Resume;
-                    _suspendAction = Suspend;
-                    Messenger.Instance.Suspending.Subscribe(_suspendAction);
-                    Messenger.Instance.Resuming.Subscribe(_resumeAction);
                 }
                 else
                 {
@@ -104,22 +94,22 @@
         }
 
 
-        private void Suspend(TaskCompletionSource<object> taskCompletionSource)
+        public void Suspend()
         {
             Debug.WriteLine("suspending manager");
             _mqttBroker?.Stop();
             _udpMessaging?.Dispose();
             _udpMessaging = null;
-            taskCompletionSource.SetResult(null);
+            _datapointsSaver.Suspend();
         }
 
-        private void Resume(TaskCompletionSource<object> taskCompletionSource)
+        public void Resume()
         {
             Debug.WriteLine("resuming manager");
             _mqttBroker?.Start();
             if (_udpMessaging == null || _udpMessaging.Disposed)
                 _udpMessaging = new UDPMessaging();
-            taskCompletionSource.SetResult(null);
+            _datapointsSaver.Resume();
         }
 
 
