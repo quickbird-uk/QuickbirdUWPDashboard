@@ -142,6 +142,13 @@
             }
         }
 
+        public void ResetDatabaseAndPostSettings()
+        {
+            LastDatabasePost = default(DateTimeOffset);
+            LastDatabaseUpdate = default(DateTimeOffset);
+            LastSensorDataPost = default(DateTimeOffset);
+        }
+
         /// <summary>
         ///     Local setting that allows the app to run local network for device management. Defaults to false.
         /// </summary>

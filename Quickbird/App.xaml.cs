@@ -82,6 +82,7 @@
             await EndSession();
 
             Settings.Instance.UnsetCreds();
+            Settings.Instance.ResetDatabaseAndPostSettings();
 
             // Delete the database.
             var localFolder = ApplicationData.Current.LocalFolder;
