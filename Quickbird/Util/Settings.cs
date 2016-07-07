@@ -15,8 +15,6 @@
     {
         public delegate void ChangeHandler();
 
-        public event ChangeHandler CredsChanged; 
-
         /// <summary>
         ///     Enum for choosing where a property that you want to delete exists.
         /// </summary>
@@ -28,6 +26,10 @@
 
         private readonly ApplicationDataContainer _localSettings;
         private readonly ApplicationDataContainer _roamingSettings;
+        private bool _credsSet;
+        private Guid _credStableSid;
+        private string _credToken;
+        private string _credUserId;
 
         /// <summary>
         ///     Creata a new settings obbject that gives acces to local and roaming settings.
@@ -37,29 +39,37 @@
             _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
 
+            if (!_roamingSettings.Values.ContainsKey(nameof(CombinedCredentials)))
+            {
+                _roamingSettings.Values[nameof(CombinedCredentials)] = new ApplicationDataCompositeValue();
+            }
+            else
+            {
+                UpdateCredPropsFromCombined();
+            }
             _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
-        private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
-        {
-            if (sender.ContainsKey(nameof(CredToken)))
-            {
-                CredsChanged?.Invoke();
-            }
-        }
-
-        /// <summary>
-        ///     Singleton instance accessor.
-        /// </summary>
-        public static Settings Instance { get; } = new Settings();
-
         public bool CredsSet
         {
-            get { return Get(_roamingSettings, false); }
+            get { return _credsSet; }
             private set
             {
                 if (value == CredsSet) return;
-                Set(_roamingSettings, value);
+                _credsSet = value;
+                CombinedCredentials[nameof(CredsSet)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Guid CredStableSid
+        {
+            get { return _credStableSid; }
+            private set
+            {
+                if (value == CredStableSid) return;
+                _credStableSid = value;
+                CombinedCredentials[nameof(CredStableSid)] = value;
                 OnPropertyChanged();
             }
         }
@@ -69,11 +79,12 @@
         /// </summary>
         public string CredToken
         {
-            get { return Get<string>(_roamingSettings, null); }
+            get { return _credToken; }
             private set
             {
                 if (value == CredToken) return;
-                Set(_roamingSettings, value);
+                _credToken = value;
+                CombinedCredentials[nameof(CredToken)] = value;
                 OnPropertyChanged();
             }
         }
@@ -83,22 +94,28 @@
         /// </summary>
         public string CredUserId
         {
-            get { return Get<string>(_roamingSettings, null); }
+            get { return _credUserId; }
             private set
             {
                 if (value == CredUserId) return;
-                Set(_roamingSettings, value);
+                _credUserId = value;
+                CombinedCredentials[nameof(CredUserId)] = value;
                 OnPropertyChanged();
             }
         }
 
-        public Guid CredStableSid
+        /// <summary>
+        ///     Singleton instance accessor.
+        /// </summary>
+        public static Settings Instance { get; } = new Settings();
+
+        public DateTimeOffset LastDatabasePost
         {
-            get { return Get(_roamingSettings, default(Guid)); }
-            private set
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+            set
             {
-                if (value == CredStableSid) return;
-                Set(_roamingSettings, value);
+                if (value == LastDatabaseUpdate) return;
+                Set(_localSettings, value);
                 OnPropertyChanged();
             }
         }
@@ -125,17 +142,6 @@
             }
         }
 
-        public DateTimeOffset LastDatabasePost
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-            set
-            {
-                if (value == LastDatabaseUpdate) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
         /// <summary>
         ///     Local setting that allows the app to run local network for device management. Defaults to false.
         /// </summary>
@@ -150,7 +156,46 @@
             }
         }
 
+
+        private ApplicationDataCompositeValue CombinedCredentials
+        {
+            get { return Get(_roamingSettings, default(ApplicationDataCompositeValue)); }
+            set
+            {
+                if (value == CombinedCredentials) return;
+                Set(_roamingSettings, value);
+                UpdateCredPropsFromCombined();
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public event ChangeHandler CredsChanged;
+
+        /// <summary>
+        ///     Method to unset a method value if it exists, otherwise it does nothing.
+        /// </summary>
+        /// <param name="settingsName">Name of the setting to unset.</param>
+        /// <param name="settingsType">Roaming or local.</param>
+        public void Delete([NotNull] string settingsName, SettingsType settingsType)
+        {
+            ApplicationDataContainer container;
+            switch (settingsType)
+            {
+                case SettingsType.Local:
+                    container = _localSettings;
+                    break;
+                case SettingsType.Roaming:
+                    container = _roamingSettings;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(settingsType), settingsType, null);
+            }
+
+            if (container.Values.ContainsKey(settingsName))
+                container.Values.Remove(settingsName);
+        }
 
         public void SetNewCreds(string token, string userId, Guid stableSid)
         {
@@ -163,9 +208,15 @@
         public void UnsetCreds()
         {
             CredsSet = false;
-            Delete(nameof(CredToken), SettingsType.Roaming);
-            Delete(nameof(CredUserId), SettingsType.Roaming);
-            Delete(nameof(CredStableSid), SettingsType.Roaming);
+            CredToken = null;
+            CredUserId = null;
+            CredStableSid = default(Guid);
+        }
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
@@ -203,34 +254,26 @@
             settingsContainer.Values[settingsName] = value;
         }
 
-        /// <summary>
-        ///     Method to unset a method value if it exists, otherwise it does nothing.
-        /// </summary>
-        /// <param name="settingsName">Name of the setting to unset.</param>
-        /// <param name="settingsType">Roaming or local.</param>
-        public void Delete([NotNull] string settingsName, SettingsType settingsType)
+        private void UpdateCredPropsFromCombined()
         {
-            ApplicationDataContainer container;
-            switch (settingsType)
-            {
-                case SettingsType.Local:
-                    container = _localSettings;
-                    break;
-                case SettingsType.Roaming:
-                    container = _roamingSettings;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(settingsType), settingsType, null);
-            }
+            var cc = CombinedCredentials;
 
-            if (container.Values.ContainsKey(settingsName))
-                container.Values.Remove(settingsName);
+            //This would trigger an infinite loop if the simple variable didn't check to see if the value is the same on setting.
+
+            if (cc.ContainsKey(nameof(CredsSet))) CredsSet = (bool) cc[nameof(CredsSet)];
+            if (cc.ContainsKey(nameof(CredToken))) CredToken = (string) cc[nameof(CredToken)];
+            if (cc.ContainsKey(nameof(CredUserId))) CredUserId = (string) cc[nameof(CredUserId)];
+            if (cc.ContainsKey(nameof(CredStableSid))) CredStableSid = (Guid) cc[nameof(CredStableSid)];
         }
 
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (sender.ContainsKey(nameof(CombinedCredentials)))
+            {
+                UpdateCredPropsFromCombined();
+
+                CredsChanged?.Invoke();
+            }
         }
     }
 }
