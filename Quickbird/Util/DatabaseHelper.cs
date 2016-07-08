@@ -235,32 +235,9 @@
             return contTask;
         }
 
-        /// <summary>Makes a webrequest to the API server to fetch a table.</summary>
-        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
-        /// <param name="tableName">Name of the table to request.</param>
-        /// <param name="tableList">A collection of dbset </param>
-        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
-        /// types.</param>
-        /// <returns>Null on success, otherwise an error message.</returns>
-        private async Task<string> DownloadDeserialiseTable<TPoco>(string tableName, List<object> tableList,
-            Creds cred = null) where TPoco : class
+        private static async Task<List<TPoco>> Deserialize<TPoco>(string tableName, Creds cred, string response)
+            where TPoco : class
         {
-            // Step 1: Request
-            string response;
-            if (cred == null)
-                response = await Request.GetTable(ApiUrl, tableName).ConfigureAwait(false);
-            else
-                response = await Request.GetTable(ApiUrl, tableName, cred).ConfigureAwait(false);
-
-            if (response.StartsWith("Error:"))
-            {
-                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}, {response}");
-
-                return $"Request failed: {tableName}, {response}";
-            }
-
-
-            // Step 2: Deserialise
             List<TPoco> updatesFromServer;
             try
             {
@@ -271,14 +248,9 @@
             {
                 Debug.WriteLine($"Desserialise falied on response for {tableName}, creds {null == cred}.");
                 Debug.WriteLine(e);
-                return "Unable to deserialise.";
+                throw new Exception($"Derserialize failed: {tableName}, creds {cred?.Token ?? "null"}");
             }
-
-            // Step 3: Merge
-            // Get the DbSet that this request should be inserted into.
-            await AddOrModify(updatesFromServer, tableList).ConfigureAwait(false);
-
-            return null;
+            return updatesFromServer;
         }
 
         /// <summary>Updates the database from the cloud server.</summary>
@@ -289,6 +261,23 @@
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
             await Messenger.Instance.TablesChanged.Invoke(null);
             return updatesFromServerAsync;
+        }
+
+        private static async Task<string> MakeRequest<TPoco>(string tableName, Creds cred) where TPoco : class
+        {
+            string response;
+            if (cred == null)
+                response = await Request.GetTable(ApiUrl, tableName).ConfigureAwait(false);
+            else
+                response = await Request.GetTable(ApiUrl, tableName, cred).ConfigureAwait(false);
+
+            if (response.StartsWith("Error:"))
+            {
+                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}, {response}");
+
+                throw new Exception($"Request failed: {tableName}, {response}");
+            }
+            return response;
         }
 
         /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
@@ -442,6 +431,29 @@
             return result;
         }
 
+        /// <summary>Downloads derserialzes and add/merges a table.</summary>
+        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
+        /// <param name="tableName">Name of the table to request.</param>
+        /// <param name="tableList">A list of possible tables that the poco might belong to.</param>
+        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
+        /// types.</param>
+        /// <returns>Null on success, otherwise an error message.</returns>
+        private async Task<string> ReqDeserMerge<TPoco>(string tableName, List<object> tableList, Creds cred = null)
+            where TPoco : class
+        {
+            // Step 1: Request
+            var response = await MakeRequest<TPoco>(tableName, cred);
+
+            // Step 2: Deserialise
+            var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+
+            // Step 3: Merge
+            // Get the DbSet that this request should be inserted into.
+            await AddOrModify(updatesFromServer, tableList).ConfigureAwait(false);
+
+            return null;
+        }
+
         /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
         /// Run on threadpool because SQLite doesn't do async IO.</summary>
         /// <returns>Non-readings tree of data used bvy the UI.</returns>
@@ -474,7 +486,7 @@
             var lastUpdate = settings.LastDatabaseUpdate;
             var now = DateTimeOffset.Now;
 
-            var responses = new List<string>();
+            var res = new List<string>();
 
             using (var db = new MainDbContext())
             {
@@ -509,31 +521,26 @@
                 // The download part of that method could be done in paralell, but the rest need to be done in order.
                 //var tasks = new[]
                 //{
-                //    Task.Run(() => DownloadDeserialiseTable<Parameter>(nameof(db.Parameters), tableList)),
-                //    Task.Run(() => DownloadDeserialiseTable<Placement>(nameof(db.Placements), tableList)),
-                //    Task.Run(() => DownloadDeserialiseTable<Subsystem>(nameof(db.Subsystems), tableList)),
-                //    Task.Run(() => DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList)),
-                //    Task.Run(() => DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList))
+                //    Task.Run(() => ReqDeserMerge<Parameter>(nameof(db.Parameters), tableList)),
+                //    Task.Run(() => ReqDeserMerge<Placement>(nameof(db.Placements), tableList)),
+                //    Task.Run(() => ReqDeserMerge<Subsystem>(nameof(db.Subsystems), tableList)),
+                //    Task.Run(() => ReqDeserMerge<RelayType>(nameof(db.RelayTypes), tableList)),
+                //    Task.Run(() => ReqDeserMerge<SensorType>(nameof(db.SensorTypes), tableList))
                 //};
 
                 //await Task.WhenAll(tasks);
 
                 // Setting configure await to false allows all of this method to be run on the threadpool.
                 // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
-                responses.Add(
-                    await DownloadDeserialiseTable<Parameter>(nameof(db.Parameters), tableList).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<Placement>(nameof(db.Placements), tableList).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<Subsystem>(nameof(db.Subsystems), tableList).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<RelayType>(nameof(db.RelayTypes), tableList).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<SensorType>(nameof(db.SensorTypes), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Parameter>(nameof(db.Parameters), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Placement>(nameof(db.Placements), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Subsystem>(nameof(db.Subsystems), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<RelayType>(nameof(db.RelayTypes), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<SensorType>(nameof(db.SensorTypes), tableList).ConfigureAwait(false));
 
-                if (responses.Any(r => r != null))
+                if (res.Any(r => r != null))
                 {
-                    return responses.Where(r => r != null).ToList();
+                    return res.Where(r => r != null).ToList();
                 }
                 db.SaveChanges();
 
@@ -545,28 +552,18 @@
                 // 5.Relays
                 // 6.
 
-                responses.Add(
-                    await DownloadDeserialiseTable<Person>(nameof(db.People), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Person>(nameof(db.People), tableList, creds).ConfigureAwait(false));
                 // Crop type is the only mergable that is no-auth.
-                responses.Add(
-                    await DownloadDeserialiseTable<CropType>(nameof(db.CropTypes), tableList).ConfigureAwait(false));
-                responses.Add(
-                    await
-                        DownloadDeserialiseTable<Location>(nameof(db.Locations), tableList, creds).ConfigureAwait(false));
-                responses.Add(
-                    await
-                        DownloadDeserialiseTable<CropCycle>(nameof(db.CropCycles), tableList, creds)
-                            .ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<Device>(nameof(db.Devices), tableList, creds).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<Relay>(nameof(db.Relays), tableList, creds).ConfigureAwait(false));
-                responses.Add(
-                    await DownloadDeserialiseTable<Sensor>(nameof(db.Sensors), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<CropType>(nameof(db.CropTypes), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Location>(nameof(db.Locations), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<CropCycle>(nameof(db.CropCycles), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Device>(nameof(db.Devices), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Relay>(nameof(db.Relays), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge<Sensor>(nameof(db.Sensors), tableList, creds).ConfigureAwait(false));
 
-                if (responses.Any(r => r != null))
+                if (res.Any(r => r != null))
                 {
-                    return responses.Where(r => r != null).ToList();
+                    return res.Where(r => r != null).ToList();
                 }
                 db.SaveChanges();
 
@@ -576,30 +573,30 @@
 
                 var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
 
-                responses.Add(
+                res.Add(
                     await
-                        DownloadDeserialiseTable<SensorHistory>($"{nameof(db.SensorsHistory)}/{unixtime}/9001",
-                            tableList, creds).ConfigureAwait(false));
-                responses.Add(
+                        ReqDeserMerge<SensorHistory>($"{nameof(db.SensorsHistory)}/{unixtime}/9001", tableList, creds)
+                            .ConfigureAwait(false));
+                res.Add(
                     await
-                        DownloadDeserialiseTable<RelayHistory>($"{nameof(db.RelayHistory)}/{unixtime}/9001", tableList,
-                            creds).ConfigureAwait(false));
+                        ReqDeserMerge<RelayHistory>($"{nameof(db.RelayHistory)}/{unixtime}/9001", tableList, creds)
+                            .ConfigureAwait(false));
 
-                if (responses.Any(r => r != null))
+                if (res.Any(r => r != null))
                 {
-                    return responses.Where(r => r != null).ToList();
+                    return res.Where(r => r != null).ToList();
                 }
                 db.SaveChanges();
             }
 
-            responses = responses.Where(r => r != null).ToList();
+            res = res.Where(r => r != null).ToList();
 
-            if (!responses.Any())
+            if (!res.Any())
             {
                 settings.LastDatabaseUpdate = now;
             }
 
-            return responses;
+            return res;
         }
     }
 }
