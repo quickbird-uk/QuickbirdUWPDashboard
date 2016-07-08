@@ -8,7 +8,6 @@
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
     using DbStructure;
-    using DbStructure.Global;
     using DbStructure.User;
     using Internet;
     using Microsoft.EntityFrameworkCore;
@@ -64,6 +63,16 @@
             return userData;
         }
 
+        /// <summary>Updates the database from the cloud server.</summary>
+        /// <returns>A compilation of errors.</returns>
+        public async Task<List<string>> GetUpdatesFromServerAsync()
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateFromServerAsync));
+            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
+            await Messenger.Instance.TablesChanged.Invoke(null);
+            return updatesFromServerAsync;
+        }
+
         public async Task Sync()
         {
             var updateErrors = await GetUpdatesFromServerAsync();
@@ -80,12 +89,10 @@
         /// merges data where required.</summary>
         /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
         /// <param name="updatesFromServer">The data recieved from the server.</param>
-        /// <param name="tables">List of the DbSet table objects from the context that the updates could belong
-        /// to.</param>
+        /// <param name="dbSet">The actual databse table.</param>
         /// <returns>Awaitable, the local database queries are done async.</returns>
-        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, List<object> tables) where TPoco : class
+        private async Task AddOrModify<TPoco>(List<TPoco> updatesFromServer, DbSet<TPoco> dbSet) where TPoco : class
         {
-            var dbSet = (DbSet<TPoco>) tables.First(d => d is DbSet<TPoco>);
             var pocoType = typeof(TPoco);
             foreach (var remote in updatesFromServer)
             {
@@ -253,17 +260,7 @@
             return updatesFromServer;
         }
 
-        /// <summary>Updates the database from the cloud server.</summary>
-        /// <returns>A compilation of errors.</returns>
-        private async Task<List<string>> GetUpdatesFromServerAsync()
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateFromServerAsync));
-            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
-            await Messenger.Instance.TablesChanged.Invoke(null);
-            return updatesFromServerAsync;
-        }
-
-        private static async Task<string> MakeRequest<TPoco>(string tableName, Creds cred) where TPoco : class
+        private static async Task<string> DownloadRequest(string tableName, Creds cred)
         {
             string response;
             if (cred == null)
@@ -434,22 +431,23 @@
         /// <summary>Downloads derserialzes and add/merges a table.</summary>
         /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
         /// <param name="tableName">Name of the table to request.</param>
-        /// <param name="tableList">A list of possible tables that the poco might belong to.</param>
+        /// <param name="dbTable">The actual POCO table.</param>
         /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
         /// types.</param>
         /// <returns>Null on success, otherwise an error message.</returns>
-        private async Task<string> ReqDeserMerge<TPoco>(string tableName, List<object> tableList, Creds cred = null)
+        private async Task<string> ReqDeserMerge<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
             where TPoco : class
         {
             // Step 1: Request
-            var response = await MakeRequest<TPoco>(tableName, cred);
+            var response = await DownloadRequest(tableName, cred);
 
             // Step 2: Deserialise
             var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+            Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
 
             // Step 3: Merge
             // Get the DbSet that this request should be inserted into.
-            await AddOrModify(updatesFromServer, tableList).ConfigureAwait(false);
+            await AddOrModify(updatesFromServer, dbTable).ConfigureAwait(false);
 
             return null;
         }
@@ -490,24 +488,6 @@
 
             using (var db = new MainDbContext())
             {
-                var tableList = new List<object>
-                {
-                    db.CropCycles,
-                    db.CropTypes,
-                    db.Devices,
-                    db.Locations,
-                    db.Parameters,
-                    db.People,
-                    db.Placements,
-                    db.RelayHistory,
-                    db.Relays,
-                    db.RelayTypes,
-                    db.Sensors,
-                    db.SensorsHistory,
-                    db.SensorTypes,
-                    db.Subsystems
-                };
-
                 // No auth no post types:
                 // 1. Parameters
                 // 2. --------------------------People WRONG
@@ -532,11 +512,11 @@
 
                 // Setting configure await to false allows all of this method to be run on the threadpool.
                 // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
-                res.Add(await ReqDeserMerge<Parameter>(nameof(db.Parameters), tableList).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Placement>(nameof(db.Placements), tableList).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Subsystem>(nameof(db.Subsystems), tableList).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<RelayType>(nameof(db.RelayTypes), tableList).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<SensorType>(nameof(db.SensorTypes), tableList).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Placements), db.Placements).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
                 {
@@ -552,14 +532,14 @@
                 // 5.Relays
                 // 6.
 
-                res.Add(await ReqDeserMerge<Person>(nameof(db.People), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.People), db.People, creds).ConfigureAwait(false));
                 // Crop type is the only mergable that is no-auth.
-                res.Add(await ReqDeserMerge<CropType>(nameof(db.CropTypes), tableList).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Location>(nameof(db.Locations), tableList, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<CropCycle>(nameof(db.CropCycles), tableList, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Device>(nameof(db.Devices), tableList, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Relay>(nameof(db.Relays), tableList, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge<Sensor>(nameof(db.Sensors), tableList, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
+                res.Add(await ReqDeserMerge(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
                 {
@@ -575,11 +555,11 @@
 
                 res.Add(
                     await
-                        ReqDeserMerge<SensorHistory>($"{nameof(db.SensorsHistory)}/{unixtime}/9001", tableList, creds)
+                        ReqDeserMerge($"{nameof(db.SensorsHistory)}/{unixtime}/9001", db.SensorsHistory, creds)
                             .ConfigureAwait(false));
                 res.Add(
                     await
-                        ReqDeserMerge<RelayHistory>($"{nameof(db.RelayHistory)}/{unixtime}/9001", tableList, creds)
+                        ReqDeserMerge($"{nameof(db.RelayHistory)}/{unixtime}/9001", db.RelayHistory, creds)
                             .ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
