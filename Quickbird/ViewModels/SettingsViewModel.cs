@@ -1,19 +1,19 @@
 ﻿namespace Quickbird.ViewModels
 {
     using System;
-    using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
     using LocalNetworking;
     using Util;
+    using Views;
 
     public class SettingsViewModel : ViewModelBase
     {
+        private static DateTimeOffset _lastConflictDetected = DateTimeOffset.MinValue;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _localNetworkConflictAction;
 
         private bool _isNetworkConflict;
-        private static DateTimeOffset _lastConflictDetected = DateTimeOffset.MinValue;
 
         public SettingsViewModel()
         {
@@ -56,16 +56,32 @@
             {
                 if (value == Settings.Instance.LocalDeviceManagementEnabled) return;
                 Settings.Instance.LocalDeviceManagementEnabled = value;
-                // While we cany guarantee the order of the messenger invokes, the actual settings value will be correct so we don't care.
-                Task.Run(() => Messenger.Instance.DeviceManagementEnableChanged.Invoke(null));
+
+                // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
+                Task.Run(() => ((App) Application.Current).StartOrKillNetworkManagerBasedOnSettings());
+
                 OnPropertyChanged();
             }
+        }
+
+        /// <summary>
+        ///     Signs out the twitter account by deleteing the creds, deleteing the database, stopping the live data and navigating
+        ///     back to the landing page.
+        /// </summary>
+        public void SignOut()
+        {
+            ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView));
         }
 
         private void LocalNetworkConflictDetected(string ip)
         {
             IsNetworkConflict = true;
             _lastConflictDetected = DateTimeOffset.Now;
+        }
+
+        public override void Kill()
+        {
+            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
         }
     }
 }

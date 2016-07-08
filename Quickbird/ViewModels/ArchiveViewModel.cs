@@ -30,28 +30,34 @@ namespace Quickbird.ViewModels
 
         public async void Update(string input)
         {
-            MainDbContext db = new MainDbContext();
-            var cropCycles = await db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate < DateTimeOffset.Now).Include(cc => cc.Location).ToListAsync();
-
-            for(int i=0; i< cropCycles.Count; i++)
+            using (var db = new MainDbContext())
             {
-                bool matchFound = false; 
-                for(int m=0; m < CropCycles.Count; m++)
+                var cropCycles =
+                    await
+                        db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate < DateTimeOffset.Now)
+                            .Include(cc => cc.Location)
+                            .ToListAsync();
+
+                for (int i = 0; i < cropCycles.Count; i++)
                 {
-                    if(cropCycles[i].ID == CropCycles[m].CropCycle.ID)
+                    bool matchFound = false;
+                    for (int m = 0; m < CropCycles.Count; m++)
                     {
-                        matchFound = true;
-                        CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
+                        if (cropCycles[i].ID == CropCycles[m].CropCycle.ID)
+                        {
+                            matchFound = true;
+                            CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
+                        }
+                    }
+                    if (matchFound == false)
+                    {
+                        CropCycles.Add(new CropCyclePresenter(cropCycles[i]));
                     }
                 }
-                if (matchFound == false)
-                {
-                    CropCycles.Add(new CropCyclePresenter(cropCycles[i]));
-                }
+                CropCycles.OrderBy(cc => cc.StartDate);
+                //Group the Crop Cycles
+                OnPropertyChanged(nameof(CropCycles));
             }
-            CropCycles.OrderBy(cc => cc.StartDate); 
-            //Group the Crop Cycles
-            OnPropertyChanged("CropCycles");
         }
 
         public ObservableCollection<CropCyclePresenter> CropCycles { get; set; } = new ObservableCollection<CropCyclePresenter>();
@@ -168,5 +174,9 @@ namespace Quickbird.ViewModels
             public string Duration { get; set; }            
         }
 
+        public override void Kill()
+        {
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+        }
     }
 }

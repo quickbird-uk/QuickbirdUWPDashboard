@@ -98,5 +98,18 @@
             <Setter Property="Foreground" Value="#FF4A90E2" />
         </Style>
 
+        <Style x:Key="ShellButtonText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+
+        <Style x:Key="ShellButtonOuter" TargetType="Button">
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="#00000000" />
+        </Style>
+
     </Application.Resources>
 </Application>

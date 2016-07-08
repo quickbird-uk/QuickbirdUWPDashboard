@@ -5,10 +5,12 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
     using DbStructure;
     using DbStructure.Global;
     using DbStructure.User;
+    using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
@@ -17,26 +19,22 @@
     {
         private const int _saveIntervalSeconds = 60;
         private static DatapointsSaver _Instance;
+        private readonly Action<string> _onHardwareChanged;
+        
+        private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
         private List<Device> _dbDevices;
 
         //Flow management
         //private volatile int _pendingLoads= 1;
         private Task _localTask;
-        private readonly Action<string> _onHardwareChanged;
 
         private List<KeyValuePair<Relay, List<RelayDatapoint>>> _relayBuffer =
             new List<KeyValuePair<Relay, List<RelayDatapoint>>>();
 
-        private readonly DispatcherTimer _saveTimer;
-        private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
+        private DispatcherTimer _saveTimer;
         private List<SensorHistory> _sensorDays = new List<SensorHistory>();
         //Local Cache
         private List<SensorType> _sensorTypes;
-
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _resumeAction;
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _suspendAction;
 
         public DatapointsSaver()
         {
@@ -44,21 +42,18 @@
             {
                 _Instance = this;
 
-                _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
-                _saveTimer.Tick += SaveBufferedReadings;
-                _saveTimer.Start();
+                Task.Run(() =>
+                ((App)Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+               {
+                   _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(_saveIntervalSeconds) };
+                   _saveTimer.Tick += SaveBufferedReadings;
+                   _saveTimer.Start();
+               }));
 
                 _onHardwareChanged = HardwareChanged;
                 Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged);
 
                 _localTask = Task.Run(() => { LoadData(); });
-
-                _resumeAction = Resume;
-                _suspendAction = Suspend;
-                Messenger.Instance.Suspending.Subscribe(_suspendAction);
-                Messenger.Instance.Resuming.Subscribe(_resumeAction);
-
-
             }
             else
             {
@@ -97,6 +92,12 @@
                 var tomorrow = DateTimeOffset.Now.AddDays(1);
                 return tomorrow.Subtract(tomorrow.TimeOfDay);
             }
+        }
+
+        public void Dispose()
+        {
+            BlockingDispatcher.Run(() => _saveTimer?.Stop());
+            _Instance = null;
         }
 
 
@@ -168,7 +169,7 @@
                         try
                         {
                             var sensorBuffer = _sensorBuffer.First(sb => sb.sensor.SensorTypeID == message.SensorTypeID);
-                            var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
+                            var duration = TimeSpan.FromMilliseconds((double)message.duration / 1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
                             sensorBuffer.freshBuffer.Add(datapoint);
@@ -183,10 +184,9 @@
                     }
 
 
-
                     //this is meant to be fire-forget, that's cool 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    Internet.WebSocketConnection.Instance.SendAsync(sensorReadings);
+                    WebSocketConnection.Instance.SendAsync(sensorReadings);
                     Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
@@ -314,7 +314,7 @@
                             }
 
                             var sensorType = _sensorTypes.First(st => st.ID == sbuffer.sensor.SensorTypeID);
-                            var value = cumulativeValue/sbuffer.freshBuffer.Count;
+                            var value = cumulativeValue / sbuffer.freshBuffer.Count;
 
                             if (sensorType.ParamID == 5) // Level
                             {
@@ -383,26 +383,24 @@
         }
 
 
-        private void Suspend(TaskCompletionSource<object> taskCompletionSource)
+        public void Suspend()
         {
             Debug.WriteLine("suspending datasaver");
-            _saveTimer?.Stop();
-            taskCompletionSource.SetResult(null);
+            BlockingDispatcher.Run(() => _saveTimer?.Stop());
         }
 
-        private void Resume(TaskCompletionSource<object> taskCompletionSource)
+        public void Resume()
         {
             Debug.WriteLine("resuming datasaver");
-            _saveTimer?.Start();
-            taskCompletionSource.SetResult(null);
+            BlockingDispatcher.Run(() => _saveTimer?.Start());
         }
 
 
         private class SensorBuffer
         {
+            public readonly SensorHistory dataDay;
             public readonly List<SensorDatapoint> freshBuffer;
             public readonly Sensor sensor;
-            public readonly SensorHistory dataDay;
 
             public SensorBuffer(Sensor assignSensor, SensorHistory inDataDay = null)
             {
@@ -410,12 +408,6 @@
                 freshBuffer = new List<SensorDatapoint>();
                 dataDay = inDataDay;
             }
-        }
-
-        public void Dispose()
-        {
-            _saveTimer?.Stop();
-            _Instance = null;
         }
     }
 }

@@ -4,8 +4,8 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
 
     /// <summary>
     ///     Broacast a message to multiple subscribers.
@@ -71,7 +71,9 @@
             _subscribers.RemoveAll(deadActions.Contains);
 
             CoreDispatcher dispatcher = null;
-            if (useCoreDispatcher) dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+            if (useCoreDispatcher) dispatcher = ((App)Application.Current).Dispatcher;
+            if (dispatcher == null)
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}");
 
             // Special mode when the param is a TaskCompletionSource<object> and you want it to be set when all the actions complete.
             if (insertCompletionSource)
@@ -91,7 +93,8 @@
 
                     if (useCoreDispatcher)
                     {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => completingAction(completer));
+                        if (dispatcher != null)
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => completingAction(completer));
                     }
                     else
                     {
@@ -109,7 +112,8 @@
                 {
                     if (useCoreDispatcher)
                     {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
+                        if (dispatcher != null)
+                            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action(param));
                     }
                     else
                     {

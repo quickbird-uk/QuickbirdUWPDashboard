@@ -14,6 +14,10 @@
 
         private ObservableCollection<LiveCardViewModel> _mainCards = new ObservableCollection<LiveCardViewModel>();
 
+        /// <summary>
+        /// All data in this model trickles up from the DashboardViewModel, making this a simple data model class.
+        /// </summary>
+        /// <param name="run"></param>
         public DashboardViewModel([NotNull] CropCycle run)
         {
             CropId = run.ID;
@@ -112,6 +116,24 @@
             foreach (var item in ambientItems)
             {
                 if (!AmbientCards.Contains(item)) AmbientCards.Add(item);
+            }
+        }
+
+        public override void Kill()
+        {
+            foreach (var liveCardViewModel in AmbientCards)
+            {
+                liveCardViewModel.Kill();
+            }
+
+            foreach (var liveCardViewModel in Cards)
+            {
+                liveCardViewModel.Kill();
+            }
+
+            foreach (var liveCardViewModel in MainCards)
+            {
+                liveCardViewModel.Kill();
             }
         }
     }

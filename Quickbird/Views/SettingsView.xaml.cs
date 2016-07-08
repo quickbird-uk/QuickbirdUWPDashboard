@@ -1,8 +1,8 @@
 ﻿namespace Quickbird.Views
 {
     using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Navigation;
     using ViewModels;
-    using Util;
 
     /// <summary>
     ///     All sorts of settings are viewed and edited here.
@@ -16,13 +16,8 @@
             InitializeComponent();
         }
 
-        private async void Button_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            SignOutButton.IsEnabled = false; 
-            await Internet.WebSocketConnection.Instance.Stop();
-            Settings.Instance.UnsetCreds();           
-            //TODO: delete Database
-            //TODO: Stop listening to local devices
         }
     }
 }

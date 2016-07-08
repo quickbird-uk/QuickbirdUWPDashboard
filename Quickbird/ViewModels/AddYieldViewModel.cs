@@ -16,8 +16,7 @@ namespace Quickbird.ViewModels
 
     public class AddYieldViewModel : ViewModelBase
     {
-        MainDbContext _db = new MainDbContext();
-        private Guid _cropCycleID;
+        private readonly Guid _cropCycleID;
         private Windows.UI.Xaml.Visibility _errorVisibility = Windows.UI.Xaml.Visibility.Collapsed;
         private Windows.UI.Xaml.Media.SolidColorBrush _textBoxColour = new Windows.UI.Xaml.Media.SolidColorBrush
         {
@@ -28,7 +27,6 @@ namespace Quickbird.ViewModels
         private string _buttonText = "Add Yield";
         private bool _closeCropRun = false;
         private Action<string> _updateAction;
-        private CropCycle _cropCycle;
         private bool _isLoading = false; 
          
 
@@ -43,11 +41,15 @@ namespace Quickbird.ViewModels
         /// <summary>
         /// Attached to tables changed event
         /// </summary>
-        /// <param name=""></param>
-        private async void UpdateData(string input)
+        /// <param name="tablesChangedPlaceholderVar">ignored</param>
+        private async void UpdateData(string tablesChangedPlaceholderVar)
         {
-            _cropCycle = await _db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
-            if(_cropCycle.EndDate != null)
+            CropCycle cropCycle;
+            using (var db = new MainDbContext())
+            {
+                cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
+            }
+            if(cropCycle.EndDate != null)
             {
                 //TODO Close this frame bacuse the crop cycle is already closed! 
             }
@@ -114,17 +116,20 @@ namespace Quickbird.ViewModels
         /// </summary>
         public async Task SaveCropRun()
         {
-            ValidEntry = false;
-            IsLoading = true; 
-            _cropCycle.Yield += _userEnteredAmount;
-            if (_closeCropRun)
-                _cropCycle.EndDate = DateTimeOffset.Now;
-            _cropCycle.UpdatedAt = DateTimeOffset.Now; 
-            await _db.SaveChangesAsync();
-            _updateAction = null; 
-            await Messenger.Instance.TablesChanged.Invoke(string.Empty);
-            _db.Dispose();
-            IsLoading = false; 
+            using (var db = new MainDbContext())
+            {
+                var cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
+                ValidEntry = false;
+                IsLoading = true;
+                cropCycle.Yield += _userEnteredAmount;
+                if (_closeCropRun)
+                    cropCycle.EndDate = DateTimeOffset.Now;
+                cropCycle.UpdatedAt = DateTimeOffset.Now;
+                await db.SaveChangesAsync();
+                _updateAction = null;
+                await Messenger.Instance.TablesChanged.Invoke(string.Empty);
+                IsLoading = false;
+            }
         }
 
         public string ButtonText
@@ -187,6 +192,10 @@ namespace Quickbird.ViewModels
                 OnPropertyChanged();
             }
         }
-            
+
+        public override void Kill()
+        {
+            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+        }
     }
 }

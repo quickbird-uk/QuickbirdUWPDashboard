@@ -34,8 +34,6 @@
 
         public BroadcastMessage<string> LocalNetworkConflict { get; } = new BroadcastMessage<string>();
 
-        public BroadcastMessage<object> DeviceManagementEnableChanged { get; } = new BroadcastMessage<object>();
-
         public struct SensorReading
         {
             public SensorReading(Guid id, double value, DateTimeOffset timestamp, TimeSpan duration)

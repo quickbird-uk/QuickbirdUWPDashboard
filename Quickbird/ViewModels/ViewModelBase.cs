@@ -10,7 +10,7 @@
     using JetBrains.Annotations;
     using Util;
 
-    public class ViewModelBase : INotifyPropertyChanged
+    public abstract class ViewModelBase : INotifyPropertyChanged
     {
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<TaskCompletionSource<object>> _resumeAction;
@@ -21,15 +21,15 @@
 
         public ViewModelBase()
         {
-            _resumeAction = Resume;
-            _suspendAction = Suspend;
+            _resumeAction = BaseResume;
+            _suspendAction = BaseSuspend;
             Messenger.Instance.Suspending.Subscribe(_suspendAction);
             Messenger.Instance.Resuming.Subscribe(_resumeAction);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void Resume(TaskCompletionSource<object> completer)
+        private void BaseResume(TaskCompletionSource<object> completer)
         {
             Debug.WriteLine("resumuing timers");
             foreach (var dispatcherTimer in DispatcherTimers)
@@ -39,7 +39,7 @@
             completer.SetResult(null);
         }
 
-        private void Suspend(TaskCompletionSource<object> completer)
+        private void BaseSuspend(TaskCompletionSource<object> completer)
         {
             Debug.WriteLine("suspending timers");
             foreach (var dispatcherTimer in DispatcherTimers)
@@ -54,5 +54,10 @@
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        /// <summary>
+        ///     Clean up timers messenger things etc.
+        /// </summary>
+        public abstract void Kill();
     }
 }

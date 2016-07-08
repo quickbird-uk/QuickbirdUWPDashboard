@@ -23,8 +23,20 @@
             Update(cropCycle);
         }
 
-        public Guid CropRunId { get; }
+        private bool _isSelected;
 
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set
+            {
+                if (value == _isSelected) return;
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Guid CropRunId { get; }
 
         public string CropName
         {
@@ -47,7 +59,6 @@
                 OnPropertyChanged();
             }
         }
-
 
         public string BoxName
         {
@@ -106,6 +117,11 @@
         public void UpdateInternetStatus(bool isInternetAvailable)
         {
             CropViewModel.UpdateInternetStatus(isInternetAvailable);
+        }
+
+        public override void Kill()
+        {
+            _cropViewModel.Kill();
         }
     }
 }

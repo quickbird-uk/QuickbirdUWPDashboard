@@ -2,14 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using DbStructure;
-    using Util;
     using MoreLinq;
+    using Util;
 
     public class LiveCardViewModel : ViewModelBase
     {
@@ -50,6 +48,7 @@
         private string _unitName = "sensor type";
         private string _units = "Units";
         private string _value = "?";
+        private readonly DispatcherTimer _ageStatusUpdateTime;
 
         public LiveCardViewModel(Sensor poco)
         {
@@ -58,7 +57,11 @@
             PlacementId = poco.SensorType.PlaceID;
             ParameterID = poco.SensorType.ParamID;
             SensorTypeID = poco.SensorTypeID;
-            _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+
+            _dispatcher = ((App)Application.Current).Dispatcher;
+            if (_dispatcher == null)
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
+
             _dataUpdater = async readings =>
             {
                 var ofThisSensor = readings.Where(r => r.SensorId == poco.ID).ToList();
@@ -71,15 +74,15 @@
                 }
             };
 
-            var ageStatusUpdateTime = new DispatcherTimer
+            _ageStatusUpdateTime = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
 
-            ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
-            ageStatusUpdateTime.Start();
+            _ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            _ageStatusUpdateTime.Start();
 
-            DispatcherTimers.Add(ageStatusUpdateTime);
+            DispatcherTimers.Add(_ageStatusUpdateTime);
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
@@ -254,7 +257,7 @@
         }
 
         /// <summary>
-        /// Update the age status message according to how old it is.
+        ///     Update the age status message according to how old it is.
         /// </summary>
         private void UpdateAgeStatusMessage()
         {
@@ -291,7 +294,7 @@
         }
 
         /// <summary>
-        /// Only updates the UI if the value is newer.
+        ///     Only updates the UI if the value is newer.
         /// </summary>
         /// <param name="value">The value to display.</param>
         /// <param name="time">The datestamp of the reading.</param>
@@ -307,7 +310,7 @@
         }
 
         /// <summary>
-        /// Updates the basic data on the live card.
+        ///     Updates the basic data on the live card.
         /// </summary>
         /// <param name="poco"></param>
         public void Update(Sensor poco)
@@ -353,6 +356,12 @@
         private string FormatValue(double value)
         {
             return string.Format(value < 10 ? "{0:0.0}" : "{0:0}", value);
+        }
+
+        public override void Kill()
+        {
+            _ageStatusUpdateTime.Stop();
+            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_dataUpdater);
         }
     }
 }

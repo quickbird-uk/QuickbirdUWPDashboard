@@ -74,5 +74,10 @@
 
             ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
         }
+
+        public override void Kill()
+        {
+            // No special resources use here.
+        }
     }
 }

@@ -1,8 +1,6 @@
 ﻿namespace Quickbird.ViewModels
 {
     using System;
-    using System.Diagnostics;
-    using System.Linq;
     using Windows.UI.Xaml.Controls;
     using DbStructure.User;
     using Util;
@@ -10,7 +8,7 @@
 
     public class CropViewModel : ViewModelBase
     {
-        private const string ShowNotificationsString = "Show Notifications";
+        private const string ShowNotificationsString = "Journal";
         private readonly DashboardViewModel _dashboardViewModel;
 
         private readonly Guid _id;
@@ -20,17 +18,23 @@
         private Frame _cropContentFrame;
         private string _cropName;
 
+        private bool _isInternetAvailable;
+
         private bool _isNotificationsOpen;
         private string _notificationsButtonText = ShowNotificationsString;
         private string _notificationsCount = "0";
         private string _plantingDate;
 
         private bool _syncButtonEnabled = true;
+        private bool _syncing;
         private string _varietyName;
         private string _yield;
-        private bool _isInternetAvailable;
-        private bool _syncing;
 
+        /// <summary>
+        ///     All the data in this ViewModel is pumped in from the ShellListViewModel, the only thing that will ever call this
+        ///     contructor. As a result this is a very simple bindable datamodel.
+        /// </summary>
+        /// <param name="cropCycle"></param>
         public CropViewModel(CropCycle cropCycle)
         {
             _id = cropCycle.ID;
@@ -150,6 +154,17 @@
             }
         }
 
+        public bool IsInternetAvailable
+        {
+            get { return _isInternetAvailable; }
+            set
+            {
+                if (value == _isInternetAvailable) return;
+                _isInternetAvailable = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void SetContentFrame(Frame contentFrame)
         {
             _cropContentFrame = contentFrame;
@@ -191,7 +206,7 @@
         private void OpenNotifications()
         {
             IsNotificationsOpen = true;
-            NotificationsButtonText = "Hide Notifications";
+            NotificationsButtonText = "Hide Journal";
         }
 
         private void CloseNotifications()
@@ -205,17 +220,10 @@
             _syncing = true;
             SyncButtonEnabled = false;
 
-            var updateErrors = await DatabaseHelper.Instance.GetUpdatesFromServerAsync();
-            if (updateErrors?.Any() ?? false) Debug.WriteLine(updateErrors);
-
-            var postErrors = await DatabaseHelper.Instance.PostUpdatesAsync();
-            if (postErrors?.Any() ?? false) Debug.WriteLine(string.Join(",", postErrors));
-
-            var postHistErrors = await DatabaseHelper.Instance.PostHistoryAsync();
-            if(postHistErrors?.Any() ?? false) Debug.WriteLine(postHistErrors);
+            await DatabaseHelper.Instance.Sync();
 
             _syncing = false;
-            if(_isInternetAvailable)
+            if (_isInternetAvailable)
                 SyncButtonEnabled = true;
         }
 
@@ -227,15 +235,18 @@
                 SyncButtonEnabled = true;
             }
 
-            _isInternetAvailable = isInternetAvailable;
+            IsInternetAvailable = isInternetAvailable;
 
             if (!isInternetAvailable)
             {
                 SyncButtonEnabled = false;
             }
+        }
 
-
-
+        public override void Kill()
+        {
+            //All the data in this ViewModel is pumped in from the ShellListViewModel.
+            _dashboardViewModel.Kill();
         }
     }
 }

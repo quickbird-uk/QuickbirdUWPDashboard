@@ -1,14 +1,14 @@
 ﻿<Page x:Class="Quickbird.Views.Shell"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Quickbird.Views.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:views="using:Quickbird.Views"
     mc:Ignorable="d">
 
     <!--  Page Resources  -->
     <Page.Resources>
-        <views:TrueVisible x:Key="TrueVisible" />
+        <converters:TrueVisible x:Key="TrueVisible" />
     </Page.Resources>
 
     <SplitView x:Name="Navigation"
@@ -54,12 +54,11 @@
                 <ListView x:Name="Menu"
                     Grid.Row="1"
                     IsItemClickEnabled="True"
-                    ItemClick="{x:Bind ViewModel.ListItemClickedOrChanged}"
+                    ItemClick="{x:Bind ViewModel.ListItemClicked}"
                     ItemContainerStyle="{ThemeResource MenuItemDark}"
                     ItemsSource="{x:Bind ViewModel.ShellListViewModels}"
                     RequestedTheme="Dark"
-                    SelectedItem="{x:Bind ViewModel.SelectedShellListViewModel, Mode=TwoWay}"
-                    SelectionChanged="{x:Bind ViewModel.ListItemClickedOrChanged}">
+                    SelectedItem="{x:Bind ViewModel.SelectedShellListViewModel, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid>
@@ -113,7 +112,7 @@
 
                 <!--  Pane Footer  -->
                 <StackPanel Grid.Row="2">
-
+                    <TextBlock Text="{x:Bind ViewModel.Error, Mode=OneWay, FallbackValue=x}" TextWrapping="Wrap" />
                     <!--  Add Crop Button  -->
                     <Button x:Name="AddCropButton"
                         Background="DodgerBlue"
@@ -131,10 +130,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Add Crop" />
                         </Grid>
                     </Button>
@@ -155,10 +151,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Archive" />
                         </Grid>
                     </Button>
@@ -179,10 +172,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Graphs" />
                         </Grid>
                     </Button>
@@ -203,10 +193,7 @@
                                 Style="{ThemeResource Icon}"
                                 Text="&#xE713;" />
                             <TextBlock Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe UI"
-                                FontSize="20"
-                                FontWeight="Normal"
+                                Style="{StaticResource ShellButtonText}"
                                 Text="Settings" />
                         </Grid>
                     </Button>

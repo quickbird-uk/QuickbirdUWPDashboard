@@ -443,7 +443,11 @@ namespace Quickbird.ViewModels
 
             public Syncfusion.UI.Xaml.Charts.ChartSeries ChartSeries = null;
 
-            public Syncfusion.UI.Xaml.Charts.DateTimeAxis Axis = null; 
+            public Syncfusion.UI.Xaml.Charts.DateTimeAxis Axis = null;
+            public override void Kill()
+            {
+                // I like spaghetti you like spaghetti.
+            }
         }
 
         public struct CroprunTuple
@@ -475,6 +479,11 @@ namespace Quickbird.ViewModels
             }
             public DateTime timestamp { get; set; }
             public double value { get; set; }
+        }
+
+        public override void Kill()
+        {
+            Dispose();
         }
     }
 }
