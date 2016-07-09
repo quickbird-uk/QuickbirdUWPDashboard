@@ -1,0 +1,47 @@
+digraph G {
+
+    /* Entities */
+   node[style="filled", fillcolor="white"];
+   start[label="Start Sync", shape="box", style="rounded,filled", fillcolor="orange"];
+   end[label="End Sync", shape="box", style="rounded,filled", fillcolor="orange"];
+   abort[label="Abort", shape="box", style="rounded,filled", fillcolor="red"];
+
+   reqFive[label="Request 5 days from $lastReq", shape="rectangle"];
+   anythingRecieved[label="Any items recieved?", shape="diamond"];
+   setLastToLastItem[label="Set $lastReq to last item date" , shape="rectangle"];
+   mergeAndSave[label="Merge and save data", shape="rectangle"];
+   anyDaysLocallyModified[label="Any days locally modified?", shape="diamond"];
+   unmarkFive[label="Unflag 5 as locally modified", shape="rectangle"];
+   uploadFive[label="Upload those five", shape="rectangle"];
+   success[label="Successful upload?", shape="diamond"];
+   reflagFive[label="Reflag those five as modified", shape="box"];
+    
+    /* Relationships */
+
+    subgraph cluster0 {
+        style="filled";
+        color="lightgray";
+        start -> reqFive;
+        reqFive -> anythingRecieved;
+        anythingRecieved -> mergeAndSave[label=" yes "];
+        anythingRecieved -> anyDaysLocallyModified[label=" no "];
+        anythingRecieved -> abort[label=" failed "];
+        mergeAndSave -> setLastToLastItem;
+        setLastToLastItem -> reqFive;
+        anyDaysLocallyModified -> unmarkFive[label=" yes "];
+        unmarkFive -> uploadFive;
+        uploadFive -> success;
+        success -> anyDaysLocallyModified[label=" yes "];
+        success -> reflagFive[label=" no "];
+        reflagFive -> abort;
+        anyDaysLocallyModified -> end[label="no"];
+    }
+
+
+    subgraph cluster1 {
+        dataFromDevice[label="Data recieved from device", shape="parallelogram"];
+        saveToDb[label="Save to local db", shape="box"];
+        markDayAsLocallyModified[label="Flag day as locally modified", shape="box"];
+        dataFromDevice -> saveToDb -> markDayAsLocallyModified;
+    }
+}

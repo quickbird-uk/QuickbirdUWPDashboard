@@ -101,14 +101,161 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
+                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId)d).ID == ((IHasId)remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
                         dbSet.Select(a => a)
                             .AsNoTracking()
-                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
+                            .FirstOrDefault(d => ((IHasGuid)d).ID == ((IHasGuid)remote).ID);
+                }
+                else if (pocoType == typeof(CropType))
+                {
+                    var x = remote as CropType;
+                    local = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
+                }
+                else if (pocoType == typeof(SensorHistory))
+                {
+                    var remoteSenHist = remote as SensorHistory;
+                    var localSenHist =
+                        dbSet.OfType<SensorHistory>()
+                            .AsNoTracking()
+                            .FirstOrDefault(
+                                d => d.SensorID == remoteSenHist.SensorID && d.TimeStamp == remoteSenHist.TimeStamp);
+                    local = localSenHist as TPoco;
+                    if (null != local)
+                    {
+                        // They are the same primary key so merge them.
+                        localSenHist.DeserialiseData();
+                        var mergedSenHist = SensorHistory.Merge(remoteSenHist, localSenHist);
+                        mergedSenHist.SerialiseData();
+                        merged = mergedSenHist as TPoco;
+                    }
+                    else
+                    {
+                        Debug.Assert(remoteSenHist != null, "remoteSenHist != null, poco type detection failed.");
+                        remoteSenHist.SerialiseData();
+                    }
+
+                    if (remoteSenHist != null)
+                    {
+                        var id = remoteSenHist.SensorID;
+                        await
+                            Messenger.Instance.NewSensorDataPoint.Invoke(
+                                    remoteSenHist.Data.Select(
+                                        d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
+                                .ConfigureAwait(false);
+                    }
+                }
+                else if (pocoType == typeof(RelayHistory))
+                {
+                    var remoteRelayHist = remote as RelayHistory;
+                    var oldHist =
+                        dbSet.OfType<RelayHistory>()
+                            .AsNoTracking()
+                            .FirstOrDefault(
+                                d => d.RelayID == remoteRelayHist.RelayID && d.TimeStamp == remoteRelayHist.TimeStamp);
+                    local = oldHist as TPoco;
+                    if (null != local)
+                    {
+                        // They are the same primary key so merge them.
+                        oldHist.DeserialiseData();
+                        var mergedRelayHist = RelayHistory.Merge(remoteRelayHist, oldHist);
+                        mergedRelayHist.SerialiseData();
+                        merged = mergedRelayHist as TPoco;
+                    }
+                    else
+                    {
+                        Debug.Assert(remoteRelayHist != null, "remoteRelayHist != null, poco type detection failed.");
+                        remoteRelayHist.SerialiseData();
+                    }
+
+                    if (remoteRelayHist != null)
+                    {
+                        var id = remoteRelayHist.RelayID;
+                        await
+                            Messenger.Instance.NewRelayDataPoint.Invoke(
+                                    remoteRelayHist.Data.Select(
+                                        d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)))
+                                .ConfigureAwait(false);
+                    }
+                }
+
+                //Whatever it is, jsut add record to the DB 
+                if (local == null)
+                {
+                    dbSet.Add(remote);
+                }
+                else
+                {
+                    //User Tables
+                    if (remote is BaseEntity && local is BaseEntity)
+                    {
+                        // These types allow local changes. Check date and don't overwrite unless the server has changed.
+                        var remoteVersion = remote as BaseEntity;
+                        var localVersion = local as BaseEntity;
+
+                        if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
+                        {
+                            // Overwrite local version, with the server's changes.
+                            dbSet.Update(remote);
+                            //await Messenger.Instance.UserTablesChanged.Invoke("update");
+                        }
+                        // We are not using this mode where ther server gets to override local changes. Far too confusing.
+                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
+                        //{
+                        //    // Overwrite local version with remote version that was modified since the last update.
+                        //    // The local version is newer but we have decided to overwrite it 
+                        //    dbSet.Update(entry);
+                        //}
+                    }
+                    else if (typeof(TPoco) == typeof(SensorHistory))
+                    {
+                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
+                        dbSet.Update(merged);
+                        // The messenger message is done earlier, no difference between new and update.
+                    }
+                    else if (typeof(TPoco) == typeof(RelayHistory))
+                    {
+                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
+                        dbSet.Update(merged);
+                    }
+                    //RED - Global read-only tables
+                    else
+                    {
+                        // Simply take the changes from the server, there are no valid local changes.
+                        dbSet.Update(remote);
+                        //await Messenger.Instance.HardwareTableChanged.Invoke("new");
+                    }
+                }
+            }
+        }
+
+        /// <summary>Figures out the real type of the table entitiy, performs checks for existing items and
+        /// merges data where required.</summary>
+        /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
+        /// <param name="updatesFromServer">The data recieved from the server.</param>
+        /// <param name="dbSet">The actual databse table.</param>
+        /// <returns>Awaitable, the local database queries are done async.</returns>
+        private async Task AddOrModifyHistory<TPoco>(List<TPoco> updatesFromServer, DbSet<TPoco> dbSet) where TPoco : class
+        {
+            var pocoType = typeof(TPoco);
+            foreach (var remote in updatesFromServer)
+            {
+                TPoco local = null;
+                TPoco merged = null;
+                if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
+                {
+                    local =
+                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId)d).ID == ((IHasId)remote).ID);
+                }
+                else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
+                {
+                    local =
+                        dbSet.Select(a => a)
+                            .AsNoTracking()
+                            .FirstOrDefault(d => ((IHasGuid)d).ID == ((IHasGuid)remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -451,6 +598,29 @@
 
             return null;
         }
+        /// <summary>Downloads derserialzes and add/merges a table.</summary>
+        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
+        /// <param name="tableName">Name of the table to request.</param>
+        /// <param name="dbTable">The actual POCO table.</param>
+        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
+        /// types.</param>
+        /// <returns>Null on success, otherwise an error message.</returns>
+        private async Task<string> ReqDeserMergeHistory<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
+            where TPoco : class
+        {
+            // Step 1: Request
+            var response = await DownloadRequest(tableName, cred);
+
+            // Step 2: Deserialise
+            var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+            Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
+
+            // Step 3: Merge
+            // Get the DbSet that this request should be inserted into.
+            await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
+
+            return null;
+        }
 
         /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
         /// Run on threadpool because SQLite doesn't do async IO.</summary>
@@ -555,11 +725,11 @@
 
                 res.Add(
                     await
-                        ReqDeserMerge($"{nameof(db.SensorsHistory)}/{unixtime}/9001", db.SensorsHistory, creds)
+                        ReqDeserMergeHistory($"{nameof(db.SensorsHistory)}/{unixtime}/9001", db.SensorsHistory, creds)
                             .ConfigureAwait(false));
                 res.Add(
                     await
-                        ReqDeserMerge($"{nameof(db.RelayHistory)}/{unixtime}/9001", db.RelayHistory, creds)
+                        ReqDeserMergeHistory($"{nameof(db.RelayHistory)}/{unixtime}/9001", db.RelayHistory, creds)
                             .ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
