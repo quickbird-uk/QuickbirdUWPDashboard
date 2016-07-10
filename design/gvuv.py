@@ -59,7 +59,7 @@ from subprocess import call
 ###############################################################################
 # CONFIG
 ###############################################################################
-defaultfile = 'sync.dot'
+defaultfile = 'sync2.dot'
 dotpath = 'dot.exe'  # Change this if graphviz is not in path.
 # END CONFIG
 

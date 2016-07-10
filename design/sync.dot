@@ -1,17 +1,19 @@
 digraph G {
     /* Entities */
-   node[style="filled", fillcolor="white"];
-   start[label="Start Sync", shape="box", style="rounded,filled", fillcolor="orange"];
-   end[label="End Sync", shape="box", style="rounded,filled", fillcolor="orange"];
-   abort[label="Abort", shape="box", style="rounded,filled", fillcolor="red"];
+   graph[fontname="consolas"];
+   edge[fontname="consolas"];
+   node[style="filled", fillcolor="white", fontname="consolas", fixedsize="true", width="5"];
+   start[label="Start Sync", shape="box", style="rounded,filled", fillcolor="orange", width="2"];
+   end[label="End Sync", shape="box", style="rounded,filled", fillcolor="orange", width="2"];
+   abort[label="Abort", shape="box", style="rounded,filled", fillcolor="red",width="2"];
 
-   reqFive[label="Request 5 days from $lastReq", shape="rectangle"];
+   reqFive[label="GET: History/$device/5days/$lastReq", shape="polygon", sides="4", skew="0.2"];
    anythingRecieved[label="Any items recieved?", shape="diamond"];
    setLastToLastItem[label="Set $lastReq to last item date" , shape="rectangle"];
    mergeAndSave[label="Merge and save data", shape="rectangle"];
    anyDaysLocallyModified[label="Any days locally modified?", shape="diamond"];
    unmarkFive[label="Unflag 5 as locally modified", shape="rectangle"];
-   uploadFive[label="Upload those five", shape="rectangle"];
+   uploadFive[label="Upload those five", shape="polygon", sides="4", skew="0.2"];
    success[label="Successful upload?", shape="diamond"];
    dlsuccess[label="Successful download?", shape="diamond"];
    reflagFive[label="Reflag those five as modified", shape="box"];
@@ -39,6 +41,7 @@ digraph G {
         success -> reflagFive[label=" no "];
         reflagFive -> abort;
         anyDaysLocallyModified -> end[label="no"];
+        {rank=same; end, abort}
     }
 
 
