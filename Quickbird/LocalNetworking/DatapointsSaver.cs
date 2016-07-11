@@ -159,7 +159,7 @@
 
             var settings = Settings.Instance;
 
-            if (settings.CredsSet && settings.LastDatabaseUpdate != default(DateTimeOffset) &&
+            if (settings.CredsSet && settings.LastDatabaseDownload != default(DateTimeOffset) &&
                 _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
             {
                 Debug.WriteLine("addingDevice");
@@ -295,7 +295,7 @@
             {
                 var settings = Settings.Instance;
 
-                if (settings.LastDatabaseUpdate > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
+                if (settings.LastDatabaseDownload > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
                 {
                     Debug.WriteLine("Datasaver started, recent update detected.");
 

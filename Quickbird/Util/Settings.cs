@@ -100,23 +100,23 @@
         /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
 
-        public DateTimeOffset LastDatabasePost
+        public DateTimeOffset LastDatabaseUpload
         {
             get { return Get(_localSettings, default(DateTimeOffset)); }
             set
             {
-                if (value == LastDatabaseUpdate) return;
+                if (value == LastDatabaseDownload) return;
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }
         }
 
-        public DateTimeOffset LastDatabaseUpdate
+        public DateTimeOffset LastDatabaseDownload
         {
             get { return Get(_localSettings, default(DateTimeOffset)); }
             set
             {
-                if (value == LastDatabaseUpdate) return;
+                if (value == LastDatabaseDownload) return;
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }
@@ -127,7 +127,7 @@
             get { return Get(_localSettings, default(DateTimeOffset)); }
             set
             {
-                if (value == LastDatabaseUpdate) return;
+                if (value == LastDatabaseDownload) return;
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }
@@ -186,8 +186,8 @@
 
         public void ResetDatabaseAndPostSettings()
         {
-            LastDatabasePost = default(DateTimeOffset);
-            LastDatabaseUpdate = default(DateTimeOffset);
+            LastDatabaseUpload = default(DateTimeOffset);
+            LastDatabaseDownload = default(DateTimeOffset);
             LastSensorDataPost = default(DateTimeOffset);
         }
 

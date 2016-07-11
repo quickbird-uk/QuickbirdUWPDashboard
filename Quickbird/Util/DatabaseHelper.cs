@@ -232,8 +232,7 @@
             }
         }
 
-        /// <summary>Figures out the real type of the table entitiy, performs checks for existing items and
-        /// merges data where required.</summary>
+        /// <summary>Add or modify just for histories.</summary>
         /// <typeparam name="TPoco">The POCO type of the entity.</typeparam>
         /// <param name="updatesFromServer">The data recieved from the server.</param>
         /// <param name="dbSet">The actual databse table.</param>
@@ -242,30 +241,17 @@
             where TPoco : class
         {
             var pocoType = typeof(TPoco);
+            DateTimeOffset newestUploadDate = DateTimeOffset.MinValue;
+
             foreach (var remote in updatesFromServer)
             {
                 TPoco local = null;
                 TPoco merged = null;
-                if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
-                {
-                    local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
-                }
-                else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
-                {
-                    local =
-                        dbSet.Select(a => a)
-                            .AsNoTracking()
-                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
-                }
-                else if (pocoType == typeof(CropType))
-                {
-                    var x = remote as CropType;
-                    local = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
-                }
-                else if (pocoType == typeof(SensorHistory))
+                if (pocoType == typeof(SensorHistory))
                 {
                     var remoteSenHist = remote as SensorHistory;
+                    Debug.Assert(remoteSenHist != null, "remoteSenHist != null, poco type detection failed.");
+
                     var localSenHist =
                         dbSet.OfType<SensorHistory>()
                             .AsNoTracking()
@@ -282,23 +268,20 @@
                     }
                     else
                     {
-                        Debug.Assert(remoteSenHist != null, "remoteSenHist != null, poco type detection failed.");
                         remoteSenHist.SerialiseData();
                     }
 
-                    if (remoteSenHist != null)
-                    {
-                        var id = remoteSenHist.SensorID;
-                        await
-                            Messenger.Instance.NewSensorDataPoint.Invoke(
-                                    remoteSenHist.Data.Select(
-                                        d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
-                                .ConfigureAwait(false);
-                    }
+                    var id = remoteSenHist.SensorID;
+                    await
+                        Messenger.Instance.NewSensorDataPoint.Invoke(
+                                remoteSenHist.Data.Select(
+                                    d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
+                            .ConfigureAwait(false);
                 }
                 else if (pocoType == typeof(RelayHistory))
                 {
                     var remoteRelayHist = remote as RelayHistory;
+                    Debug.Assert(remoteRelayHist != null, "remoteRelayHist != null, poco type detection failed.");
                     var oldHist =
                         dbSet.OfType<RelayHistory>()
                             .AsNoTracking()
@@ -315,19 +298,16 @@
                     }
                     else
                     {
-                        Debug.Assert(remoteRelayHist != null, "remoteRelayHist != null, poco type detection failed.");
                         remoteRelayHist.SerialiseData();
                     }
 
-                    if (remoteRelayHist != null)
-                    {
                         var id = remoteRelayHist.RelayID;
                         await
                             Messenger.Instance.NewRelayDataPoint.Invoke(
                                     remoteRelayHist.Data.Select(
                                         d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)))
                                 .ConfigureAwait(false);
-                    }
+                    
                 }
 
                 //Whatever it is, jsut add record to the DB 
@@ -337,28 +317,7 @@
                 }
                 else
                 {
-                    //User Tables
-                    if (remote is BaseEntity && local is BaseEntity)
-                    {
-                        // These types allow local changes. Check date and don't overwrite unless the server has changed.
-                        var remoteVersion = remote as BaseEntity;
-                        var localVersion = local as BaseEntity;
-
-                        if (remoteVersion.UpdatedAt > localVersion.UpdatedAt)
-                        {
-                            // Overwrite local version, with the server's changes.
-                            dbSet.Update(remote);
-                            //await Messenger.Instance.UserTablesChanged.Invoke("update");
-                        }
-                        // We are not using this mode where ther server gets to override local changes. Far too confusing.
-                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
-                        //{
-                        //    // Overwrite local version with remote version that was modified since the last update.
-                        //    // The local version is newer but we have decided to overwrite it 
-                        //    dbSet.Update(entry);
-                        //}
-                    }
-                    else if (typeof(TPoco) == typeof(SensorHistory))
+                    if (typeof(TPoco) == typeof(SensorHistory))
                     {
                         Debug.Assert(merged != null, "merged != null, poco type detection failed.");
                         dbSet.Update(merged);
@@ -506,7 +465,7 @@
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            var lastDatabasePost = settings.LastDatabasePost;
+            var lastDatabasePost = settings.LastDatabaseUpload;
 
             var postTime = DateTimeOffset.Now;
             var responses = new List<string>();
@@ -538,7 +497,7 @@
             }
 
             var errors = responses.Where(r => r != null).ToList();
-            if (!errors.Any()) settings.LastDatabasePost = postTime;
+            if (!errors.Any()) settings.LastDatabaseUpload = postTime;
             return errors;
         }
 
@@ -620,16 +579,23 @@
         { // Any exeption raised in these methods result in abort exeption with an error message for debug.
             try
             {
+                var lastUpdate = Settings.Instance.LastDatabaseDownload;
+                var unixTime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
+
                 // Step 1: Request
-                var response = await DownloadRequest(tableName, cred);
+                var response = await DownloadRequest($"{tableName}/{unixTime}/5", cred);
 
                 // Step 2: Deserialise
                 var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
                 Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
 
+                var numberofItems = updatesFromServer.Count;
+
                 // Step 3: Merge
                 // Get the DbSet that this request should be inserted into.
                 await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
+
+                return $"Success:{numberofItems}";
             }
             catch (Exception ex)
             {
@@ -667,7 +633,6 @@
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            var lastUpdate = settings.LastDatabaseUpdate;
             var now = DateTimeOffset.Now;
 
             var res = new List<string>();
@@ -737,15 +702,14 @@
                 // 1.RelayHistory
                 // 2.SensorHistory
 
-                var unixtime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
+                var lastUpdate = Settings.Instance.LastDatabaseDownload;
 
-                res.Add(
-                    await
-                        ReqDeserMergeHistory($"{nameof(db.SensorsHistory)}/{unixtime}/9001", db.SensorsHistory, creds)
+                    res.Add(await
+                        ReqDeserMergeHistory(nameof(db.SensorsHistory), db.SensorsHistory, creds)
                             .ConfigureAwait(false));
-                res.Add(
-                    await
-                        ReqDeserMergeHistory($"{nameof(db.RelayHistory)}/{unixtime}/9001", db.RelayHistory, creds)
+
+                res.Add(await
+                        ReqDeserMergeHistory(nameof(db.RelayHistory), db.RelayHistory, creds)
                             .ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
@@ -759,7 +723,7 @@
 
             if (!res.Any())
             {
-                settings.LastDatabaseUpdate = now;
+                settings.LastDatabaseDownload = now;
             }
 
             return res;
