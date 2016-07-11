@@ -7,17 +7,13 @@
     using Windows.Storage;
     using JetBrains.Annotations;
 
-    /// <summary>
-    ///     A singleton to create settings properties in.
-    ///     Local and roaming are hard coded into individual properties.
-    /// </summary>
+    /// <summary>A singleton to create settings properties in. Local and roaming are hard coded into
+    /// individual properties.</summary>
     internal class Settings : INotifyPropertyChanged
     {
         public delegate void ChangeHandler();
 
-        /// <summary>
-        ///     Enum for choosing where a property that you want to delete exists.
-        /// </summary>
+        /// <summary>Enum for choosing where a property that you want to delete exists.</summary>
         public enum SettingsType
         {
             Local,
@@ -26,15 +22,13 @@
 
         private readonly ApplicationDataContainer _localSettings;
         private readonly ApplicationDataContainer _roamingSettings;
+        private ApplicationDataCompositeValue _combinedCreds;
         private bool _credsSet;
         private Guid _credStableSid;
         private string _credToken;
         private string _credUserId;
-        private ApplicationDataCompositeValue _combinedCreds;
 
-        /// <summary>
-        ///     Creata a new settings obbject that gives acces to local and roaming settings.
-        /// </summary>
+        /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
         {
             _roamingSettings = ApplicationData.Current.RoamingSettings;
@@ -77,9 +71,7 @@
             }
         }
 
-        /// <summary>
-        ///     The credentials token setting.
-        /// </summary>
+        /// <summary>The credentials token setting.</summary>
         public string CredToken
         {
             get { return _credToken; }
@@ -92,9 +84,7 @@
             }
         }
 
-        /// <summary>
-        ///     The credentials userID setting.
-        /// </summary>
+        /// <summary>The credentials userID setting.</summary>
         public string CredUserId
         {
             get { return _credUserId; }
@@ -107,9 +97,7 @@
             }
         }
 
-        /// <summary>
-        ///     Singleton instance accessor.
-        /// </summary>
+        /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
 
         public DateTimeOffset LastDatabasePost
@@ -145,16 +133,8 @@
             }
         }
 
-        public void ResetDatabaseAndPostSettings()
-        {
-            LastDatabasePost = default(DateTimeOffset);
-            LastDatabaseUpdate = default(DateTimeOffset);
-            LastSensorDataPost = default(DateTimeOffset);
-        }
-
-        /// <summary>
-        ///     Local setting that allows the app to run local network for device management. Defaults to false.
-        /// </summary>
+        /// <summary>Local setting that allows the app to run local network for device management. Defaults to
+        /// false.</summary>
         public bool LocalDeviceManagementEnabled
         {
             get { return Get(_localSettings, false); }
@@ -182,9 +162,7 @@
 
         public event ChangeHandler CredsChanged;
 
-        /// <summary>
-        ///     Method to unset a method value if it exists, otherwise it does nothing.
-        /// </summary>
+        /// <summary>Method to unset a method value if it exists, otherwise it does nothing.</summary>
         /// <param name="settingsName">Name of the setting to unset.</param>
         /// <param name="settingsType">Roaming or local.</param>
         public void Delete([NotNull] string settingsName, SettingsType settingsType)
@@ -204,6 +182,13 @@
 
             if (container.Values.ContainsKey(settingsName))
                 container.Values.Remove(settingsName);
+        }
+
+        public void ResetDatabaseAndPostSettings()
+        {
+            LastDatabasePost = default(DateTimeOffset);
+            LastDatabaseUpdate = default(DateTimeOffset);
+            LastSensorDataPost = default(DateTimeOffset);
         }
 
         public void SetNewCreds(string token, string userId, Guid stableSid)
@@ -230,9 +215,7 @@
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        /// <summary>
-        ///     Gets the setting with the name of the property it is called from.
-        /// </summary>
+        /// <summary>Gets the setting with the name of the property it is called from.</summary>
         /// <typeparam name="T">The type of the setting, must be the same as the property.</typeparam>
         /// <param name="settingsContainer">Local or roaming.</param>
         /// <param name="defaultValue">The value to return if the setting is not set.</param>
@@ -252,9 +235,7 @@
             return defaultValue;
         }
 
-        /// <summary>
-        ///     Sets the setting with the name of the property it is called from.
-        /// </summary>
+        /// <summary>Sets the setting with the name of the property it is called from.</summary>
         /// <typeparam name="T">The type of the setting value.</typeparam>
         /// <param name="settingsContainer">Local or roaming.</param>
         /// <param name="value">The value to set.</param>
