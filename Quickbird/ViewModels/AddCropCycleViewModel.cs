@@ -172,7 +172,6 @@
                 CropTypeName = cropType.Name,
                 CropVariety = CropVariety,
                 LocationID = _chosenPlace.Location.ID,
-                Location = _chosenPlace.Location,
                 CreatedAt = DateTimeOffset.Now,
                 UpdatedAt = DateTimeOffset.Now,
                 StartDate = DateTimeOffset.Now,
