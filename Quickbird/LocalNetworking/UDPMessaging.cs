@@ -14,13 +14,10 @@
     using Windows.UI.Xaml;
     using Util;
 
-    /// <summary>
-    ///     This class broadcasts UDP messages.  It should be instantiated by the Manager.
-    ///     The sensor boxees listen for those UDP messages, and connect to the server that sent them.
-    ///     That way the server does not need a static IP
-    ///     Here i use a System.Net api which is different to Windows.Networking, and is somewhat lower level.
-    ///     If you try to instantiate this class twice, you will get an exception!
-    /// </summary>
+    /// <summary>This class broadcasts UDP messages.  It should be instantiated by the Manager. The sensor
+    /// boxees listen for those UDP messages, and connect to the server that sent them. That way the server
+    /// does not need a static IP Here i use a System.Net api which is different to Windows.Networking, and
+    /// is somewhat lower level. If you try to instantiate this class twice, you will get an exception!</summary>
     public class UDPMessaging : IDisposable
     {
         public const int BroadcastIntervalSeconds = 3;
@@ -39,8 +36,7 @@
             {
                 throw new Exception("Tried to create more than one UDPMessaging Class!");
             }
-            Task.Run(() =>
-            ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            Task.Run(() => ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 UdpBroadcastTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(BroadcastIntervalSeconds)};
                 UdpBroadcastTimer.Tick += UDPBroadcast;
@@ -77,58 +73,35 @@
             // GC.SuppressFinalize(this);
         }
 
-        private void UDPBroadcast(object sender, object o)
+        protected virtual void Dispose(bool disposing)
         {
-            var localEndPoints = new List<IPAddress>();
-
-            foreach (var localHostName in NetworkInformation.GetHostNames())
+            if (!Disposed)
             {
-                if (localHostName.IPInformation != null && localHostName.Type == HostNameType.Ipv4
-                    && localHostName.IPInformation.PrefixLength.HasValue)
-                    //by making sure that there is a prefix, we will probably hit a local network
+                if (disposing)
                 {
-                    var ipString = localHostName.CanonicalName;
-                    var stringBytes = ipString.Split('.');
-                    var localIPBytes = new byte[stringBytes.Length];
-                    var broadcastIpBytes = new byte[stringBytes.Length];
-
-
-                    for (var i = 0; i < stringBytes.Length; i++)
-                    {
-                        localIPBytes[i] = byte.Parse(stringBytes[i]);
-                        broadcastIpBytes[i] = localIPBytes[i];
-
-                        var maskLength = localHostName.IPInformation.PrefixLength.Value - 8*i;
-
-                        if (maskLength > 0)
-                        {
-                            var bynaryMask = (byte) (255 >> maskLength);
-                            broadcastIpBytes[i] = (byte) (broadcastIpBytes[i] | bynaryMask);
-                        }
-                        else
-                            broadcastIpBytes[i] = 255;
-                    }
-
-                    localEndPoints.Add(new IPAddress(localIPBytes));
-                    var broadcast = new IPAddress(broadcastIpBytes);
-
-                    var sds = new SocketAsyncEventArgs
-                    {
-                        RemoteEndPoint = new IPEndPoint(broadcast, 44000)
-                    };
-                    sds.SetBuffer(new byte[] {115, 101, 107, 114, 101, 116}, 0, 6);
-                    //sekret - the message arduino reacts to 
-
-                    _udpSocket.SendToAsync(sds);
+                    // TODO: dispose managed state (managed objects).
                 }
-            }
 
-            Interlocked.Exchange(ref _localEndPoints, localEndPoints);
+                var cleanUpTimer = new Action(() =>
+                {
+                    UdpBroadcastTimer.Stop();
+                    UdpBroadcastTimer.Tick -= UDPBroadcast;
+                });
+
+                BlockingDispatcher.Run(cleanUpTimer);
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                _udpSocket.Dispose();
+
+                // TODO: set large fields to null.
+                _instance = null;
+
+                Disposed = true;
+            }
         }
 
-        /// <summary>
-        ///     This is a call-back function triggered when we receive a new message, otehrwise known as Async for C
-        /// </summary>
+        /// <summary>This is a call-back function triggered when we receive a new message, otehrwise known as
+        /// Async for C</summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ReceiveFromCallback(object sender, SocketAsyncEventArgs e)
@@ -167,31 +140,50 @@
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void UDPBroadcast(object sender, object o)
         {
-            if (!Disposed)
+            var localEndPoints = new List<IPAddress>();
+
+            foreach (var localHostName in NetworkInformation.GetHostNames())
             {
-                if (disposing)
+                if (localHostName.IPInformation != null && localHostName.Type == HostNameType.Ipv4 &&
+                    localHostName.IPInformation.PrefixLength.HasValue)
+                    //by making sure that there is a prefix, we will probably hit a local network
                 {
-                    // TODO: dispose managed state (managed objects).
+                    var ipString = localHostName.CanonicalName;
+                    var stringBytes = ipString.Split('.');
+                    var localIPBytes = new byte[stringBytes.Length];
+                    var broadcastIpBytes = new byte[stringBytes.Length];
+
+
+                    for (var i = 0; i < stringBytes.Length; i++)
+                    {
+                        localIPBytes[i] = byte.Parse(stringBytes[i]);
+                        broadcastIpBytes[i] = localIPBytes[i];
+
+                        var maskLength = localHostName.IPInformation.PrefixLength.Value - 8*i;
+
+                        if (maskLength > 0)
+                        {
+                            var bynaryMask = (byte) (255 >> maskLength);
+                            broadcastIpBytes[i] = (byte) (broadcastIpBytes[i] | bynaryMask);
+                        }
+                        else
+                            broadcastIpBytes[i] = 255;
+                    }
+
+                    localEndPoints.Add(new IPAddress(localIPBytes));
+                    var broadcast = new IPAddress(broadcastIpBytes);
+
+                    var sds = new SocketAsyncEventArgs {RemoteEndPoint = new IPEndPoint(broadcast, 44000)};
+                    sds.SetBuffer(new byte[] {115, 101, 107, 114, 101, 116}, 0, 6);
+                    //sekret - the message arduino reacts to 
+
+                    _udpSocket.SendToAsync(sds);
                 }
-
-                var cleanUpTimer = new Action(() =>
-                {
-                    UdpBroadcastTimer.Stop();
-                    UdpBroadcastTimer.Tick -= UDPBroadcast;
-                });
-
-                BlockingDispatcher.Run(cleanUpTimer);
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                _udpSocket.Dispose();
-
-                // TODO: set large fields to null.
-                _instance = null;
-
-                Disposed = true;
             }
+
+            Interlocked.Exchange(ref _localEndPoints, localEndPoints);
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Linq;
     using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
@@ -19,9 +18,7 @@
     using Util;
     using Views;
 
-    /// <summary>
-    ///     Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
+    /// <summary>Provides application-specific behavior to supplement the default Application class.</summary>
     public sealed partial class App : Application
     {
         private readonly ConcurrentQueue<Task> _activeSessionTasks = new ConcurrentQueue<Task>();
@@ -31,10 +28,8 @@
         private Manager _networking;
         private bool _notPrelaunchSuspend;
 
-        /// <summary>
-        ///     Initializes the singleton application object.  This is the first line of authored code
-        ///     executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
+        /// <summary>Initializes the singleton application object.  This is the first line of authored code
+        /// executed, and as such is the logical equivalent of main() or WinMain().</summary>
         public App()
         {
             InitializeComponent();
@@ -42,9 +37,8 @@
             Resuming += OnResuming;
         }
 
-        /// <summary>
-        ///     The UI dispatcher for this app. This ensures that the correct dispatcher is acquired in both kiosk and normal apps.
-        /// </summary>
+        /// <summary>The UI dispatcher for this app. This ensures that the correct dispatcher is acquired in
+        /// both kiosk and normal apps.</summary>
         public CoreDispatcher Dispatcher { get; private set; }
 
         public Frame RootFrame { get; private set; }
@@ -56,10 +50,8 @@
             ClearCompletedSessionTasks();
         }
 
-        /// <summary>
-        ///     Shuts down all local and internet network managers and then waits for any existing database and server requests to
-        ///     finish.
-        /// </summary>
+        /// <summary>Shuts down all local and internet network managers and then waits for any existing
+        /// database and server requests to finish.</summary>
         /// <returns>awaitable, please wait for this to finish.</returns>
         public async Task EndSession()
         {
@@ -73,9 +65,7 @@
             await AwaitAllSessionTasks().ConfigureAwait(false);
         }
 
-        /// <summary>
-        ///     Ends session, deletes database and unsets all credentials.
-        /// </summary>
+        /// <summary>Ends session, deletes database and unsets all credentials.</summary>
         /// <returns></returns>
         public async Task SignOut()
         {
@@ -89,9 +79,7 @@
             await (await localFolder.GetItemAsync(MainDbContext.FileName)).DeleteAsync();
         }
 
-        /// <summary>
-        ///     Starts or kills the local device network if the settings permit it.
-        /// </summary>
+        /// <summary>Starts or kills the local device network if the settings permit it.</summary>
         public async Task StartOrKillNetworkManagerBasedOnSettings()
         {
             if (Settings.Instance.LocalDeviceManagementEnabled)
@@ -123,9 +111,8 @@
             await StartOrKillNetworkManagerBasedOnSettings();
         }
 
-        /// <summary>
-        ///     This only gets called if the application is activated via some special means. We are not currently doing so.
-        /// </summary>
+        /// <summary>This only gets called if the application is activated via some special means. We are not
+        /// currently doing so.</summary>
         /// <param name="args"></param>
         protected override void OnActivated(IActivatedEventArgs args)
         {
@@ -150,11 +137,9 @@
             }
         }
 
-        /// <summary>
-        ///     Fired when the user attempts to open the program, even whent he program is already open.
-        ///     This gets fired when the user clicks notifications, resulting in this being called in an already running
-        ///     application.
-        /// </summary>
+        /// <summary>Fired when the user attempts to open the program, even whent he program is already open.
+        /// This gets fired when the user clicks notifications, resulting in this being called in an already
+        /// running application.</summary>
         /// <param name="e">Details about the launch request and process.</param>
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
@@ -210,9 +195,7 @@
             }
         }
 
-        /// <summary>
-        ///     Fired when Windows decides to kill a session.
-        /// </summary>
+        /// <summary>Fired when Windows decides to kill a session.</summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         private async void ExtendedExecutionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
@@ -232,9 +215,7 @@
             }
         }
 
-        /// <summary>
-        ///     Cleanly destroy an old session so that a new one can be requested.
-        /// </summary>
+        /// <summary>Cleanly destroy an old session so that a new one can be requested.</summary>
         private void KillExtendedExecutionSession()
         {
             if (_extendedExecutionSession != null)
@@ -245,9 +226,7 @@
             }
         }
 
-        /// <summary>
-        ///     Kills the network manager.
-        /// </summary>
+        /// <summary>Kills the network manager.</summary>
         private async Task KillNetworkManager()
         {
             await Task.Run(() =>
@@ -261,9 +240,7 @@
             }).ConfigureAwait(false);
         }
 
-        /// <summary>
-        ///     Invoked when Navigation to a certain page fails
-        /// </summary>
+        /// <summary>Invoked when Navigation to a certain page fails</summary>
         /// <param name="sender">The Frame which failed navigation</param>
         /// <param name="e">Details about the navigation failure</param>
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
@@ -284,9 +261,7 @@
             WebSocketConnection.Instance.Resume();
         }
 
-        /// <summary>
-        ///     Lifecycle suspend.
-        /// </summary>
+        /// <summary>Lifecycle suspend.</summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
@@ -346,9 +321,7 @@
             }
         }
 
-        /// <summary>
-        ///     Starts a new session, assuming the old one has been closed. I hope you did a null check.
-        /// </summary>
+        /// <summary>Starts a new session, assuming the old one has been closed. I hope you did a null check.</summary>
         /// <returns>awaitable</returns>
         private async Task StartExtendedSession()
         {

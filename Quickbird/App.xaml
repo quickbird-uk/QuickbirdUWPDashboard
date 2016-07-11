@@ -1,9 +1,8 @@
-﻿
-<Application x:Class="Quickbird.App"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Quickbird"
-    RequestedTheme="Light">
+﻿<Application x:Class="Quickbird.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Quickbird"
+             RequestedTheme="Light">
     <Application.Resources>
         <!--  Navigation Panel | SplitView  -->
         <Style x:Key="NavigationPanel" TargetType="SplitView">

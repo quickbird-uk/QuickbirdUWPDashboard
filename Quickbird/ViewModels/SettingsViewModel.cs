@@ -19,10 +19,7 @@
         {
             _localNetworkConflictAction = LocalNetworkConflictDetected;
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
-            var timer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
+            var timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(1)};
             EventHandler<object> timerOnTick = (sender, o) =>
             {
                 var now = DateTimeOffset.Now;
@@ -35,20 +32,7 @@
             timer.Start();
         }
 
-        public bool IsNetworkConflict
-        {
-            get { return _isNetworkConflict; }
-            set
-            {
-                if (value == _isNetworkConflict) return;
-                _isNetworkConflict = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     Enable the local network to communicate with devices. tied directly to settings.
-        /// </summary>
+        /// <summary>Enable the local network to communicate with devices. tied directly to settings.</summary>
         public bool DeviceManagementEnabled
         {
             get { return Settings.Instance.LocalDeviceManagementEnabled; }
@@ -64,10 +48,24 @@
             }
         }
 
-        /// <summary>
-        ///     Signs out the twitter account by deleteing the creds, deleteing the database, stopping the live data and navigating
-        ///     back to the landing page.
-        /// </summary>
+        public bool IsNetworkConflict
+        {
+            get { return _isNetworkConflict; }
+            set
+            {
+                if (value == _isNetworkConflict) return;
+                _isNetworkConflict = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public override void Kill()
+        {
+            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+        }
+
+        /// <summary>Signs out the twitter account by deleteing the creds, deleteing the database, stopping the
+        /// live data and navigating back to the landing page.</summary>
         public void SignOut()
         {
             ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView));
@@ -77,11 +75,6 @@
         {
             IsNetworkConflict = true;
             _lastConflictDetected = DateTimeOffset.Now;
-        }
-
-        public override void Kill()
-        {
-            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
         }
     }
 }

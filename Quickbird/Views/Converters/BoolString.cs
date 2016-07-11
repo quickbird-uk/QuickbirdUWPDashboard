@@ -4,14 +4,10 @@
     using System.Linq;
     using Windows.UI.Xaml.Data;
 
-    /// <summary>
-    ///     First parameter corresponds to true, second to false. Delimit parameters with |.
-    /// </summary>
+    /// <summary>First parameter corresponds to true, second to false. Delimit parameters with |.</summary>
     public class BoolString : IValueConverter
     {
-        /// <summary>
-        ///     Converts true and false to corresponding strings supplied as parameters.
-        /// </summary>
+        /// <summary>Converts true and false to corresponding strings supplied as parameters.</summary>
         /// <param name="value">a boolean</param>
         /// <param name="targetType">string</param>
         /// <param name="parameter">Use a bar to separate params: "trueString|falseString"</param>
@@ -37,9 +33,7 @@
             return items.Last();
         }
 
-        /// <summary>
-        ///     string to bool, expected strings supplied in params.
-        /// </summary>
+        /// <summary>string to bool, expected strings supplied in params.</summary>
         /// <param name="value">A string or any object where ToString() works.</param>
         /// <param name="targetType">string</param>
         /// <param name="parameter">Use a bar to separate params: "trueString|falseString"</param>

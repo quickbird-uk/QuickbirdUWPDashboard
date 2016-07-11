@@ -13,17 +13,6 @@
         private string _friendlyText = "Your Twitter Account is used to authenticate you.";
         private bool _loginEnabled;
 
-        public bool LoginEnabled
-        {
-            get { return _loginEnabled; }
-            set
-            {
-                if (value == _loginEnabled) return;
-                _loginEnabled = value;
-                OnPropertyChanged();
-            }
-        }
-
         public string FriendlyText
         {
             get { return _friendlyText; }
@@ -35,10 +24,20 @@
             }
         }
 
-        private void UpdateCredsAndTokens()
+        public bool LoginEnabled
         {
-            var settings = Settings.Instance;
-            Debug.WriteLine(settings.CredToken ?? "No saved auth.");
+            get { return _loginEnabled; }
+            set
+            {
+                if (value == _loginEnabled) return;
+                _loginEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public override void Kill()
+        {
+            // No special resources use here.
         }
 
         public async void Login()
@@ -75,9 +74,10 @@
             ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
         }
 
-        public override void Kill()
+        private void UpdateCredsAndTokens()
         {
-            // No special resources use here.
+            var settings = Settings.Instance;
+            Debug.WriteLine(settings.CredToken ?? "No saved auth.");
         }
     }
 }

@@ -32,63 +32,7 @@
             UpdateData(string.Empty);
         }
 
-        /// <summary>
-        ///     List of places to be displayed to the user.
-        /// </summary>
-        public ObservableCollection<PlaceTuple> PlaceList
-        {
-            get { return _placeList; }
-            private set
-            {
-                _placeList = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     This is the selection of the user
-        /// </summary>
-        public object SelectedPlace
-        {
-            get { return _chosenPlace; }
-            set
-            {
-                _chosenPlace = (PlaceTuple) value;
-                ChosenIsVacant = _chosenPlace.IsVacant;
-            }
-        }
-
-        /// <summary>
-        ///     CropType Chosen By the user. Set By UI
-        /// </summary>
-        public string UserCropType
-        {
-            get { return _userEnteredCropType; }
-            set
-            {
-                _userEnteredCropType = value;
-                SuggestedList = _cropTypeCache.Where(ct => ct.Key
-                        .Contains(_userEnteredCropType.ToLower()))
-                    .Select(ct => ct.Value.Name).ToList();
-            }
-        }
-
-        /// <summary>
-        ///     Suggested Crop List for the suggestion box.
-        /// </summary>
-        public List<string> SuggestedList
-        {
-            get { return _suggestedList; }
-            set
-            {
-                _suggestedList = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     Indicates if the chosen Location is avaliable for a new cropRun to be created
-        /// </summary>
+        /// <summary>Indicates if the chosen Location is avaliable for a new cropRun to be created</summary>
         public bool ChosenIsVacant
         {
             get { return _chosenIsVacant; }
@@ -101,53 +45,50 @@
 
         public string CropVariety { get; set; }
 
-
-        /// <summary>
-        ///     Update Data event, runs every time
-        /// </summary>
-        /// <param name="something"></param>
-        private async void UpdateData(string something)
+        /// <summary>List of places to be displayed to the user.</summary>
+        public ObservableCollection<PlaceTuple> PlaceList
         {
-            using (var db = new MainDbContext())
+            get { return _placeList; }
+            private set
             {
-                var places =
-                    await db.Locations.Where(loc => loc.Devices.Count > 0).Include(loc => loc.CropCycles).ToListAsync();
+                _placeList = value;
+                OnPropertyChanged();
+            }
+        }
 
-                var cropTypeCache = await db.CropTypes.ToListAsync();
-                foreach (var cropType in cropTypeCache)
-                {
-                    if (_cropTypeCache.Any(ct => ct.Key.Equals(cropType.Name.ToLower())) == false)
-                    {
-                        var pair = new KeyValuePair<string, CropType>(cropType.Name.ToLower(),
-                            cropType);
-                        _cropTypeCache.Add(pair);
-                    }
-                }
+        /// <summary>This is the selection of the user</summary>
+        public object SelectedPlace
+        {
+            get { return _chosenPlace; }
+            set
+            {
+                _chosenPlace = (PlaceTuple) value;
+                ChosenIsVacant = _chosenPlace.IsVacant;
+            }
+        }
 
-                foreach (var loc in places)
-                {
-                    var tuple =
-                        PlaceList.FirstOrDefault(ct => ct.Location.Equals(loc));
-                    if (tuple == null)
-                    {
-                        tuple = new PlaceTuple {Location = loc};
-                        PlaceList.Add(tuple);
-                    }
+        /// <summary>Suggested Crop List for the suggestion box.</summary>
+        public List<string> SuggestedList
+        {
+            get { return _suggestedList; }
+            set
+            {
+                _suggestedList = value;
+                OnPropertyChanged();
+            }
+        }
 
-                    var runningCropCycle = loc.CropCycles.FirstOrDefault(cc => cc.EndDate == null);
-                    if (runningCropCycle != null)
-                    {
-                        tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName +
-                                            " of variety " + runningCropCycle.CropVariety;
-                        tuple.IsVacant = false;
-                    }
-                    else
-                    {
-                        tuple.DisplayName = loc.Name + " - Avaliable";
-                        tuple.IsVacant = true;
-                    }
-                }
-                OnPropertyChanged(nameof(PlaceList));
+        /// <summary>CropType Chosen By the user. Set By UI</summary>
+        public string UserCropType
+        {
+            get { return _userEnteredCropType; }
+            set
+            {
+                _userEnteredCropType = value;
+                SuggestedList =
+                    _cropTypeCache.Where(ct => ct.Key.Contains(_userEnteredCropType.ToLower()))
+                        .Select(ct => ct.Value.Name)
+                        .ToList();
             }
         }
 
@@ -155,8 +96,8 @@
         {
             ChosenIsVacant = false;
             var settings = Settings.Instance;
-            var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value
-                           ?? new CropType
+            var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value ??
+                           new CropType
                            {
                                Name = UserCropType,
                                Approved = false,
@@ -190,15 +131,56 @@
         }
 
 
-        public override void Kill()
+        public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateEvent); }
+
+
+        /// <summary>Update Data event, runs every time</summary>
+        /// <param name="something"></param>
+        private async void UpdateData(string something)
         {
-            Messenger.Instance.TablesChanged.Unsubscribe(_updateEvent);
+            using (var db = new MainDbContext())
+            {
+                var places =
+                    await db.Locations.Where(loc => loc.Devices.Count > 0).Include(loc => loc.CropCycles).ToListAsync();
+
+                var cropTypeCache = await db.CropTypes.ToListAsync();
+                foreach (var cropType in cropTypeCache)
+                {
+                    if (_cropTypeCache.Any(ct => ct.Key.Equals(cropType.Name.ToLower())) == false)
+                    {
+                        var pair = new KeyValuePair<string, CropType>(cropType.Name.ToLower(), cropType);
+                        _cropTypeCache.Add(pair);
+                    }
+                }
+
+                foreach (var loc in places)
+                {
+                    var tuple = PlaceList.FirstOrDefault(ct => ct.Location.Equals(loc));
+                    if (tuple == null)
+                    {
+                        tuple = new PlaceTuple {Location = loc};
+                        PlaceList.Add(tuple);
+                    }
+
+                    var runningCropCycle = loc.CropCycles.FirstOrDefault(cc => cc.EndDate == null);
+                    if (runningCropCycle != null)
+                    {
+                        tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName +
+                                            " of variety " + runningCropCycle.CropVariety;
+                        tuple.IsVacant = false;
+                    }
+                    else
+                    {
+                        tuple.DisplayName = loc.Name + " - Avaliable";
+                        tuple.IsVacant = true;
+                    }
+                }
+                OnPropertyChanged(nameof(PlaceList));
+            }
         }
 
 
-        /// <summary>
-        ///     Used as a grouping for UI to blabber about
-        /// </summary>
+        /// <summary>Used as a grouping for UI to blabber about</summary>
         public class PlaceTuple : ViewModelBase
         {
             private string _displayName;
@@ -222,22 +204,22 @@
                 }
             }
 
-            public Location Location
-            {
-                get { return _location; }
-                set
-                {
-                    _location = value;
-                    OnPropertyChanged();
-                }
-            }
-
             public bool IsVacant
             {
                 get { return _isVacant; }
                 set
                 {
                     _isVacant = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public Location Location
+            {
+                get { return _location; }
+                set
+                {
+                    _location = value;
                     OnPropertyChanged();
                 }
             }

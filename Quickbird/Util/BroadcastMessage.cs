@@ -7,50 +7,19 @@
     using Windows.UI.Core;
     using Windows.UI.Xaml;
 
-    /// <summary>
-    ///     Broacast a message to multiple subscribers.
-    /// </summary>
+    /// <summary>Broacast a message to multiple subscribers.</summary>
     /// <typeparam name="T"></typeparam>
     public class BroadcastMessage<T>
     {
         private readonly List<WeakReference<Action<T>>> _subscribers = new List<WeakReference<Action<T>>>();
 
-        /// <summary>
-        ///     Puts an weakrefernce to an action on the list of actions to be used when the Invoke method is called.
-        /// </summary>
-        /// <param name="action">Action to be invoked on the Invoke method.</param>
-        public void Subscribe(Action<T> action)
-        {
-            _subscribers.Add(new WeakReference<Action<T>>(action));
-        }
-
-        /// <summary>
-        ///     Removes any weakreferences to the specified action immediately.
-        /// </summary>
-        /// <param name="action">Action to be removed.</param>
-        public void Unsubscribe(Action<T> action)
-        {
-            _subscribers.RemoveAll(weakRef =>
-            {
-                Action<T> target;
-                if (weakRef.TryGetTarget(out target))
-                {
-                    return target == action;
-                }
-                return false;
-            });
-        }
-
-        /// <summary>
-        ///     Invokes all the subscribed actions that have not been garbage collected. References to non-existing objects are
-        ///     cleaned up.
-        /// </summary>
+        /// <summary>Invokes all the subscribed actions that have not been garbage collected. References to
+        /// non-existing objects are cleaned up.</summary>
         /// <param name="param">Parameter passed to actions</param>
         /// <param name="useCoreDispatcher">Default true, invoke on UI. When false uses Task.Run().</param>
-        /// <param name="insertCompletionSource">
-        ///     If the param is a completion source this will create a new completion source for
-        ///     every action, await them all and then SetResult(null) on the original param completion source.
-        /// </param>
+        /// <param name="insertCompletionSource">If the param is a completion source this will create a new
+        /// completion source for every action, await them all and then SetResult(null) on the original param
+        /// completion source.</param>
         /// <returns>Awaitable.</returns>
         public async Task Invoke(T param, bool useCoreDispatcher = true, bool insertCompletionSource = false)
         {
@@ -71,7 +40,7 @@
             _subscribers.RemoveAll(deadActions.Contains);
 
             CoreDispatcher dispatcher = null;
-            if (useCoreDispatcher) dispatcher = ((App)Application.Current).Dispatcher;
+            if (useCoreDispatcher) dispatcher = ((App) Application.Current).Dispatcher;
             if (dispatcher == null)
                 Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}");
 
@@ -121,6 +90,26 @@
                     }
                 }
             }
+        }
+
+        /// <summary>Puts an weakrefernce to an action on the list of actions to be used when the Invoke method
+        /// is called.</summary>
+        /// <param name="action">Action to be invoked on the Invoke method.</param>
+        public void Subscribe(Action<T> action) { _subscribers.Add(new WeakReference<Action<T>>(action)); }
+
+        /// <summary>Removes any weakreferences to the specified action immediately.</summary>
+        /// <param name="action">Action to be removed.</param>
+        public void Unsubscribe(Action<T> action)
+        {
+            _subscribers.RemoveAll(weakRef =>
+            {
+                Action<T> target;
+                if (weakRef.TryGetTarget(out target))
+                {
+                    return target == action;
+                }
+                return false;
+            });
         }
     }
 }

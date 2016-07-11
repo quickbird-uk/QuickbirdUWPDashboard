@@ -14,14 +14,24 @@
 
         private ObservableCollection<LiveCardViewModel> _mainCards = new ObservableCollection<LiveCardViewModel>();
 
-        /// <summary>
-        /// All data in this model trickles up from the DashboardViewModel, making this a simple data model class.
-        /// </summary>
+        /// <summary>All data in this model trickles up from the DashboardViewModel, making this a simple data
+        /// model class.</summary>
         /// <param name="run"></param>
         public DashboardViewModel([NotNull] CropCycle run)
         {
             CropId = run.ID;
             Update(run);
+        }
+
+        public ObservableCollection<LiveCardViewModel> AmbientCards
+        {
+            get { return _ambientCards; }
+            set
+            {
+                if (value == _ambientCards) return;
+                _ambientCards = value;
+                OnPropertyChanged();
+            }
         }
 
         public ObservableCollection<LiveCardViewModel> Cards
@@ -34,17 +44,8 @@
                 OnPropertyChanged();
             }
         }
-      
-        public ObservableCollection<LiveCardViewModel> AmbientCards
-        {
-            get { return _ambientCards; }
-            set
-            {
-                if (value == _ambientCards) return;
-                _ambientCards = value;
-                OnPropertyChanged();
-            }
-        }
+
+        public Guid CropId { get; }
 
         public ObservableCollection<LiveCardViewModel> MainCards
         {
@@ -57,11 +58,25 @@
             }
         }
 
-        public Guid CropId { get; }
+        public override void Kill()
+        {
+            foreach (var liveCardViewModel in AmbientCards)
+            {
+                liveCardViewModel.Kill();
+            }
 
-        /// <summary>
-        ///     Updates are externally imposed after a bigger database query.
-        /// </summary>
+            foreach (var liveCardViewModel in Cards)
+            {
+                liveCardViewModel.Kill();
+            }
+
+            foreach (var liveCardViewModel in MainCards)
+            {
+                liveCardViewModel.Kill();
+            }
+        }
+
+        /// <summary>Updates are externally imposed after a bigger database query.</summary>
         /// <param name="run">CropCycle including Location.Devices.Sensors.Params</param>
         public void Update(CropCycle run)
         {
@@ -96,15 +111,8 @@
                 }
             }
             //WE chose these two sensors for plantID's. The system we have does not have a good selection right now 
-            var mainIds = new long[]
-            {
-                8,
-                13, 19, 4, 16
-            };
-            var ambientIds = new long[]
-            {
-                5, 6, 11
-            };
+            var mainIds = new long[] {8, 13, 19, 4, 16};
+            var ambientIds = new long[] {5, 6, 11};
 
             var mainItems = Cards.Where(c => mainIds.Contains(c.SensorTypeID));
             var ambientItems = Cards.Where(c => ambientIds.Contains(c.SensorTypeID));
@@ -116,24 +124,6 @@
             foreach (var item in ambientItems)
             {
                 if (!AmbientCards.Contains(item)) AmbientCards.Add(item);
-            }
-        }
-
-        public override void Kill()
-        {
-            foreach (var liveCardViewModel in AmbientCards)
-            {
-                liveCardViewModel.Kill();
-            }
-
-            foreach (var liveCardViewModel in Cards)
-            {
-                liveCardViewModel.Kill();
-            }
-
-            foreach (var liveCardViewModel in MainCards)
-            {
-                liveCardViewModel.Kill();
             }
         }
     }

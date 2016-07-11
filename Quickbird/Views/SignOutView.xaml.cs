@@ -9,9 +9,8 @@
     using Windows.UI.Xaml.Navigation;
     using JetBrains.Annotations;
 
-    /// <summary>
-    ///     Signs out then navigates to Landing OR re-signs in and goes back to shell (requires parameter).
-    /// </summary>
+    /// <summary>Signs out then navigates to Landing OR re-signs in and goes back to shell (requires
+    /// parameter).</summary>
     public sealed partial class SignOutView : Page, INotifyPropertyChanged
     {
         public enum ShouldItSignBackIn
@@ -22,14 +21,9 @@
 
         private string _currentOperation = "Signing Out";
 
-        public SignOutView()
-        {
-            InitializeComponent();
-        }
+        public SignOutView() { InitializeComponent(); }
 
-        /// <summary>
-        ///     UI information for the user.
-        /// </summary>
+        /// <summary>UI information for the user.</summary>
         public string CurrentOperation
         {
             get { return _currentOperation; }

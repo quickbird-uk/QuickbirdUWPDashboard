@@ -9,10 +9,7 @@
     {
         public CropViewModel ViewModel;
 
-        public CropView()
-        {
-            InitializeComponent();
-        }
+        public CropView() { InitializeComponent(); }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {

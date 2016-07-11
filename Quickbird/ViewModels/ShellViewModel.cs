@@ -21,9 +21,8 @@
         private readonly DispatcherTimer _syncTimer;
 
 
-        /// <summary>
-        ///     This action must not be inlined, it is used by the messenger via a weak-reference, inlined it will GC prematurely.
-        /// </summary>
+        /// <summary>This action must not be inlined, it is used by the messenger via a weak-reference, inlined
+        /// it will GC prematurely.</summary>
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _updateAction;
 
@@ -33,9 +32,7 @@
         private bool _isNavOpen = true;
         private object _selectedShellListViewModel;
 
-        /// <summary>
-        ///     Initialise the shell.
-        /// </summary>
+        /// <summary>Initialise the shell.</summary>
         /// <param name="contentFrame">The frame insided the shell used for most navigations.</param>
         public ShellViewModel(Frame contentFrame)
         {
@@ -44,20 +41,14 @@
 
             UpdateInternetInViewModels(IsInternetAvailable);
 
-            _internetCheckTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(5)
-            };
+            _internetCheckTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(5)};
 
             _internetCheckTimer.Tick += OnInternetCheckTimerTick;
             DispatcherTimers.Add(_internetCheckTimer);
 
             _internetCheckTimer.Start();
-            
-            _syncTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
+
+            _syncTimer = new DispatcherTimer {Interval = TimeSpan.FromMinutes(1)};
 
             _syncTimer.Tick += OnSyncTimerTick;
             DispatcherTimers.Add(_syncTimer);
@@ -117,6 +108,34 @@
 
         public ObservableCollection<ShellListViewModel> ShellListViewModels { get; } =
             new ObservableCollection<ShellListViewModel>();
+
+        public async void FirstUpdate()
+        {
+            Debug.WriteLine("Running First Update");
+
+            try
+            {
+                await Update();
+            }
+            catch (Exception e)
+            {
+                Error = e.ToString();
+                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
+            }
+
+
+            if (ShellListViewModels.Count > 0)
+            {
+                var item = ShellListViewModels[0].CropViewModel;
+                _contentFrame.Navigate(typeof(CropView), item);
+                SelectedShellListViewModel = item;
+            }
+            else
+            {
+                _contentFrame.Navigate(typeof(AddCropCycleView));
+                SelectedShellListViewModel = null;
+            }
+        }
 
         public override void Kill()
         {
@@ -184,42 +203,12 @@
             }
         }
 
-        public async void FirstUpdate()
-        {
-            Debug.WriteLine("Running First Update");
-
-            try
-            {
-                await Update();
-            }
-            catch (Exception e)
-            {
-                Error = e.ToString();
-                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
-            }
-
-
-            if (ShellListViewModels.Count > 0)
-            {
-                var item = ShellListViewModels[0].CropViewModel;
-                _contentFrame.Navigate(typeof(CropView), item);
-                SelectedShellListViewModel = item;
-            }
-            else
-            {
-                _contentFrame.Navigate(typeof(AddCropCycleView));
-                SelectedShellListViewModel = null;
-            }
-        }
-
         private void OnInternetCheckTimerTick(object sender, object o)
         {
             IsInternetAvailable = Request.IsInternetAvailable();
         }
 
-        /// <summary>
-        ///     An infinite loop that uses a delay instead of a time so that it is not reentrant.
-        /// </summary>
+        /// <summary>An infinite loop that uses a delay instead of a time so that it is not reentrant.</summary>
         private async void OnSyncTimerTick(object sender, object other)
         {
             _syncTimer.Stop();
@@ -235,9 +224,8 @@
             _syncTimer.Start();
         }
 
-        /// <summary>
-        ///     Enable or disable the Sync button in every cropview, this task waits until the bound variable is sucessfully set.
-        /// </summary>
+        /// <summary>Enable or disable the Sync button in every cropview, this task waits until the bound
+        /// variable is sucessfully set.</summary>
         /// <param name="enabled"></param>
         /// <returns></returns>
         private async Task SetSyncEnabled(bool enabled)

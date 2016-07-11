@@ -5,10 +5,8 @@ namespace Quickbird.Internet
 
     public static class UrlCombiner
     {
-        /// <summary>
-        ///     Each item provided is treated as a separate element in the path.
-        ///     Existing slashes are changed to forward slashes and double slashes not in the protocol are reduced to single.
-        /// </summary>
+        /// <summary>Each item provided is treated as a separate element in the path. Existing slashes are
+        /// changed to forward slashes and double slashes not in the protocol are reduced to single.</summary>
         /// <param name="parts"></param>
         /// <returns></returns>
         public static Uri CombineAsSeparateElements(params string[] parts)

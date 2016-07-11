@@ -29,6 +29,15 @@
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>Clean up timers messenger things etc.</summary>
+        public abstract void Kill();
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private void BaseResume(TaskCompletionSource<object> completer)
         {
             Debug.WriteLine("resumuing timers");
@@ -48,16 +57,5 @@
             }
             completer.SetResult(null);
         }
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        /// <summary>
-        ///     Clean up timers messenger things etc.
-        /// </summary>
-        public abstract void Kill();
     }
 }

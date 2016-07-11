@@ -8,10 +8,7 @@
     {
         public DashboardViewModel ViewModel;
 
-        public Dashboard()
-        {
-            InitializeComponent();
-        }
+        public Dashboard() { InitializeComponent(); }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {

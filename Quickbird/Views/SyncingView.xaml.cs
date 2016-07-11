@@ -8,15 +8,10 @@
     using Models;
     using Util;
 
-    /// <summary>
-    ///     Forces the user to wait while a sync is performed, then navigates to the shell.
-    /// </summary>
+    /// <summary>Forces the user to wait while a sync is performed, then navigates to the shell.</summary>
     public sealed partial class SyncingView : Page
     {
-        public SyncingView()
-        {
-            InitializeComponent();
-        }
+        public SyncingView() { InitializeComponent(); }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {

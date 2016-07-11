@@ -1,82 +1,53 @@
-﻿using Quickbird.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.ComponentModel;
-using Newtonsoft.Json; 
-
-
-namespace Quickbird.Internet
+﻿namespace Quickbird.Internet
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Windows.Networking.Sockets;
+    using Windows.Storage.Streams;
+    using Newtonsoft.Json;
+    using Util;
 
-    /// <summary>
-    /// This class is static, the instance of this class needs to be accessed somewhere, somehow, for websocket communication to activate! 
-    /// </summary>
-    public class WebSocketConnection : INotifyPropertyChanged 
+    /// <summary>This class is static, the instance of this class needs to be accessed somewhere, somehow,
+    /// for websocket communication to activate!</summary>
+    public class WebSocketConnection : INotifyPropertyChanged
     {
-        /// NetWorking
-        public static WebSocketConnection Instance { get; } = new WebSocketConnection();
-        private static MessageWebSocket _webSocket; //it is laso the subject of lock
-        private static DataWriter _messageWriter;
-        private readonly object StoppingLock = new object();
-        private static Timer _ReconnectTimer;
-        int _reconnectionAttempt; //Used for exponenetial backoff timer         
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        const string SocketCloseMessage = "AppIsSuspending";
-
         public enum ConnectionState
         {
-            /// <summary>
-            /// The websocket is not even started
-            /// </summary>
-            Stopped, 
-            /// <summary>
-            /// Websocket is suspended because hte app is suspended
-            /// </summary>
-            Supended,                                 
-            /// <summary>
-            /// it will try to reconnect shortly! 
-            /// </summary>
+            /// <summary>The websocket is not even started</summary>
+            Stopped,
+
+            /// <summary>Websocket is suspended because hte app is suspended</summary>
+            Supended,
+
+            /// <summary>it will try to reconnect shortly!</summary>
             WillTryConnect,
-            /// <summary>
-            /// It is actively attempting to connect
-            /// </summary>
+
+            /// <summary>It is actively attempting to connect</summary>
             Connecting,
-            /// <summary>
-            /// It is currently connected
-            /// </summary>
+
+            /// <summary>It is currently connected</summary>
             Connected,
-            
-            /// <summary>
-            /// This state is used when suspend is called while the app is connecting. 
-            /// It will suspend as soon as it finishes connecting
-            /// </summary>
+
+            /// <summary>This state is used when suspend is called while the app is connecting. It will suspend as
+            /// soon as it finishes connecting</summary>
             SuspendScheduled
         }
-        private long _connectionState = 0; 
 
-        /// <summary>
-        /// Property observable from the UI about state of the conection
-        /// </summary>
-        public ConnectionState Connected
-        {
-            get
-            {
-                return (ConnectionState)Interlocked.Read(ref _connectionState);
-            }
-        }
+        private const string SocketCloseMessage = "AppIsSuspending";
+        private static MessageWebSocket _webSocket; //it is laso the subject of lock
+        private static DataWriter _messageWriter;
+        private static Timer _ReconnectTimer;
+        private readonly object StoppingLock = new object();
+        private long _connectionState;
+        private int _reconnectionAttempt; //Used for exponenetial backoff timer         
 
 
         public WebSocketConnection()
         {
-
             Debug.WriteLine("Websocket Starting");
 
             JsonConvert.DefaultSettings = () =>
@@ -87,110 +58,109 @@ namespace Quickbird.Internet
             };
         }
 
+        /// <summary>Property observable from the UI about state of the conection</summary>
+        public ConnectionState Connected { get { return (ConnectionState) Interlocked.Read(ref _connectionState); } }
+
+        /// NetWorking
+        public static WebSocketConnection Instance { get; } = new WebSocketConnection();
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         #region StatefullMethod
-        /// <summary>
-        /// Returns true if the method is successfully started. Returns false if it's already started or
-        /// it's not 
-        /// </summary>
+
+        /// <summary>Returns true if the method is successfully started. Returns false if it's already started
+        /// or it's not</summary>
         /// <returns></returns>
         public bool TryStart()
         {
             //only act if websocket is turned off
-            if ((ConnectionState) Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.WillTryConnect, 
-                (long)ConnectionState.Stopped) == ConnectionState.Stopped)
+            if (
+                (ConnectionState)
+                Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.WillTryConnect,
+                    (long) ConnectionState.Stopped) == ConnectionState.Stopped)
             {
                 //Use is no signed in, return 
                 if (Settings.Instance.CredsSet == false)
                     return false;
-                
+
                 _ReconnectTimer = new Timer(TimerTick, null, 1000, Timeout.Infinite);
 
                 return true;
             }
-            else
-            {
-                //it was already enabled!
-                return false; 
-            }
-
+            //it was already enabled!
+            return false;
         }
 
 
-        /// <summary>
-        /// Not implemented
-        /// </summary>
+        /// <summary>Not implemented</summary>
         /// <returns></returns>
-        public void  Stop() 
+        public void Stop()
         {
             lock (StoppingLock)
             {
                 if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Stopped)
                     return;
-                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
-                    (long)ConnectionState.Stopped,
-                    (long)ConnectionState.Supended)
-                    != ConnectionState.Supended)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Stopped,
+                        (long) ConnectionState.Supended) != ConnectionState.Supended)
                 {
                     var completion = new TaskCompletionSource<object>();
 
                     Suspend();
 
-                    while ((ConnectionState)Interlocked.CompareExchange(ref _connectionState,
-                    (long)ConnectionState.Stopped,
-                    (long)ConnectionState.Supended)
-                    != ConnectionState.Supended)
+                    while (
+                        (ConnectionState)
+                        Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Stopped,
+                            (long) ConnectionState.Supended) != ConnectionState.Supended)
                     {
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// A best-effor sender of data
-        /// </summary>
+        /// <summary>A best-effor sender of data</summary>
         /// <param name="toSend"></param>
         /// <returns></returns>
         public async Task<bool> SendAsync(object toSend)
         {
-            string jsonData = JsonConvert.SerializeObject(toSend);
+            var jsonData = JsonConvert.SerializeObject(toSend);
 
-            if ((ConnectionState)Interlocked.Read(ref _connectionState) == ConnectionState.Connected)
-            {              
+            if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Connected)
+            {
                 try
                 {
                     // Send the data as one complete message.
                     _messageWriter.WriteString(jsonData);
                     await _messageWriter.StoreAsync();
-                    return true; 
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex.Message);
-                    CleanUp(); 
+                    CleanUp();
                     return false;
                 }
             }
-            else
-                return false; 
+            return false;
         }
 
         private void MessageRecieved(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            
             if (SocketMessageType.Utf8 == args.MessageType)
             {
                 try
                 {
-                    using (DataReader reader = args.GetDataReader())
+                    using (var reader = args.GetDataReader())
                     {
                         reader.UnicodeEncoding = UnicodeEncoding.Utf8;
-                        string read = reader.ReadString(reader.UnconsumedBufferLength);
-                        List<Messenger.SensorReading> sensorReadings = JsonConvert.DeserializeObject<List<Messenger.SensorReading>>(read); 
-                        if(sensorReadings != null)
+                        var read = reader.ReadString(reader.UnconsumedBufferLength);
+                        var sensorReadings = JsonConvert.DeserializeObject<List<Messenger.SensorReading>>(read);
+                        if (sensorReadings != null)
                         {
-                            #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues
                             Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true);
-                            #pragma warning restore CS4014
+#pragma warning restore CS4014
                         }
                         //Debug.WriteLine(read);
                     }
@@ -199,115 +169,125 @@ namespace Quickbird.Internet
                 {
                     Debug.WriteLine(ex.Message);
                     //If it's not inc connected state, then probably someone is already cleaning it up
-                    if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.WillTryConnect,
-                        (long)ConnectionState.Connected) == ConnectionState.Connected)
+                    if (
+                        (ConnectionState)
+                        Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.WillTryConnect,
+                            (long) ConnectionState.Connected) == ConnectionState.Connected)
                     {
                         CleanUp();
-                        ScheduleReconnection(false); 
+                        ScheduleReconnection(false);
                     }
-                }                
+                }
             }
         }
 
-        /// <summary>
-        /// Overload for the Timer
-        /// </summary>
+        /// <summary>Overload for the Timer</summary>
         /// <param name="state">is null</param>
         private async void TimerTick(object state)
         {
-            if((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Connecting, 
-                (long)ConnectionState.WillTryConnect) == ConnectionState.WillTryConnect)
-            _ReconnectTimer.Dispose();
-          
-            bool success = await TryConnect();
+            if (
+                (ConnectionState)
+                Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Connecting,
+                    (long) ConnectionState.WillTryConnect) == ConnectionState.WillTryConnect)
+                _ReconnectTimer.Dispose();
+
+            var success = await TryConnect();
             if (success)
             {
-                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Connected,
-                    (long)ConnectionState.Connecting) == ConnectionState.Connecting)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Connected,
+                        (long) ConnectionState.Connecting) == ConnectionState.Connecting)
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connected"));
                 }
-
             }
             else
             {
-                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.WillTryConnect,
-                    (long)ConnectionState.Connecting) == ConnectionState.Connecting)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.WillTryConnect,
+                        (long) ConnectionState.Connecting) == ConnectionState.Connecting)
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connected"));
                     ScheduleReconnection(false);
                 }
-                               
             }
 
             //This should be the very last line in the method, to check if suspend was scheduled while we were performing connection
-            if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Supended,
-                    (long)ConnectionState.SuspendScheduled) == ConnectionState.SuspendScheduled)
+            if (
+                (ConnectionState)
+                Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Supended,
+                    (long) ConnectionState.SuspendScheduled) == ConnectionState.SuspendScheduled)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connected"));
                 CleanUp();
             }
         }
-        /// <summary>
-        /// These methids are linked to the messenger
-        /// </summary>
+
+        /// <summary>These methids are linked to the messenger</summary>
         /// <param name="taskCompletionSource"></param>
         public void Resume()
         {
             do
             {
                 //Only resume if the previous state was suspended
-                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Supended,
-                    (long)ConnectionState.WillTryConnect) == ConnectionState.Supended)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Supended,
+                        (long) ConnectionState.WillTryConnect) == ConnectionState.Supended)
                 {
                     ScheduleReconnection(true);
                 }
-            } while ((ConnectionState)Interlocked.Read(ref _connectionState) == ConnectionState.SuspendScheduled); 
+            } while ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.SuspendScheduled);
         }
 
         public void Suspend()
         {
             while (true)
             {
-                if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Supended,
-                    (long)ConnectionState.WillTryConnect) == ConnectionState.WillTryConnect)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Supended,
+                        (long) ConnectionState.WillTryConnect) == ConnectionState.WillTryConnect)
                 {
                     _ReconnectTimer.Dispose();
                     break;
                 }
-                else if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.Supended,
-                    (long)ConnectionState.Connected) == ConnectionState.Connected)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.Supended,
+                        (long) ConnectionState.Connected) == ConnectionState.Connected)
                 {
                     //TODO: cleanup Connection
                     CleanUp();
                     break;
                 }
-                else if ((ConnectionState)Interlocked.CompareExchange(ref _connectionState, (long)ConnectionState.SuspendScheduled,
-                    (long)ConnectionState.Connecting) == ConnectionState.Connecting)
+                if (
+                    (ConnectionState)
+                    Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.SuspendScheduled,
+                        (long) ConnectionState.Connecting) == ConnectionState.Connecting)
                 {
                     //Socket is currently connecting, set the flag and it will cleanup
                     break;
-                }else if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Stopped)
+                }
+                if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Stopped)
                 {
                     break;
                 }
-                else
-                {
-                    //State changed while we were going through this loop, try again
-                }
-
             }
         }
 
         #endregion
+
         #region State-Ignoring methods
 
         private async Task<bool> TryConnect()
         {
             if (Settings.Instance.CredsSet == false)
-                return false; 
+                return false;
 
-            _webSocket = new MessageWebSocket(); 
+            _webSocket = new MessageWebSocket();
             _webSocket.Control.MessageType = SocketMessageType.Utf8;
             _webSocket.Closed += SocketClosed;
             _webSocket.MessageReceived += MessageRecieved;
@@ -317,10 +297,10 @@ namespace Quickbird.Internet
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
             _webSocket.SetRequestHeader(tokenHeader, creds.Token);
 
-            
+
             try
             {
-                Uri uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket");
+                var uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket");
                 await _webSocket.ConnectAsync(uri);
                 _messageWriter = new DataWriter(_webSocket.OutputStream);
                 _reconnectionAttempt = 0;
@@ -334,11 +314,9 @@ namespace Quickbird.Internet
                 CleanUp();
                 return false;
             }
-        }  
+        }
 
-        /// <summary>
-        /// Unclear what hte hell this does
-        /// </summary>
+        /// <summary>Unclear what hte hell this does</summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         private void SocketClosed(IWebSocket sender, WebSocketClosedEventArgs args)
@@ -354,26 +332,23 @@ namespace Quickbird.Internet
 
         private void ScheduleReconnection(bool immediately)
         {
-            if(immediately)
+            if (immediately)
                 _ReconnectTimer = new Timer(TimerTick, null, 1000, Timeout.Infinite);
             else
             {
                 //Multiple should not exceed value of 6
-                int timeMultiple = _reconnectionAttempt > 6 ? _reconnectionAttempt : 6;
+                var timeMultiple = _reconnectionAttempt > 6 ? _reconnectionAttempt : 6;
 
-                int reconDelay = (int)Math.Round(Math.Pow(_reconnectionAttempt, 2) * 1000);
+                var reconDelay = (int) Math.Round(Math.Pow(_reconnectionAttempt, 2)*1000);
 
                 _ReconnectTimer = new Timer(TimerTick, null, reconDelay, Timeout.Infinite);
 
-                Interlocked.Exchange(ref _connectionState, (long)ConnectionState.WillTryConnect);
+                Interlocked.Exchange(ref _connectionState, (long) ConnectionState.WillTryConnect);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connected"));
             }
-
         }
 
-        /// <summary>
-        /// Call after the connection is closed. Get ready for new connection
-        /// </summary>
+        /// <summary>Call after the connection is closed. Get ready for new connection</summary>
         private void CleanUp()
         {
             _ReconnectTimer?.Dispose();
@@ -394,6 +369,7 @@ namespace Quickbird.Internet
             _webSocket?.Dispose();
             _webSocket = null;
         }
+
         #endregion
     }
 }

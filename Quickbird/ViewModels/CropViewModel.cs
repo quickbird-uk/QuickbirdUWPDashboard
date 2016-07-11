@@ -30,40 +30,14 @@
         private string _varietyName;
         private string _yield;
 
-        /// <summary>
-        ///     All the data in this ViewModel is pumped in from the ShellListViewModel, the only thing that will ever call this
-        ///     contructor. As a result this is a very simple bindable datamodel.
-        /// </summary>
+        /// <summary>All the data in this ViewModel is pumped in from the ShellListViewModel, the only thing
+        /// that will ever call this contructor. As a result this is a very simple bindable datamodel.</summary>
         /// <param name="cropCycle"></param>
         public CropViewModel(CropCycle cropCycle)
         {
             _id = cropCycle.ID;
             _dashboardViewModel = new DashboardViewModel(cropCycle);
             Update(cropCycle);
-        }
-
-        public Guid CropRunId { get; set; }
-
-        public string CropName
-        {
-            get { return _cropName; }
-            set
-            {
-                if (value == _cropName) return;
-                _cropName = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string VarietyName
-        {
-            get { return _varietyName; }
-            set
-            {
-                if (value == _varietyName) return;
-                _varietyName = value;
-                OnPropertyChanged();
-            }
         }
 
         public string BoxName
@@ -77,67 +51,31 @@
             }
         }
 
-        public string PlantingDate
+        public string CropName
         {
-            get { return _plantingDate; }
+            get { return _cropName; }
             set
             {
-                if (value == _plantingDate) return;
-                _plantingDate = value;
+                if (value == _cropName) return;
+                _cropName = value;
                 OnPropertyChanged();
             }
         }
 
-        public string Yield
+        public Guid CropRunId { get; set; }
+
+        public bool IsInternetAvailable
         {
-            get { return _yield; }
+            get { return _isInternetAvailable; }
             set
             {
-                if (value == _yield) return;
-                _yield = value;
+                if (value == _isInternetAvailable) return;
+                _isInternetAvailable = value;
                 OnPropertyChanged();
             }
         }
 
-        public bool SyncButtonEnabled
-        {
-            get { return _syncButtonEnabled; }
-            set
-            {
-                if (value == _syncButtonEnabled) return;
-                _syncButtonEnabled = _isInternetAvailable && value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string NotificationsCount
-        {
-            get { return _notificationsCount; }
-            set
-            {
-                if (value == _notificationsCount) return;
-                _notificationsCount = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     Text changes when the notifications drawer is opened and closed.
-        /// </summary>
-        public string NotificationsButtonText
-        {
-            get { return _notificationsButtonText; }
-            set
-            {
-                if (value == _notificationsButtonText) return;
-                _notificationsButtonText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        ///     Bound two way because the notifications drawer closes automatically.
-        /// </summary>
+        /// <summary>Bound two way because the notifications drawer closes automatically.</summary>
         public bool IsNotificationsOpen
         {
             get { return _isNotificationsOpen; }
@@ -154,16 +92,80 @@
             }
         }
 
-        public bool IsInternetAvailable
+        /// <summary>Text changes when the notifications drawer is opened and closed.</summary>
+        public string NotificationsButtonText
         {
-            get { return _isInternetAvailable; }
+            get { return _notificationsButtonText; }
             set
             {
-                if (value == _isInternetAvailable) return;
-                _isInternetAvailable = value;
+                if (value == _notificationsButtonText) return;
+                _notificationsButtonText = value;
                 OnPropertyChanged();
             }
         }
+
+        public string NotificationsCount
+        {
+            get { return _notificationsCount; }
+            set
+            {
+                if (value == _notificationsCount) return;
+                _notificationsCount = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string PlantingDate
+        {
+            get { return _plantingDate; }
+            set
+            {
+                if (value == _plantingDate) return;
+                _plantingDate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SyncButtonEnabled
+        {
+            get { return _syncButtonEnabled; }
+            set
+            {
+                if (value == _syncButtonEnabled) return;
+                _syncButtonEnabled = _isInternetAvailable && value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string VarietyName
+        {
+            get { return _varietyName; }
+            set
+            {
+                if (value == _varietyName) return;
+                _varietyName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Yield
+        {
+            get { return _yield; }
+            set
+            {
+                if (value == _yield) return;
+                _yield = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public override void Kill()
+        {
+            //All the data in this ViewModel is pumped in from the ShellListViewModel.
+            _dashboardViewModel.Kill();
+        }
+
+        public void NavToAddYield() { _cropContentFrame?.Navigate(typeof(AddYieldView), _id); }
 
         public void SetContentFrame(Frame contentFrame)
         {
@@ -171,24 +173,16 @@
             _cropContentFrame.Navigate(typeof(Dashboard), _dashboardViewModel);
         }
 
-        /// <summary>
-        ///     Updates the properties of this viewmodel with data from POCO.
-        /// </summary>
-        /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
-        public void Update(CropCycle cropRun)
+        public async void Sync(object sender, object e)
         {
-            CropRunId = cropRun.ID;
-            CropName = cropRun.CropTypeName;
-            VarietyName = cropRun.CropVariety;
-            PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
-            BoxName = cropRun.Location.Name;
-            Yield = $"{cropRun.Yield}kg";
-            _dashboardViewModel.Update(cropRun);
-        }
+            _syncing = true;
+            SyncButtonEnabled = false;
 
-        public void NavToAddYield()
-        {
-            _cropContentFrame?.Navigate(typeof(AddYieldView), _id);
+            await DatabaseHelper.Instance.Sync();
+
+            _syncing = false;
+            if (_isInternetAvailable)
+                SyncButtonEnabled = true;
         }
 
         public void ToggleNotifications()
@@ -203,28 +197,17 @@
             }
         }
 
-        private void OpenNotifications()
+        /// <summary>Updates the properties of this viewmodel with data from POCO.</summary>
+        /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
+        public void Update(CropCycle cropRun)
         {
-            IsNotificationsOpen = true;
-            NotificationsButtonText = "Hide Journal";
-        }
-
-        private void CloseNotifications()
-        {
-            IsNotificationsOpen = false;
-            NotificationsButtonText = ShowNotificationsString;
-        }
-
-        public async void Sync(object sender, object e)
-        {
-            _syncing = true;
-            SyncButtonEnabled = false;
-
-            await DatabaseHelper.Instance.Sync();
-
-            _syncing = false;
-            if (_isInternetAvailable)
-                SyncButtonEnabled = true;
+            CropRunId = cropRun.ID;
+            CropName = cropRun.CropTypeName;
+            VarietyName = cropRun.CropVariety;
+            PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
+            BoxName = cropRun.Location.Name;
+            Yield = $"{cropRun.Yield}kg";
+            _dashboardViewModel.Update(cropRun);
         }
 
         public void UpdateInternetStatus(bool isInternetAvailable)
@@ -243,10 +226,16 @@
             }
         }
 
-        public override void Kill()
+        private void CloseNotifications()
         {
-            //All the data in this ViewModel is pumped in from the ShellListViewModel.
-            _dashboardViewModel.Kill();
+            IsNotificationsOpen = false;
+            NotificationsButtonText = ShowNotificationsString;
+        }
+
+        private void OpenNotifications()
+        {
+            IsNotificationsOpen = true;
+            NotificationsButtonText = "Hide Journal";
         }
     }
 }

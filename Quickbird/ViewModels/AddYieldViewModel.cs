@@ -1,109 +1,52 @@
-﻿using Quickbird.Models;
-using Quickbird.Util;
-using DbStructure.User;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.UI;
-
-namespace Quickbird.ViewModels
+﻿namespace Quickbird.ViewModels
 {
+    using System;
+    using System.Threading.Tasks;
+    using Windows.UI;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Media;
+    using DbStructure.User;
+    using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
 
     public class AddYieldViewModel : ViewModelBase
     {
         private readonly Guid _cropCycleID;
-        private Windows.UI.Xaml.Visibility _errorVisibility = Windows.UI.Xaml.Visibility.Collapsed;
-        private Windows.UI.Xaml.Media.SolidColorBrush _textBoxColour = new Windows.UI.Xaml.Media.SolidColorBrush
-        {
-            Color = Colors.LightCyan
-        };
-        private bool _validEntry = true;
-        private double _userEnteredAmount;
         private string _buttonText = "Add Yield";
-        private bool _closeCropRun = false;
+        private bool _closeCropRun;
+        private Visibility _errorVisibility = Visibility.Collapsed;
+        private bool _isLoading;
+
+        private SolidColorBrush _textBoxColour = new SolidColorBrush {Color = Colors.LightCyan};
+
         private Action<string> _updateAction;
-        private bool _isLoading = false; 
-         
+        private double _userEnteredAmount;
+        private bool _validEntry = true;
+
 
         public AddYieldViewModel(Guid CropCycleID)
         {
             _cropCycleID = CropCycleID;
-            _updateAction = UpdateData; 
-            Messenger.Instance.TablesChanged.Subscribe(_updateAction); 
-            UpdateData(string.Empty); 
+            _updateAction = UpdateData;
+            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            UpdateData(string.Empty);
         }
 
-        /// <summary>
-        /// Attached to tables changed event
-        /// </summary>
-        /// <param name="tablesChangedPlaceholderVar">ignored</param>
-        private async void UpdateData(string tablesChangedPlaceholderVar)
+        public string ButtonText
         {
-            CropCycle cropCycle;
-            using (var db = new MainDbContext())
-            {
-                cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
-            }
-            if(cropCycle.EndDate != null)
-            {
-                //TODO Close this frame bacuse the crop cycle is already closed! 
-            }
-        }
-
-        /// <summary>
-        /// Updated from UI throught Two-wauy binding, processes user input
-        /// </summary>
-        public string UserEnteredText
-        {
-            get
-            {
-                return string.Empty; 
-            }
+            get { return _buttonText; }
             set
             {
-                bool success = Double.TryParse(value, out _userEnteredAmount);
-                if(String.IsNullOrWhiteSpace(value))
-                {
-                    success = true;
-                    _userEnteredAmount = 0; 
-                }
-
-                //Only take action if something has changed!                
-                if (success != ValidEntry && success)
-                {
-                    ValidEntry = success;
-                    ErrorVisibility = Windows.UI.Xaml.Visibility.Collapsed;
-                    TextBoxColour = new Windows.UI.Xaml.Media.SolidColorBrush
-                    {
-                        Color = Colors.LightCyan
-                    };
-                }
-                else if (success != ValidEntry && success == false)
-                {
-                    ValidEntry = success;
-                    ErrorVisibility = Windows.UI.Xaml.Visibility.Visible;
-                    TextBoxColour =  new Windows.UI.Xaml.Media.SolidColorBrush
-                    {
-                        Color = Colors.PaleVioletRed
-                    }; 
-                }
+                _buttonText = value;
+                OnPropertyChanged();
             }
         }
 
-        /// <summary>
-        /// Updated from UI through two-way binding, determines if the crop run will be closed 
-        /// </summary>
+        /// <summary>Updated from UI through two-way binding, determines if the crop run will be closed</summary>
         public bool CloseCropRun
         {
-            get
-            {
-                return _closeCropRun;
-            }
+            get { return _closeCropRun; }
             set
             {
                 _closeCropRun = value;
@@ -111,9 +54,80 @@ namespace Quickbird.ViewModels
             }
         }
 
-        /// <summary>
-        /// Runs when the user licks the button
-        /// </summary>
+        public Visibility ErrorVisibility
+        {
+            get { return _errorVisibility; }
+            set
+            {
+                _errorVisibility = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsLoading
+        {
+            get { return _isLoading; }
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Goes red when user input is invalid</summary>
+        public SolidColorBrush TextBoxColour
+        {
+            get { return _textBoxColour; }
+            set
+            {
+                _textBoxColour = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Updated from UI throught Two-wauy binding, processes user input</summary>
+        public string UserEnteredText
+        {
+            get { return string.Empty; }
+            set
+            {
+                var success = double.TryParse(value, out _userEnteredAmount);
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    success = true;
+                    _userEnteredAmount = 0;
+                }
+
+                //Only take action if something has changed!                
+                if (success != ValidEntry && success)
+                {
+                    ValidEntry = success;
+                    ErrorVisibility = Visibility.Collapsed;
+                    TextBoxColour = new SolidColorBrush {Color = Colors.LightCyan};
+                }
+                else if (success != ValidEntry && success == false)
+                {
+                    ValidEntry = success;
+                    ErrorVisibility = Visibility.Visible;
+                    TextBoxColour = new SolidColorBrush {Color = Colors.PaleVioletRed};
+                }
+            }
+        }
+
+        /// <summary>Goes true when user entered valid input, and lets hium proceed</summary>
+        public bool ValidEntry
+        {
+            get { return _validEntry; }
+            set
+            {
+                _validEntry = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateAction); }
+
+        /// <summary>Runs when the user licks the button</summary>
         public async Task SaveCropRun()
         {
             using (var db = new MainDbContext())
@@ -132,70 +146,19 @@ namespace Quickbird.ViewModels
             }
         }
 
-        public string ButtonText
+        /// <summary>Attached to tables changed event</summary>
+        /// <param name="tablesChangedPlaceholderVar">ignored</param>
+        private async void UpdateData(string tablesChangedPlaceholderVar)
         {
-            get {
-                return _buttonText; }
-            set {
-                _buttonText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool IsLoading
-        {
-            get
+            CropCycle cropCycle;
+            using (var db = new MainDbContext())
             {
-                return _isLoading;
+                cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
             }
-            set
+            if (cropCycle.EndDate != null)
             {
-                _isLoading = value;
-                OnPropertyChanged();
+                //TODO Close this frame bacuse the crop cycle is already closed! 
             }
-        }
-
-        /// <summary>
-        /// Goes true when user entered valid input, and lets hium proceed
-        /// </summary>
-        public bool ValidEntry
-        {
-            get {
-                return _validEntry;
-            }
-            set {
-                _validEntry = value;
-                OnPropertyChanged(); 
-            }
-        }
-
-        /// <summary>
-        /// Goes red when user input is invalid 
-        /// </summary>
-        public Windows.UI.Xaml.Media.SolidColorBrush TextBoxColour {
-            get {
-                return _textBoxColour; 
-            }
-            set {
-                _textBoxColour = value;
-                OnPropertyChanged(); 
-            }
-        }
-
-        public Windows.UI.Xaml.Visibility ErrorVisibility
-        {
-            get {
-                return _errorVisibility;
-            }
-            set {
-                _errorVisibility = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public override void Kill()
-        {
-            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
         }
     }
 }

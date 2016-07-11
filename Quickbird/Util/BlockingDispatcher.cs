@@ -5,14 +5,12 @@
     using Windows.UI.Core;
     using Windows.UI.Xaml;
 
-    /// <summary>
-    ///     Use for dispatching code to the UI while blocking the current thread (unless it is the ui, then run normally).
-    /// </summary>
+    /// <summary>Use for dispatching code to the UI while blocking the current thread (unless it is the ui,
+    /// then run normally).</summary>
     internal static class BlockingDispatcher
     {
-        /// <summary>
-        ///     Synchronously runs code on the UI thread, taking into account if you are already on the UI thread.
-        /// </summary>
+        /// <summary>Synchronously runs code on the UI thread, taking into account if you are already on the UI
+        /// thread.</summary>
         /// <param name="work">Work to be done on the UI thread.</param>
         public static void Run(Action work)
         {

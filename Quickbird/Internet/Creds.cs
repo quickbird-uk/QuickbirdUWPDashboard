@@ -7,9 +7,7 @@
     using Windows.Data.Json;
     using Windows.Security.Authentication.Web;
 
-    /// <summary>
-    ///     Authentication token, associated information and broker to create it.
-    /// </summary>
+    /// <summary>Authentication token, associated information and broker to create it.</summary>
     public class Creds
     {
         private Creds(string userId, string token)
@@ -51,79 +49,39 @@
             Audience = JsonOptional(json, "aud");
         }
 
-        /// <summary>
-        ///     The not before date for the token. Taken is meant to be valid starting from this date.
-        /// </summary>
-        public DateTimeOffset? Start { get; set; }
-
-        /// <summary>
-        ///     The entire raw token to be used for authentication.
-        /// </summary>
-        public string Token { get; }
-
-        /// <summary>
-        ///     The expiry date of the token.
-        /// </summary>
-        public DateTimeOffset Expiry { get; }
-
-        /// <summary>
-        ///     The SID as reported outside of the token (should be the same as the token subject) unique to the user.
-        /// </summary>
-        public string Userid { get; }
-
-        /// <summary>
-        ///     The identity provider (i.e. Twitter).
-        /// </summary>
-        public string IdentityProvider { get; }
-
-        /// <summary>
-        ///     A SID unique to the user-identity pair, this will differ if the same user uses multiple identity providers.
-        /// </summary>
-        public string StableSid { get; }
-
-        /// <summary>
-        ///     The SID of the user that the token is issued for.
-        /// </summary>
-        public string Subject { get; }
-
-        /// <summary>
-        ///     The site that issued the token.
-        /// </summary>
-        public string Issuer { get; }
-
-        /// <summary>
-        ///     The site intened to use use the token.
-        /// </summary>
+        /// <summary>The site intened to use use the token.</summary>
         public string Audience { get; }
 
-        /// <summary>
-        ///     Dunno
-        /// </summary>
+        /// <summary>The expiry date of the token.</summary>
+        public DateTimeOffset Expiry { get; }
+
+        /// <summary>The identity provider (i.e. Twitter).</summary>
+        public string IdentityProvider { get; }
+
+        /// <summary>The site that issued the token.</summary>
+        public string Issuer { get; }
+
+        /// <summary>A SID unique to the user-identity pair, this will differ if the same user uses multiple
+        /// identity providers.</summary>
+        public string StableSid { get; }
+
+        /// <summary>The not before date for the token. Taken is meant to be valid starting from this date.</summary>
+        public DateTimeOffset? Start { get; set; }
+
+        /// <summary>The SID of the user that the token is issued for.</summary>
+        public string Subject { get; }
+
+        /// <summary>The entire raw token to be used for authentication.</summary>
+        public string Token { get; }
+
+        /// <summary>The SID as reported outside of the token (should be the same as the token subject) unique
+        /// to the user.</summary>
+        public string Userid { get; }
+
+        /// <summary>Dunno</summary>
         public string Version { get; }
 
-        /// <summary>
-        ///     Ignores json exeption and returns null when json is missing.
-        /// </summary>
-        /// <param name="json"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private string JsonOptional(JsonObject json, string id)
-        {
-            string res;
-            try
-            {
-                res = json.GetNamedString(id);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            return res;
-        }
-
-        /// <summary>
-        ///     This will throw an exception of some sort if any step fails.
-        /// </summary>
+        /// <summary>This will throw an exception of some sort if any step fails.</summary>
         /// <param name="entryUrl"></param>
         /// <param name="resultUrl"></param>
         /// <returns></returns>
@@ -151,9 +109,7 @@
             throw new Exception("Error from authenticator: " + res.ResponseStatus);
         }
 
-        /// <summary>
-        ///     Instant, catches exeptions and returns null on failure.
-        /// </summary>
+        /// <summary>Instant, catches exeptions and returns null on failure.</summary>
         /// <param name="userId">The SID, (should be same as token subject.</param>
         /// <param name="token">The three part token (header, body, signature).</param>
         /// <returns>A Creds object, or null.</returns>
@@ -173,9 +129,25 @@
             }
         }
 
-        /// <summary>
-        ///     Pads out base 64 strings with `=` to make sure they are a multiple of 4 in length.
-        /// </summary>
+        /// <summary>Ignores json exeption and returns null when json is missing.</summary>
+        /// <param name="json"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private string JsonOptional(JsonObject json, string id)
+        {
+            string res;
+            try
+            {
+                res = json.GetNamedString(id);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return res;
+        }
+
+        /// <summary>Pads out base 64 strings with `=` to make sure they are a multiple of 4 in length.</summary>
         /// <param name="base64String"></param>
         /// <returns></returns>
         private string PadAndParseBase64String(string base64String)

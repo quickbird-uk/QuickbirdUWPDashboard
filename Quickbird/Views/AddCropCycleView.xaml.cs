@@ -9,14 +9,8 @@
         public AddCropCycleViewModel ViewModel = new AddCropCycleViewModel();
 
 
-        public AddCropCycleView()
-        {
-            InitializeComponent();
-        }
+        public AddCropCycleView() { InitializeComponent(); }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            ViewModel.Kill();
-        }
+        protected override void OnNavigatedFrom(NavigationEventArgs e) { ViewModel.Kill(); }
     }
 }

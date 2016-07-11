@@ -3,15 +3,11 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Threading.Tasks;
     using uPLibrary.Networking.M2Mqtt;
     using uPLibrary.Networking.M2Mqtt.Messages;
-    using Util;
 
-    /// <summary>
-    ///     This class is in charge of all the local communication. It initiates MQTT and UDP messaging.
-    ///     IF you try to instantiate this class twice, it will throw and exception!
-    /// </summary>
+    /// <summary>This class is in charge of all the local communication. It initiates MQTT and UDP
+    /// messaging. IF you try to instantiate this class twice, it will throw and exception!</summary>
     public class Manager : IDisposable
     {
         private static MqttBroker _mqttBroker;
@@ -23,7 +19,7 @@
         private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private bool disposedValue; // To detect redundant calls
-        
+
         public Manager()
         {
             lock (_lock)
@@ -50,6 +46,51 @@
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
+        }
+
+        public void Resume()
+        {
+            Debug.WriteLine("resuming manager");
+            _mqttBroker?.Start();
+            if (_udpMessaging == null || _udpMessaging.Disposed)
+                _udpMessaging = new UDPMessaging();
+            _datapointsSaver.Resume();
+        }
+
+
+        public void Suspend()
+        {
+            Debug.WriteLine("suspending manager");
+            _mqttBroker?.Stop();
+            _udpMessaging?.Dispose();
+            _udpMessaging = null;
+            _datapointsSaver.Suspend();
+        }
+
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects). 
+                    _udpMessaging?.Dispose();
+                    _datapointsSaver?.Dispose();
+                }
+                if (_mqttBroker != null)
+                {
+                    _mqttBroker.MessagePublished -= MqttMessageRecieved;
+                    _mqttBroker.Stop();
+                }
+                _mqttBroker = null;
+                _udpMessaging = null;
+                _datapointsSaver = null;
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+                disposedValue = true;
+            }
         }
 
         private void MqttMessageRecieved(KeyValuePair<string, MqttMsgPublish> publishEvent)
@@ -84,57 +125,11 @@
                             readings[i].duration = BitConverter.ToInt32(rawData, i*SensorMessage.incomingLength + 4);
                             readings[i].SensorTypeID = rawData[i*SensorMessage.incomingLength + 8];
                         }
-                        var toWrite =
-                            new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
+                        var toWrite = new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
 
                         _datapointsSaver.BufferAndSendReadings(toWrite);
                     }
                 }
-            }
-        }
-
-
-        public void Suspend()
-        {
-            Debug.WriteLine("suspending manager");
-            _mqttBroker?.Stop();
-            _udpMessaging?.Dispose();
-            _udpMessaging = null;
-            _datapointsSaver.Suspend();
-        }
-
-        public void Resume()
-        {
-            Debug.WriteLine("resuming manager");
-            _mqttBroker?.Start();
-            if (_udpMessaging == null || _udpMessaging.Disposed)
-                _udpMessaging = new UDPMessaging();
-            _datapointsSaver.Resume();
-        }
-
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects). 
-                    _udpMessaging?.Dispose();
-                    _datapointsSaver?.Dispose();
-                }
-                if (_mqttBroker != null)
-                {
-                    _mqttBroker.MessagePublished -= MqttMessageRecieved;
-                    _mqttBroker.Stop();
-                }
-                _mqttBroker = null;
-                _udpMessaging = null;
-                _datapointsSaver = null;
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-                disposedValue = true;
             }
         }
 
