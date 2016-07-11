@@ -2,7 +2,7 @@ digraph G {
     # Defaults
     graph[fontname="consolas"];
     edge[fontname="consolas"];
-    node[style="filled", fillcolor="white", fontname="consolas", fixedsize="true", width="4"];
+    node[style="filled", fillcolor="white", fontname="consolas"] ;
 
     subgraph cluster0 {
         label="Sync Process";
@@ -10,16 +10,15 @@ digraph G {
         color="lightgray";
 
         # Terminators
-        node[shape=box, style="rounded,filled", fillcolor="orange", width="2"];
+        node[shape=box, style="rounded,filled", fillcolor="orange"];
         start[label="Sync($device)"];
         end[label="End"];
-        #abort[label="Abort", fillcolor="red"];
  
         {rank=source; start}
         {rank=sink; end}
 
         # Reset defaults
-        node[fillcolor="white", width="4", style="filled"]
+        node[fillcolor="white", style="filled"]
         
         # Inputs
         node[shape="polygon", sides="4", skew="0.2"]
@@ -46,21 +45,17 @@ digraph G {
         
         start -> request -> reqAny
 
-        subgraph clusterAreItems {
-            label=""
-            reqAny -> decode[label="true"]
-            decode -> merge -> itemOverwritten
-            itemOverwritten -> setUpdNull
-            setUpdNull -> lastDownUpd
-            lastDownUpd -> request 
-        }
-        subgraph clusterNoItems{
-            label=""
-            reqAny -> histNullUploaded[label="false"]
-            histNullUploaded -> nullUploadAny
-            nullUploadAny -> uploadData[label="true"]
-            uploadData -> setUploaded
-        }
+        reqAny -> decode[label="true"]
+        reqAny -> histNullUploaded[label="false"]
+
+        decode -> merge -> itemOverwritten
+        itemOverwritten -> setUpdNull
+        setUpdNull -> lastDownUpd
+        lastDownUpd -> request 
+
+        histNullUploaded -> nullUploadAny
+        nullUploadAny -> uploadData[label="true"]
+        uploadData -> setUploaded
 
         nullUploadAny -> end[label="false"]
         setUploaded -> end
@@ -71,7 +66,7 @@ digraph G {
         style="filled";
         color="lightgray";
 
-        Terminator[shape="box", style="rounded, filled", width="2"];
+        Terminator[shape="box", style="rounded, filled", fillcolor="orange"];
         Process[shape="box"];
         Input[shape="polygon", sides="4", skew="0.2"];
         Branch[shape="diamond"];
