@@ -237,106 +237,44 @@
         /// <param name="updatesFromServer">The data recieved from the server.</param>
         /// <param name="dbSet">The actual databse table.</param>
         /// <returns>Awaitable, the local database queries are done async.</returns>
-        private async Task AddOrModifyHistory<TPoco>(List<TPoco> updatesFromServer, DbSet<TPoco> dbSet)
-            where TPoco : class
+        private async Task<DateTimeOffset> AddOrModifyHistory(List<SensorHistory> updatesFromServer,
+            DbSet<SensorHistory> dbSet)
         {
-            var pocoType = typeof(TPoco);
-            DateTimeOffset newestUploadDate = DateTimeOffset.MinValue;
+            var newestUploadDate = DateTimeOffset.MinValue;
 
-            foreach (var remote in updatesFromServer)
+            foreach (var updateFromServer in updatesFromServer)
             {
-                TPoco local = null;
-                TPoco merged = null;
-                if (pocoType == typeof(SensorHistory))
+                var localSenHist =
+                    dbSet.OfType<SensorHistory>()
+                        .AsNoTracking()
+                        .FirstOrDefault(
+                            d => d.SensorID == updateFromServer.SensorID && d.TimeStamp == updateFromServer.TimeStamp);
+
+                if (null == localSenHist)
                 {
-                    var remoteSenHist = remote as SensorHistory;
-                    Debug.Assert(remoteSenHist != null, "remoteSenHist != null, poco type detection failed.");
-
-                    var localSenHist =
-                        dbSet.OfType<SensorHistory>()
-                            .AsNoTracking()
-                            .FirstOrDefault(
-                                d => d.SensorID == remoteSenHist.SensorID && d.TimeStamp == remoteSenHist.TimeStamp);
-                    local = localSenHist as TPoco;
-                    if (null != local)
-                    {
-                        // They are the same primary key so merge them.
-                        localSenHist.DeserialiseData();
-                        var mergedSenHist = SensorHistory.Merge(remoteSenHist, localSenHist);
-                        mergedSenHist.SerialiseData();
-                        merged = mergedSenHist as TPoco;
-                    }
-                    else
-                    {
-                        remoteSenHist.SerialiseData();
-                    }
-
-                    var id = remoteSenHist.SensorID;
-                    await
-                        Messenger.Instance.NewSensorDataPoint.Invoke(
-                                remoteSenHist.Data.Select(
-                                    d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
-                            .ConfigureAwait(false);
-                }
-                else if (pocoType == typeof(RelayHistory))
-                {
-                    var remoteRelayHist = remote as RelayHistory;
-                    Debug.Assert(remoteRelayHist != null, "remoteRelayHist != null, poco type detection failed.");
-                    var oldHist =
-                        dbSet.OfType<RelayHistory>()
-                            .AsNoTracking()
-                            .FirstOrDefault(
-                                d => d.RelayID == remoteRelayHist.RelayID && d.TimeStamp == remoteRelayHist.TimeStamp);
-                    local = oldHist as TPoco;
-                    if (null != local)
-                    {
-                        // They are the same primary key so merge them.
-                        oldHist.DeserialiseData();
-                        var mergedRelayHist = RelayHistory.Merge(remoteRelayHist, oldHist);
-                        mergedRelayHist.SerialiseData();
-                        merged = mergedRelayHist as TPoco;
-                    }
-                    else
-                    {
-                        remoteRelayHist.SerialiseData();
-                    }
-
-                        var id = remoteRelayHist.RelayID;
-                        await
-                            Messenger.Instance.NewRelayDataPoint.Invoke(
-                                    remoteRelayHist.Data.Select(
-                                        d => new Messenger.RelayReading(id, d.State, d.TimeStamp, d.Duration)))
-                                .ConfigureAwait(false);
-                    
-                }
-
-                //Whatever it is, jsut add record to the DB 
-                if (local == null)
-                {
-                    dbSet.Add(remote);
+                    updateFromServer.SerialiseData(); // Must be converted from server format to sqlite format.
+                    dbSet.Add(updateFromServer);
+                    if (newestUploadDate < updateFromServer.UpdatedAt) newestUploadDate = updateFromServer.UpdatedAt;
                 }
                 else
                 {
-                    if (typeof(TPoco) == typeof(SensorHistory))
-                    {
-                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
-                        dbSet.Update(merged);
-                        // The messenger message is done earlier, no difference between new and update.
-                    }
-                    else if (typeof(TPoco) == typeof(RelayHistory))
-                    {
-                        Debug.Assert(merged != null, "merged != null, poco type detection failed.");
-                        dbSet.Update(merged);
-                    }
-                    //RED - Global read-only tables
-                    else
-                    {
-                        // Simply take the changes from the server, there are no valid local changes.
-                        dbSet.Update(remote);
-                        //await Messenger.Instance.HardwareTableChanged.Invoke("new");
-                    }
+                    localSenHist.DeserialiseData();
+                    var mergedSenHist = SensorHistory.Merge(updateFromServer, localSenHist);
+                    mergedSenHist.SerialiseData();
+                    dbSet.Update(mergedSenHist);
+
+                    if (newestUploadDate < mergedSenHist.UpdatedAt) newestUploadDate = mergedSenHist.UpdatedAt;
                 }
+
+                var id = updateFromServer.SensorID;
+                await
+                    Messenger.Instance.NewSensorDataPoint.Invoke(
+                            updateFromServer.Data.Select(
+                                d => new Messenger.SensorReading(id, d.Value, d.TimeStamp, d.Duration)))
+                        .ConfigureAwait(false);
             }
+
+            return newestUploadDate;
         }
 
         /// <summary>The method should be executed on the UI thread, which means it should be called before any
@@ -567,18 +505,16 @@
             return null;
         }
 
-        /// <summary>Downloads derserialzes and add/merges a table.</summary>
-        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
+        /// <summary> Throws many exeptions that should be caught and treated as abort. Downloads derserialzes and add/merges a table.</summary>
         /// <param name="tableName">Name of the table to request.</param>
         /// <param name="dbTable">The actual POCO table.</param>
         /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
         /// types.</param>
         /// <returns>Null on success, otherwise an error message.</returns>
-        private async Task<string> ReqDeserMergeHistory<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
-            where TPoco : class
+        private async Task<DateTimeOffset> ReqDeserMergeHistory(string tableName, DbSet<SensorHistory> dbTable,
+            Creds cred = null)
         { // Any exeption raised in these methods result in abort exeption with an error message for debug.
-            try
-            {
+
                 var lastUpdate = Settings.Instance.LastDatabaseDownload;
                 var unixTime = lastUpdate == default(DateTimeOffset) ? 0 : lastUpdate.ToUnixTimeSeconds();
 
@@ -586,22 +522,19 @@
                 var response = await DownloadRequest($"{tableName}/{unixTime}/5", cred);
 
                 // Step 2: Deserialise
-                var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+                var updatesFromServer = await Deserialize<SensorHistory>(tableName, cred, response);
                 Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
 
                 var numberofItems = updatesFromServer.Count;
 
                 // Step 3: Merge
                 // Get the DbSet that this request should be inserted into.
-                await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
+                var lastUpdatedTimeOfDataRecieved = await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
 
-                return $"Success:{numberofItems}";
-            }
-            catch (Exception ex)
-            {
-                return ex.ToString();
-            }
-            return null;
+            return lastUpdatedTimeOfDataRecieved;
+
+
+
         }
 
         /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
@@ -704,13 +637,9 @@
 
                 var lastUpdate = Settings.Instance.LastDatabaseDownload;
 
-                    res.Add(await
-                        ReqDeserMergeHistory(nameof(db.SensorsHistory), db.SensorsHistory, creds)
-                            .ConfigureAwait(false));
-
-                res.Add(await
-                        ReqDeserMergeHistory(nameof(db.RelayHistory), db.RelayHistory, creds)
-                            .ConfigureAwait(false));
+                res.Add(
+                    await
+                        ReqDeserMergeHistory(nameof(db.SensorsHistory), db.SensorsHistory, creds).ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
                 {

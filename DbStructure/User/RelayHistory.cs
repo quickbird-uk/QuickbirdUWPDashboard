@@ -10,6 +10,7 @@
         [JsonIgnore]
         public virtual Relay Relay { get; set; }
 
+        // TODO: This need to be the same name (for an interface) and SensorHistory.SensorID
         [Required]
         public Guid RelayID { get; set; }
 
