@@ -101,14 +101,14 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId)d).ID == ((IHasId)remote).ID);
+                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
                         dbSet.Select(a => a)
                             .AsNoTracking()
-                            .FirstOrDefault(d => ((IHasGuid)d).ID == ((IHasGuid)remote).ID);
+                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -238,7 +238,8 @@
         /// <param name="updatesFromServer">The data recieved from the server.</param>
         /// <param name="dbSet">The actual databse table.</param>
         /// <returns>Awaitable, the local database queries are done async.</returns>
-        private async Task AddOrModifyHistory<TPoco>(List<TPoco> updatesFromServer, DbSet<TPoco> dbSet) where TPoco : class
+        private async Task AddOrModifyHistory<TPoco>(List<TPoco> updatesFromServer, DbSet<TPoco> dbSet)
+            where TPoco : class
         {
             var pocoType = typeof(TPoco);
             foreach (var remote in updatesFromServer)
@@ -248,14 +249,14 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId)d).ID == ((IHasId)remote).ID);
+                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
                         dbSet.Select(a => a)
                             .AsNoTracking()
-                            .FirstOrDefault(d => ((IHasGuid)d).ID == ((IHasGuid)remote).ID);
+                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -585,19 +586,28 @@
         private async Task<string> ReqDeserMerge<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
             where TPoco : class
         {
-            // Step 1: Request
-            var response = await DownloadRequest(tableName, cred);
+            // Any exeption raised in these methods result in abort exeption with an error message for debug.
+            try
+            {
+                // Step 1: Request
+                var response = await DownloadRequest(tableName, cred);
 
-            // Step 2: Deserialise
-            var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
-            Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
+                // Step 2: Deserialise
+                var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+                Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
 
-            // Step 3: Merge
-            // Get the DbSet that this request should be inserted into.
-            await AddOrModify(updatesFromServer, dbTable).ConfigureAwait(false);
+                // Step 3: Merge
+                // Get the DbSet that this request should be inserted into.
+                await AddOrModify(updatesFromServer, dbTable).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
 
             return null;
         }
+
         /// <summary>Downloads derserialzes and add/merges a table.</summary>
         /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
         /// <param name="tableName">Name of the table to request.</param>
@@ -607,18 +617,24 @@
         /// <returns>Null on success, otherwise an error message.</returns>
         private async Task<string> ReqDeserMergeHistory<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
             where TPoco : class
-        {
-            // Step 1: Request
-            var response = await DownloadRequest(tableName, cred);
+        { // Any exeption raised in these methods result in abort exeption with an error message for debug.
+            try
+            {
+                // Step 1: Request
+                var response = await DownloadRequest(tableName, cred);
 
-            // Step 2: Deserialise
-            var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
-            Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
+                // Step 2: Deserialise
+                var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
+                Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
 
-            // Step 3: Merge
-            // Get the DbSet that this request should be inserted into.
-            await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
-
+                // Step 3: Merge
+                // Get the DbSet that this request should be inserted into.
+                await AddOrModifyHistory(updatesFromServer, dbTable).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
             return null;
         }
 
