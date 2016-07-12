@@ -115,11 +115,23 @@
 
         public DateTimeOffset LastLocalDownloadTime
         {
-            get { return Get(_localSettings, default(DateTimeOffset));}
+            get { return Get(_localSettings, default(DateTimeOffset)); }
 
             set
             {
-                if(value == LastLocalDownloadTime) return;
+                if (value == LastLocalDownloadTime) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTimeOffset LastHistoryPostTime
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+
+            set
+            {
+                if (value == LastHistoryPostTime) return;
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }

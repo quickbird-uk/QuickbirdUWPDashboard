@@ -118,14 +118,14 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId)d).ID == ((IHasId)remote).ID);
+                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
                         dbSet.Select(a => a)
                             .AsNoTracking()
-                            .FirstOrDefault(d => ((IHasGuid)d).ID == ((IHasGuid)remote).ID);
+                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -256,44 +256,58 @@
         /// <returns></returns>
         private static async Task<string> PostHistoryChangesAsync()
         {
-            var settings = Settings.Instance;
-            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            string result;
+            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            Queue<SensorHistory> needsPost;
+            string tableName;
             using (var db = new MainDbContext())
             {
+                tableName = nameof(db.SensorsHistory);
                 if (!db.SensorsHistory.Any()) return null;
 
-                var needsPost =
-                    db.SensorsHistory.select.Where(s => s.UpdatedAt == default(DateTimeOffset)).AsNoTracking().ToList();
+                // This is a list of historical uploads 
+                needsPost =
+                    new Queue<SensorHistory>(
+                        db.SensorsHistory.Where(s => s.UpdatedAt == default(DateTimeOffset)).AsNoTracking().ToList());
+
+
+                while (needsPost.Count > 0)
+                {
+                    var batch = new List<SensorHistory>();
+                    while (batch.Count < 30 && needsPost.Any())
+                    {
+                        var item = needsPost.Dequeue();
+                        item.SerialiseData();
+                        batch.Add(item);
+                    }
+                    var json = JsonConvert.SerializeObject(batch);
+                    var result = await Request.PostTable(ApiUrl, tableName, json, creds);
+                    if (result != null)
+                    {
+                        //abort
+                        return result;
+                    }
+                }
+
+                var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
+
+                var lastPostTime = Settings.Instance.LastHistoryPostTime;
+
+                var recentlyChanged = db.SensorsHistory.Where(sh => sh.TimeStamp > lastPostTime).AsNoTracking().ToList();
+                var locallyChanged = recentlyChanged.Where(sh =>
+                {
+                    var shKey = Tuple.Create(sh.SensorID, sh.TimeStamp);
+                    return posted.Any(po => shKey.Equals(po));
+                }).ToList();
+
+                var localJson = JsonConvert.SerializeObject(locallyChanged);
+                var localResult = await Request.PostTable(ApiUrl, tableName, localJson, creds);
+                if (localResult != null)
+                {
+                    //abort
+                    return localResult;
+                }
             }
-
-
-            var deserialiseAndSlice = needsPost.Select(sensorHistory =>
-            {
-                // All data loaded from the DB must be deserialised to properly populate the poco object.
-                sensorHistory.DeserialiseData();
-                var endOfLastUpdateDay = (lastSensorDataPost + TimeSpan.FromDays(1)).Date;
-                // If the last post was halfway though a day that day will need to be sliced.
-                if (sensorHistory.TimeStamp > endOfLastUpdateDay) return sensorHistory;
-                var slice = sensorHistory.Slice(lastSensorDataPost);
-                return slice;
-            });
-            if (!deserialiseAndSlice.Any())
-            {
-                // Nothing to post so quit as a success.
-                return null;
-            }
-
-            var json = JsonConvert.SerializeObject(deserialiseAndSlice);
-
-            result = await Request.PostTable(ApiUrl, nameof(db.SensorsHistory), json, creds).ConfigureAwait(false);
-            if (result == null)
-            {
-                // Only update last post if it was successfull.
-                settings.LastSensorDataPost = postTime;
-            }
-
-            return result;
+            return null;
         }
 
         private async Task<List<string>> PostUpdatesAsync()
