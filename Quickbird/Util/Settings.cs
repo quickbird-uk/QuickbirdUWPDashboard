@@ -100,39 +100,6 @@
         /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
 
-        public DateTimeOffset LastDatabaseUpload
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-            set
-            {
-                if (value == LastDatabaseDownload) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
-        public DateTimeOffset LastDatabaseDownload
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-            set
-            {
-                if (value == LastDatabaseDownload) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
-        public DateTimeOffset LastSensorDataPost
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-            set
-            {
-                if (value == LastDatabaseDownload) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
         /// <summary>Local setting that allows the app to run local network for device management. Defaults to
         /// false.</summary>
         public bool LocalDeviceManagementEnabled
@@ -146,6 +113,17 @@
             }
         }
 
+        public DateTimeOffset LastLocalDownloadTime
+        {
+            get { return Get(_localSettings, default(DateTimeOffset));}
+
+            set
+            {
+                if(value == LastLocalDownloadTime) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
 
         private ApplicationDataCompositeValue CombinedCredentials
         {
@@ -184,12 +162,7 @@
                 container.Values.Remove(settingsName);
         }
 
-        public void ResetDatabaseAndPostSettings()
-        {
-            LastDatabaseUpload = default(DateTimeOffset);
-            LastDatabaseDownload = default(DateTimeOffset);
-            LastSensorDataPost = default(DateTimeOffset);
-        }
+        public void ResetDatabaseAndPostSettings() { throw new NotImplementedException(); }
 
         public void SetNewCreds(string token, string userId, Guid stableSid)
         {
