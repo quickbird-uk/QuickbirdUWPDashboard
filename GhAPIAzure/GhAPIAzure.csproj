@@ -215,6 +215,10 @@
     <Compile Include="Migrations\201606021302300_Issue14.Designer.cs">
       <DependentUpon>201606021302300_Issue14.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201607131623585_HistoryUploadedAt.cs" />
+    <Compile Include="Migrations\201607131623585_HistoryUploadedAt.Designer.cs">
+      <DependentUpon>201607131623585_HistoryUploadedAt.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DbContext.cs" />
     <Compile Include="Models\EFExtensions.cs" />
@@ -254,6 +258,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201606021302300_Issue14.resx">
       <DependentUpon>201606021302300_Issue14.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201607131623585_HistoryUploadedAt.resx">
+      <DependentUpon>201607131623585_HistoryUploadedAt.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

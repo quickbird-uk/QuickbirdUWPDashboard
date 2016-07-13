@@ -412,17 +412,14 @@
         private static async Task<string> PostRequestHistoryChangesAsync()
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-            Queue<SensorHistory> needsPost;
-            string tableName;
             using (var db = new MainDbContext())
             {
-                tableName = nameof(db.SensorsHistory);
+                var tableName = nameof(db.SensorsHistory);
                 if (!db.SensorsHistory.Any()) return null;
 
                 // This is a list of historical uploads 
-                needsPost =
-                    new Queue<SensorHistory>(
-                        db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
+                var needsPost = new Queue<SensorHistory>(
+                    db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
 
 
                 while (needsPost.Count > 0)
