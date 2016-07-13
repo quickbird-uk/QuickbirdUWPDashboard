@@ -37,12 +37,13 @@ namespace GhAPIAzure.Controllers
         /// The server enforces UpdatedAt as teh time of upload, so you will never miss data. 
         /// Timestamp on the day should be midnight of the day when recording FINISHES. It's the end of that day.
         /// All the records attached to that day sould be timestamped before the day!</remarks>
+        /// <param name="sensorId">Id of sensor to get histories for.</param>
         /// <param name="linuxTime">Date from which we start grabbing data, as lunux ticks in UTC</param>
         /// <param name="number">How many days to take from that date</param>
-        [Route("api/SensorsHistory/{linuxTime}/{number}")]
+        [Route("api/SensorsHistory/{sensorId}/{linuxTime}/{number}")]
         [SwaggerResponse(HttpStatusCode.OK, Type = typeof(List<SensorHistory>))]
         [SwaggerResponse(HttpStatusCode.Unauthorized)]
-        public async Task<HttpResponseMessage> GetSensorsHistory(long linuxTime, int number)
+        public async Task<HttpResponseMessage> GetSensorsHistory(Guid sensorId, long linuxTime, int number)
         {
             DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             DateTimeOffset afterDate = new DateTimeOffset(epoch + TimeSpan.FromSeconds(linuxTime), TimeSpan.Zero);
@@ -52,7 +53,7 @@ namespace GhAPIAzure.Controllers
 
             List<SensorHistory> sHistories =  await 
                 db.SensorHistories.Where(sHist => sHist.Location.PersonId == _UserID 
-                && sHist.UploadedAt > afterDate)
+                && sHist.UploadedAt > afterDate && sHist.SensorID == sensorId)
                 .OrderBy(sHist => sHist.UploadedAt)
                 .Take(number).ToListAsync();
 
