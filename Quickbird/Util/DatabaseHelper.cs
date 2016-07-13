@@ -56,10 +56,9 @@
             return userData;
         }
 
-        /// <summary>
-        /// Requires UI thread. Syncs databse data with the server.
-        /// </summary>
-        /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the threadpool as appropriate.</remarks>
+        /// <summary>Requires UI thread. Syncs databse data with the server.</summary>
+        /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the
+        /// threadpool as appropriate.</remarks>
         public async Task SyncWithServerAsyncQueued()
         {
             var updateErrors = await GetRequestUpdateAsyncQueued();
@@ -163,15 +162,13 @@
             return contTask;
         }
 
-        /// <summary>
-        /// Deserialises a table from Json, throws excption on failure.
-        /// </summary>
+        /// <summary>Deserialises a table from Json, throws excption on failure.</summary>
         /// <typeparam name="TPoco">The type od the table.</typeparam>
         /// <param name="tableName">The name of the table (used for errors).</param>
         /// <param name="response">The json to be deserialized.</param>
         /// <returns>Table entry objects.</returns>
-        private static async Task<List<TPoco>> DeserializeTableThrowOnErrrorAsync<TPoco>(string tableName, string response)
-            where TPoco : class
+        private static async Task<List<TPoco>> DeserializeTableThrowOnErrrorAsync<TPoco>(string tableName,
+            string response) where TPoco : class
         {
             List<TPoco> updatesFromServer;
             try
@@ -220,7 +217,7 @@
         /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
         /// types.</param>
         /// <returns>Null on success, otherwise an error message.</returns>
-        private async Task<string> GetRequestDeserialzeMergeTable<TPoco>(string tableName, DbSet<TPoco> dbTable,
+        private async Task<string> GetReqDeserMergeTable<TPoco>(string tableName, DbSet<TPoco> dbTable,
             Creds cred = null) where TPoco : class
         {
             // Any exeption raised in these methods result in abort exeption with an error message for debug.
@@ -245,9 +242,7 @@
             return null;
         }
 
-        /// <summary>
-        /// Updates sensor history from server.
-        /// </summary>
+        /// <summary>Updates sensor history from server.</summary>
         /// <returns>Errors, null on succes.</returns>
         private static async Task<string> GetRequestSensorHistoryAsync()
         {
@@ -281,7 +276,9 @@
                                         .ConfigureAwait(false);
 
                             daysDownloaded =
-                                await DeserializeTableThrowOnErrrorAsync<SensorHistory>(tableName, download).ConfigureAwait(false);
+                                await
+                                    DeserializeTableThrowOnErrrorAsync<SensorHistory>(tableName, download)
+                                        .ConfigureAwait(false);
 
                             anythingDownloaded = daysDownloaded.Any();
                         }
@@ -314,9 +311,8 @@
             }
         }
 
-        /// <summary>
-        /// Updates sensor history from server. Queued to run after existing database and server operations.
-        /// </summary>
+        /// <summary>Updates sensor history from server. Queued to run after existing database and server
+        /// operations.</summary>
         /// <returns>Errors, null on succes.</returns>
         private async Task<string> GetRequestSensorHistoryAsyncQueued()
         {
@@ -355,12 +351,11 @@
             {
                 // Setting configure await to false allows all of this method to be run on the threadpool.
                 // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
-                res.Add(
-                    await GetRequestDeserialzeMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
                 {
@@ -370,21 +365,14 @@
 
                 // Editable types that must be merged:
 
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.People), db.People, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.People), db.People, creds).ConfigureAwait(false));
                 // Crop type is the only mergable that is no-auth.
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
-                res.Add(
-                    await
-                        GetRequestDeserialzeMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
-                res.Add(
-                    await
-                        GetRequestDeserialzeMergeTable(nameof(db.CropCycles), db.CropCycles, creds)
-                            .ConfigureAwait(false));
-                res.Add(
-                    await GetRequestDeserialzeMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
-                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
-                res.Add(
-                    await GetRequestDeserialzeMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
+                res.Add(await GetReqDeserMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
 
                 if (res.Any(r => r != null))
                 {
