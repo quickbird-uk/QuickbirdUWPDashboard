@@ -25,7 +25,7 @@
                 db.Database.Migrate();
             }
 
-            await DatabaseHelper.Instance.Sync();
+            await DatabaseHelper.Instance.SyncWithServerAsyncQueued();
             await x;
 
             Frame.Navigate(typeof(Shell));

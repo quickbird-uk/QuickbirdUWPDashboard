@@ -216,7 +216,7 @@
             // Disables the sync button in every CropView (there is one for each crop).
             await SetSyncEnabled(false);
 
-            await DatabaseHelper.Instance.Sync();
+            await DatabaseHelper.Instance.SyncWithServerAsyncQueued();
 
             await SetSyncEnabled(true);
 
@@ -256,7 +256,7 @@
         {
             Debug.WriteLine("Shell update triggered");
 
-            var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsync();
+            var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsyncQueued();
 
             // Remove items that no longer exist.
             var now = DateTimeOffset.Now;

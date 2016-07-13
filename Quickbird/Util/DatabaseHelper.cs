@@ -14,8 +14,7 @@
     using Models;
     using Newtonsoft.Json;
 
-    /// <summary>The public methods in theis helper are meant to be run on the UI thread - this is required
-    /// to force the methods to be executed consecutively and prevent overlap.</summary>
+    /// <summary>Methods to access and update the database. </summary>
     public class DatabaseHelper
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
@@ -32,25 +31,17 @@
         /// <summary>Singleton instance accessor.</summary>
         public static DatabaseHelper Instance { get; } = new DatabaseHelper();
 
-        public async Task<List<KeyValuePair<Guid, List<SensorHistory>>>> GetDataReadingsAsync(List<Guid> sensorIDs,
-            DateTimeOffset start, DateTimeOffset end)
-        {
-            // Wrap in a function, attach continuation and set _lastTask before awaiting.
-            var queryContinuation =
-                AttachContinuationsAndSwapLastTask(() => Task.Run(() => QueryDataReading(sensorIDs, start, end)));
-            return await await queryContinuation.ConfigureAwait(false);
-        }
-
         /// <summary>Gets all of the non-reading data that the UI uses as a big tree starting from each crop
         /// cycle.</summary>
         /// <returns>CropCycle objects with all the non-reading data the UI uses included.</returns>
-        public async Task<List<CropCycle>> GetDataTreeAsync()
+        public async Task<List<CropCycle>> GetDataTreeAsyncQueued()
         {
             var stopwatchA = Stopwatch.StartNew();
             // Swap out the continuation task before any awaits are called.
             // We want to replace the _lastTask field before this method returns.
             // We cannot do this after an await because the method may return on the await statement.
-            var treeQueryWrappedInAnContinuation = AttachContinuationsAndSwapLastTask(() => Task.Run(() => TreeQuery()));
+            var treeQueryWrappedInAnContinuation =
+                AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetDataTree()));
             stopwatchA.Stop();
 
             var stopwatchB = Stopwatch.StartNew();
@@ -65,42 +56,38 @@
             return userData;
         }
 
-        public async Task Sync()
+        /// <summary>
+        /// Requires UI thread. Syncs databse data with the server.
+        /// </summary>
+        /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the threadpool as appropriate.</remarks>
+        public async Task SyncWithServerAsyncQueued()
         {
-            var updateErrors = await GetUpdatesFromServerAsync();
+            var updateErrors = await GetRequestUpdateAsyncQueued();
             if (updateErrors?.Any() ?? false)
             {
                 Debug.WriteLine(updateErrors);
                 return;
             }
 
-            var updateHistErrors = await UpdateSensorHistoryAsync();
+            var updateHistErrors = await GetRequestSensorHistoryAsyncQueued();
             if (updateHistErrors?.Any() ?? false)
             {
                 Debug.WriteLine(updateHistErrors);
                 return;
             }
 
-            var postErrors = await PostUpdatesAsync();
+            var postErrors = await PostRequestUpdatesAsyncQueued();
             if (postErrors?.Any() ?? false)
             {
                 Debug.WriteLine(string.Join(",", postErrors));
                 return;
             }
 
-            var postHistErrors = await PostHistoryAsync();
+            var postHistErrors = await PostRequestHistoryAsyncQueued();
             if (postHistErrors?.Any() ?? false)
             {
                 Debug.WriteLine(postHistErrors);
             }
-        }
-
-        public async Task<string> UpdateSensorHistoryAsync()
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateSensorHistory));
-            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
-            await Messenger.Instance.TablesChanged.Invoke(null);
-            return updatesFromServerAsync;
         }
 
         /// <summary>Figures out the real type of the table entitiy, performs checks for existing items and
@@ -153,13 +140,6 @@
                             dbSet.Update(remote);
                             //await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
-                        // We are not using this mode where ther server gets to override local changes. Far too confusing.
-                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UploadedAt > lastUpdated)
-                        //{
-                        //    // Overwrite local version with remote version that was modified since the last update.
-                        //    // The local version is newer but we have decided to overwrite it 
-                        //    dbSet.Update(entry);
-                        //}
                     }
                     //RED - Global read-only tables
                     else
@@ -183,7 +163,14 @@
             return contTask;
         }
 
-        private static async Task<List<TPoco>> Deserialize<TPoco>(string tableName, Creds cred, string response)
+        /// <summary>
+        /// Deserialises a table from Json, throws excption on failure.
+        /// </summary>
+        /// <typeparam name="TPoco">The type od the table.</typeparam>
+        /// <param name="tableName">The name of the table (used for errors).</param>
+        /// <param name="response">The json to be deserialized.</param>
+        /// <returns>Table entry objects.</returns>
+        private static async Task<List<TPoco>> DeserializeTableThrowOnErrrorAsync<TPoco>(string tableName, string response)
             where TPoco : class
         {
             List<TPoco> updatesFromServer;
@@ -194,14 +181,152 @@
             }
             catch (JsonSerializationException e)
             {
-                Debug.WriteLine($"Desserialise falied on response for {tableName}, creds {null == cred}.");
+                Debug.WriteLine($"Desserialise falied on response for {tableName}");
                 Debug.WriteLine(e);
-                throw new Exception($"Derserialize failed: {tableName}, creds {cred?.Token ?? "null"}");
+                throw new Exception($"Derserialize failed: {tableName}");
             }
             return updatesFromServer;
         }
 
-        private static async Task<string> DownloadRequest(string tableName, Creds cred)
+        /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
+        /// Run on threadpool because SQLite doesn't do async IO.</summary>
+        /// <returns>Non-readings tree of data used bvy the UI.</returns>
+        private List<CropCycle> GetDataTree()
+        {
+            using (var db = new MainDbContext())
+            {
+                return
+                    db.CropCycles.Include(cc => cc.Location)
+                        .Include(cc => cc.CropType)
+                        .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Param)
+                        .Include(cc => cc.Location)
+                        .ThenInclude(l => l.Devices)
+                        .ThenInclude(d => d.Sensors)
+                        .ThenInclude(s => s.SensorType)
+                        .ThenInclude(st => st.Place)
+                        .AsNoTracking()
+                        .ToList();
+            }
+        }
+
+        /// <summary>Downloads derserialzes and add/merges a table.</summary>
+        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
+        /// <param name="tableName">Name of the table to request.</param>
+        /// <param name="dbTable">The actual POCO table.</param>
+        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
+        /// types.</param>
+        /// <returns>Null on success, otherwise an error message.</returns>
+        private async Task<string> GetRequestDeserialzeMergeTable<TPoco>(string tableName, DbSet<TPoco> dbTable,
+            Creds cred = null) where TPoco : class
+        {
+            // Any exeption raised in these methods result in abort exeption with an error message for debug.
+            try
+            {
+                // Step 1: Request
+                var response = await GetRequestTableThrowOnErrorAsync(tableName, cred);
+
+                // Step 2: Deserialise
+                var updatesFromServer = await DeserializeTableThrowOnErrrorAsync<TPoco>(tableName, response);
+                Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
+
+                // Step 3: Merge
+                // Get the DbSet that this request should be inserted into.
+                AddOrModify(updatesFromServer, dbTable);
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Updates sensor history from server.
+        /// </summary>
+        /// <returns>Errors, null on succes.</returns>
+        private static async Task<string> GetRequestSensorHistoryAsync()
+        {
+            var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+
+            using (var db = new MainDbContext())
+            {
+                var sensors = db.Sensors.AsNoTracking().ToList();
+
+                // Each sensor has a history object for each day.
+                foreach (var sensor in sensors)
+                {
+                    var historiesForThisSensor = db.SensorsHistory.Where(sh => sh.SensorID == sensor.ID);
+
+                    bool anythingDownloaded;
+                    do
+                    {
+                        var lastUploadedTimestamp = historiesForThisSensor.Max(hist => hist.UploadedAt);
+
+                        var tableName = nameof(db.SensorsHistory);
+                        var unixTime = lastUploadedTimestamp == default(DateTimeOffset)
+                            ? 0
+                            : lastUploadedTimestamp.ToUnixTimeSeconds();
+                        List<SensorHistory> daysDownloaded;
+                        try
+                        {
+                            var download =
+                                await
+                                    GetRequestTableThrowOnErrorAsync(
+                                            $"{tableName}/{sensor.ID}/{unixTime}/{MaximumDaysToDownload}", cred)
+                                        .ConfigureAwait(false);
+
+                            daysDownloaded =
+                                await DeserializeTableThrowOnErrrorAsync<SensorHistory>(tableName, download).ConfigureAwait(false);
+
+                            anythingDownloaded = daysDownloaded.Any();
+                        }
+                        catch (Exception ex)
+                        {
+                            return ex.ToString();
+                        }
+                        Debug.WriteLine($"{daysDownloaded.Count} days downloaded for {sensor.SensorTypeID}");
+
+                        foreach (var downloadedHistoryDay in daysDownloaded)
+                        {
+                            var existingHistoryDay =
+                                historiesForThisSensor.FirstOrDefault(
+                                    sh => sh.TimeStamp.Date == downloadedHistoryDay.TimeStamp.Date);
+                            if (existingHistoryDay == null)
+                            {
+                                db.SensorsHistory.Add(downloadedHistoryDay);
+                            }
+                            else
+                            {
+                                var merged = SensorHistory.Merge(existingHistoryDay, downloadedHistoryDay);
+                                db.SensorsHistory.Update(merged);
+                            }
+                        }
+                    } while (anythingDownloaded);
+                }
+
+                db.SaveChanges();
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Updates sensor history from server. Queued to run after existing database and server operations.
+        /// </summary>
+        /// <returns>Errors, null on succes.</returns>
+        private async Task<string> GetRequestSensorHistoryAsyncQueued()
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(GetRequestSensorHistoryAsync));
+            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
+            await Messenger.Instance.TablesChanged.Invoke(null);
+            return updatesFromServerAsync;
+        }
+
+        private static async Task<string> GetRequestTableThrowOnErrorAsync(string tableName, Creds cred)
         {
             string response;
             if (cred == null)
@@ -218,43 +343,85 @@
             return response;
         }
 
+        private async Task<List<string>> GetRequestUpdateAsync()
+        {
+            var settings = Settings.Instance;
+            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            var now = DateTimeOffset.Now;
+
+            var res = new List<string>();
+
+            using (var db = new MainDbContext())
+            {
+                // Setting configure await to false allows all of this method to be run on the threadpool.
+                // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
+                res.Add(
+                    await GetRequestDeserialzeMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
+
+                if (res.Any(r => r != null))
+                {
+                    return res.Where(r => r != null).ToList();
+                }
+                db.SaveChanges();
+
+                // Editable types that must be merged:
+
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.People), db.People, creds).ConfigureAwait(false));
+                // Crop type is the only mergable that is no-auth.
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
+                res.Add(
+                    await
+                        GetRequestDeserialzeMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
+                res.Add(
+                    await
+                        GetRequestDeserialzeMergeTable(nameof(db.CropCycles), db.CropCycles, creds)
+                            .ConfigureAwait(false));
+                res.Add(
+                    await GetRequestDeserialzeMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
+                res.Add(await GetRequestDeserialzeMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
+                res.Add(
+                    await GetRequestDeserialzeMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
+
+                if (res.Any(r => r != null))
+                {
+                    return res.Where(r => r != null).ToList();
+                }
+                db.SaveChanges();
+            }
+
+            res = res.Where(r => r != null).ToList();
+
+            if (!res.Any())
+            {
+                settings.LastSuccessfulGeneralDbGet = now;
+            }
+
+            return res;
+        }
+
         /// <summary>Updates the database from the cloud server.</summary>
         /// <returns>A compilation of errors.</returns>
-        private async Task<List<string>> GetUpdatesFromServerAsync()
+        private async Task<List<string>> GetRequestUpdateAsyncQueued()
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(UpdateFromServerAsync));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(GetRequestUpdateAsync));
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
             await Messenger.Instance.TablesChanged.Invoke(null);
             return updatesFromServerAsync;
         }
 
-        /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
-        /// <param name="table">The DBSet object for the table.</param>
-        /// <param name="tableName">The name of the table in the API .</param>
-        /// <param name="lastPost">The last time the table was synced.</param>
-        /// <param name="creds">Authentication credentials.</param>
-        /// <returns>Null on success otherwise an error message.</returns>
-        private static async Task<string> PostAsync(IQueryable<BaseEntity> table, string tableName,
-            DateTimeOffset lastPost, Creds creds)
+        private async Task<string> PostRequestHistoryAsyncQueued()
         {
-            var edited = table.Where(t => t.UpdatedAt > lastPost).ToList();
-
-            if (!edited.Any()) return null;
-
-            var data = JsonConvert.SerializeObject(edited, Formatting.None);
-            var req = await Request.PostTable(ApiUrl, tableName, data, creds).ConfigureAwait(false);
-            return req;
-        }
-
-        private async Task<string> PostHistoryAsync()
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostHistoryChangesAsync));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostRequestHistoryChangesAsync));
             return await await cont.ConfigureAwait(false);
         }
 
         /// <summary>Posts all new history items since the last time data was posted.</summary>
         /// <returns></returns>
-        private static async Task<string> PostHistoryChangesAsync()
+        private static async Task<string> PostRequestHistoryChangesAsync()
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
             Queue<SensorHistory> needsPost;
@@ -310,15 +477,27 @@
             return null;
         }
 
-        private async Task<List<string>> PostUpdatesAsync()
+        /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
+        /// <param name="table">The DBSet object for the table.</param>
+        /// <param name="tableName">The name of the table in the API .</param>
+        /// <param name="lastPost">The last time the table was synced.</param>
+        /// <param name="creds">Authentication credentials.</param>
+        /// <returns>Null on success otherwise an error message.</returns>
+        private static async Task<string> PostRequestTableWhereUpdatedAsync(IQueryable<BaseEntity> table,
+            string tableName, DateTimeOffset lastPost, Creds creds)
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostUpdateToServerAsync));
-            return await await cont.ConfigureAwait(false);
+            var edited = table.Where(t => t.UpdatedAt > lastPost).ToList();
+
+            if (!edited.Any()) return null;
+
+            var data = JsonConvert.SerializeObject(edited, Formatting.None);
+            var req = await Request.PostTable(ApiUrl, tableName, data, creds).ConfigureAwait(false);
+            return req;
         }
 
         /// <summary>Posts changes saved in the local DB (excluding histories) to the server. Only Items with
         /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
-        private static async Task<List<string>> PostUpdateToServerAsync()
+        private static async Task<List<string>> PostRequestUpdateAsync()
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
 
@@ -332,7 +511,9 @@
             using (var db = new MainDbContext())
             {
                 responses.Add(
-                    await PostAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds).ConfigureAwait(false));
+                    await
+                        PostRequestTableWhereUpdatedAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds)
+                            .ConfigureAwait(false));
 
                 // CropTypes is unique:
                 var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
@@ -345,13 +526,21 @@
                 }
 
                 responses.Add(
-                    await PostAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds).ConfigureAwait(false));
+                    await
+                        PostRequestTableWhereUpdatedAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds)
+                            .ConfigureAwait(false));
                 responses.Add(
-                    await PostAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds).ConfigureAwait(false));
+                    await
+                        PostRequestTableWhereUpdatedAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds)
+                            .ConfigureAwait(false));
                 responses.Add(
-                    await PostAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds).ConfigureAwait(false));
+                    await
+                        PostRequestTableWhereUpdatedAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds)
+                            .ConfigureAwait(false));
                 responses.Add(
-                    await PostAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds).ConfigureAwait(false));
+                    await
+                        PostRequestTableWhereUpdatedAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds)
+                            .ConfigureAwait(false));
             }
 
             var errors = responses.Where(r => r != null).ToList();
@@ -359,212 +548,10 @@
             return errors;
         }
 
-        private List<KeyValuePair<Guid, List<SensorHistory>>> QueryDataReading(List<Guid> sensorIDs,
-            DateTimeOffset start, DateTimeOffset end)
+        private async Task<List<string>> PostRequestUpdatesAsyncQueued()
         {
-            var trueStartDate = start.AddDays(-1);
-            //Because of the way we put timestamps on days, we need to subtracks one
-
-            List<SensorHistory> readings;
-            using (var db = new MainDbContext())
-            {
-                readings =
-                    db.SensorsHistory.Where(
-                            sh => sh.TimeStamp > trueStartDate && sh.TimeStamp < end && sensorIDs.Contains(sh.SensorID))
-                        .AsNoTracking()
-                        .ToList();
-            }
-
-            var result = new List<KeyValuePair<Guid, List<SensorHistory>>>();
-
-            foreach (var sh in readings)
-            {
-                var sensorCollection = result.FirstOrDefault(kv => kv.Key == sh.SensorID);
-                //Check if this collection already exists
-                if (sensorCollection.Key == sh.SensorID == false)
-                {
-                    sensorCollection = new KeyValuePair<Guid, List<SensorHistory>>(sh.SensorID,
-                        new List<SensorHistory>());
-                    result.Add(sensorCollection);
-                }
-                sensorCollection.Value.Add(sh);
-            }
-
-            return result;
-        }
-
-        /// <summary>Downloads derserialzes and add/merges a table.</summary>
-        /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
-        /// <param name="tableName">Name of the table to request.</param>
-        /// <param name="dbTable">The actual POCO table.</param>
-        /// <param name="cred">Credentials to be used to authenticate with the server. Only required for some
-        /// types.</param>
-        /// <returns>Null on success, otherwise an error message.</returns>
-        private async Task<string> ReqDeserMerge<TPoco>(string tableName, DbSet<TPoco> dbTable, Creds cred = null)
-            where TPoco : class
-        {
-            // Any exeption raised in these methods result in abort exeption with an error message for debug.
-            try
-            {
-                // Step 1: Request
-                var response = await DownloadRequest(tableName, cred);
-
-                // Step 2: Deserialise
-                var updatesFromServer = await Deserialize<TPoco>(tableName, cred, response);
-                Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
-
-                // Step 3: Merge
-                // Get the DbSet that this request should be inserted into.
-                AddOrModify(updatesFromServer, dbTable);
-            }
-            catch (Exception ex)
-            {
-                return ex.ToString();
-            }
-
-            return null;
-        }
-
-        /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
-        /// Run on threadpool because SQLite doesn't do async IO.</summary>
-        /// <returns>Non-readings tree of data used bvy the UI.</returns>
-        private List<CropCycle> TreeQuery()
-        {
-            using (var db = new MainDbContext())
-            {
-                return
-                    db.CropCycles.Include(cc => cc.Location)
-                        .Include(cc => cc.CropType)
-                        .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Param)
-                        .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Place)
-                        .AsNoTracking()
-                        .ToList();
-            }
-        }
-
-        private async Task<List<string>> UpdateFromServerAsync()
-        {
-            var settings = Settings.Instance;
-            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            var now = DateTimeOffset.Now;
-
-            var res = new List<string>();
-
-            using (var db = new MainDbContext())
-            {
-                // Setting configure await to false allows all of this method to be run on the threadpool.
-                // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
-                res.Add(await ReqDeserMerge(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Placements), db.Placements).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
-
-                if (res.Any(r => r != null))
-                {
-                    return res.Where(r => r != null).ToList();
-                }
-                db.SaveChanges();
-
-                // Editable types that must be merged:
-
-                res.Add(await ReqDeserMerge(nameof(db.People), db.People, creds).ConfigureAwait(false));
-                // Crop type is the only mergable that is no-auth.
-                res.Add(await ReqDeserMerge(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
-                res.Add(await ReqDeserMerge(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
-
-                if (res.Any(r => r != null))
-                {
-                    return res.Where(r => r != null).ToList();
-                }
-                db.SaveChanges();
-            }
-
-            res = res.Where(r => r != null).ToList();
-
-            if (!res.Any())
-            {
-                settings.LastSuccessfulGeneralDbGet = now;
-            }
-
-            return res;
-        }
-
-
-        private static async Task<string> UpdateSensorHistory()
-        {
-            var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-
-            using (var db = new MainDbContext())
-            {
-                var sensors = db.Sensors.AsNoTracking().ToList();
-
-                // Each sensor has a history object for each day.
-                foreach (var sensor in sensors)
-                {
-                    var historiesForThisSensor = db.SensorsHistory.Where(sh => sh.SensorID == sensor.ID);
-
-                    bool anythingDownloaded;
-                    do
-                    {
-                        var lastUploadedTimestamp = historiesForThisSensor.Max(hist => hist.UploadedAt);
-
-                        var tableName = nameof(db.SensorsHistory);
-                        var unixTime = lastUploadedTimestamp == default(DateTimeOffset)
-                            ? 0
-                            : lastUploadedTimestamp.ToUnixTimeSeconds();
-                        List<SensorHistory> daysDownloaded;
-                        try
-                        {
-                            var download =
-                                await
-                                    DownloadRequest($"{tableName}/{sensor.ID}/{unixTime}/{MaximumDaysToDownload}", cred)
-                                        .ConfigureAwait(false);
-
-                            daysDownloaded =
-                                await Deserialize<SensorHistory>(tableName, cred, download).ConfigureAwait(false);
-
-                            anythingDownloaded = daysDownloaded.Any();
-                        }
-                        catch (Exception ex)
-                        {
-                            return ex.ToString();
-                        }
-                        Debug.WriteLine($"{daysDownloaded.Count} days downloaded for {sensor.SensorTypeID}");
-
-                        foreach (var downloadedHistoryDay in daysDownloaded)
-                        {
-                            var existingHistoryDay =
-                                historiesForThisSensor.FirstOrDefault(
-                                    sh => sh.TimeStamp.Date == downloadedHistoryDay.TimeStamp.Date);
-                            if (existingHistoryDay == null)
-                            {
-                                db.SensorsHistory.Add(downloadedHistoryDay);
-                            }
-                            else
-                            {
-                                var merged = SensorHistory.Merge(existingHistoryDay, downloadedHistoryDay);
-                                db.SensorsHistory.Update(merged);
-                            }
-                        }
-                    } while (anythingDownloaded);
-                }
-
-                db.SaveChanges();
-                return null;
-            }
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostRequestUpdateAsync));
+            return await await cont.ConfigureAwait(false);
         }
     }
 }
