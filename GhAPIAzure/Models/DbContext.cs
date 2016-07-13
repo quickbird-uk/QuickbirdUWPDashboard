@@ -89,7 +89,7 @@ namespace GhAPIAzure.Models
 
 
             modelBuilder.Entity<SensorHistory>().Ignore(sh => sh.Data);
-            modelBuilder.Entity<SensorHistory>().Property(sh => sh.UpdatedAt)
+            modelBuilder.Entity<SensorHistory>().Property(sh => sh.UploadedAt)
                 .HasColumnAnnotation(
                 IndexAnnotation.AnnotationName,
                 new IndexAnnotation(new IndexAttribute()));

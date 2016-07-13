@@ -113,11 +113,6 @@
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160629182604_Initial.cs" />
-    <Compile Include="Migrations\20160629182604_Initial.designer.cs">
-      <DependentUpon>20160629182604_Initial.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BlockingDispatcher.cs" />

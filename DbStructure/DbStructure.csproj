@@ -115,7 +115,6 @@
     <Compile Include="Hardware\Sensor.cs" />
     <Compile Include="IHasGuid.cs" />
     <Compile Include="IHasId.cs" />
-    <Compile Include="IHasUpdatedAt.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="User\BaseEntity.cs" />

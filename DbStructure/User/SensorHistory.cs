@@ -4,7 +4,7 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
-    public class SensorHistory : IHasUpdatedAt
+    public class SensorHistory
     {
         [Required]
         public DateTimeOffset TimeStamp { get; set; }
@@ -17,8 +17,13 @@
         public virtual Location Location { get; set; }
         public Guid? LocationID { get; set; }
 
+        /// <summary>
+        /// The datetime that this history was uploaded to the server, always set by the server on upload. 
+        /// Locally created histories will set have this value set locally after uploading, then the server will overwrite the value.
+        /// Setting this value prevents the data from being uploaded unless it is newer than the last upload date.
+        /// </summary>
         [Required]
-        public DateTimeOffset UpdatedAt {get; set;} = DateTimeOffset.Now;  
+        public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.Now;  
 
         [JsonIgnore]
         public byte[] RawData { get; set; } = new byte[0]; 
@@ -78,7 +83,7 @@
                 TimeStamp = this.TimeStamp,
                 Location = this.Location,
                 LocationID = this.LocationID,
-                UpdatedAt = UpdatedAt,
+                UploadedAt = UploadedAt,
                 Data = new List<SensorDatapoint>()
             };
             foreach(SensorDatapoint item in Data)
@@ -120,7 +125,7 @@
                 TimeStamp = slice1.TimeStamp,
                 Location = slice1.Location,
                 LocationID = slice1.LocationID,
-                UpdatedAt = DateTimeOffset.Now,
+                UploadedAt = DateTimeOffset.Now,
                 Data = new List<SensorDatapoint>()
             };
 

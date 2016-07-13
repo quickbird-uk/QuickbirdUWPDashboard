@@ -154,7 +154,7 @@
                             //await Messenger.Instance.UserTablesChanged.Invoke("update");
                         }
                         // We are not using this mode where ther server gets to override local changes. Far too confusing.
-                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UpdatedAt > lastUpdated)
+                        //else if (lastUpdated != default(DateTimeOffset) && remoteVersion.UploadedAt > lastUpdated)
                         //{
                         //    // Overwrite local version with remote version that was modified since the last update.
                         //    // The local version is newer but we have decided to overwrite it 
@@ -267,7 +267,7 @@
                 // This is a list of historical uploads 
                 needsPost =
                     new Queue<SensorHistory>(
-                        db.SensorsHistory.Where(s => s.UpdatedAt == default(DateTimeOffset)).AsNoTracking().ToList());
+                        db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
 
 
                 while (needsPost.Count > 0)
@@ -316,15 +316,17 @@
             return await await cont.ConfigureAwait(false);
         }
 
-        /// <summary>Posts changes saved in the local DB (excluding histories) to the server.</summary>
+        /// <summary>Posts changes saved in the local DB (excluding histories) to the server. Only Items with
+        /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
         private static async Task<List<string>> PostUpdateToServerAsync()
         {
-            var settings = Settings.Instance;
-            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
-            var lastDatabasePost = settings.LastDatabaseUpload;
+            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
 
+            var lastDatabasePost = Settings.Instance.LastSuccessfulGeneralDbPost;
             var postTime = DateTimeOffset.Now;
+
             var responses = new List<string>();
+
             // Simple tables that change:
             // CropCycle, Devices.
             using (var db = new MainDbContext())
@@ -353,7 +355,7 @@
             }
 
             var errors = responses.Where(r => r != null).ToList();
-            if (!errors.Any()) settings.LastDatabaseUpload = postTime;
+            if (!errors.Any()) Settings.Instance.LastSuccessfulGeneralDbPost = postTime;
             return errors;
         }
 
@@ -494,7 +496,7 @@
 
             if (!res.Any())
             {
-                settings.LastLocalDownloadTime = now;
+                settings.LastSuccessfulGeneralDbGet = now;
             }
 
             return res;
@@ -517,7 +519,7 @@
                     bool anythingDownloaded;
                     do
                     {
-                        var lastUploadedTimestamp = historiesForThisSensor.Max(hist => hist.UpdatedAt);
+                        var lastUploadedTimestamp = historiesForThisSensor.Max(hist => hist.UploadedAt);
 
                         var tableName = nameof(db.SensorsHistory);
                         var unixTime = lastUploadedTimestamp == default(DateTimeOffset)

@@ -80,7 +80,7 @@
                     (long) ConnectionState.Stopped) == ConnectionState.Stopped)
             {
                 //Use is no signed in, return 
-                if (Settings.Instance.CredsSet == false)
+                if (Settings.Instance.IsLoggedIn == false)
                     return false;
 
                 _ReconnectTimer = new Timer(TimerTick, null, 1000, Timeout.Infinite);
@@ -284,7 +284,7 @@
 
         private async Task<bool> TryConnect()
         {
-            if (Settings.Instance.CredsSet == false)
+            if (Settings.Instance.IsLoggedIn == false)
                 return false;
 
             _webSocket = new MessageWebSocket();

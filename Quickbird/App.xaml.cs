@@ -304,7 +304,7 @@
 
                 Type pageType;
                 var settings = Settings.Instance;
-                if (settings.CredsSet)
+                if (settings.IsLoggedIn)
                 {
                     pageType = typeof(Shell);
                 }

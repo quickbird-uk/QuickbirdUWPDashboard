@@ -81,9 +81,6 @@
     <Compile Include="..\DbStructure\IHasId.cs">
       <Link>IHasId.cs</Link>
     </Compile>
-    <Compile Include="..\DbStructure\IHasUpdatedAt.cs">
-      <Link>IHasUpdatedAt.cs</Link>
-    </Compile>
     <Compile Include="..\DbStructure\Person.cs">
       <Link>Person.cs</Link>
     </Compile>

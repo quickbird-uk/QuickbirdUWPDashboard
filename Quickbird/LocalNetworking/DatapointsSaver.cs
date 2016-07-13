@@ -156,10 +156,8 @@
         private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
             //Make sure that if fired several times, the constraints are maintained
-
-            var settings = Settings.Instance;
-
-            if (settings.CredsSet && settings.LastDatabaseDownload != default(DateTimeOffset) &&
+            
+            if (Settings.Instance.IsLoggedIn && Settings.Instance.LastSuccessfulGeneralDbGet != default(DateTimeOffset) &&
                 _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
             {
                 Debug.WriteLine("addingDevice");
@@ -182,7 +180,7 @@
                             ID = Guid.NewGuid(),
                             Deleted = false,
                             Name = string.Format("Box Number {0}", _dbDevices.Count),
-                            PersonId = settings.CredStableSid, //TODO use the thing from settings! 
+                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
                             Version = new byte[32],
                             CropCycles = new List<CropCycle>(),
                             Devices = new List<Device>(),
@@ -295,7 +293,7 @@
             {
                 var settings = Settings.Instance;
 
-                if (settings.LastDatabaseDownload > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
+                if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
                 {
                     Debug.WriteLine("Datasaver started, recent update detected.");
 

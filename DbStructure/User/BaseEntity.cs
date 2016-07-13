@@ -14,7 +14,7 @@
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
         /// <summary>
-        ///     Update the avlaue every time you edit the object
+        ///     Should be updated every time a value is locally changed.
         /// </summary>
         [Required]
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;

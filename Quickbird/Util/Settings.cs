@@ -23,10 +23,10 @@
         private readonly ApplicationDataContainer _localSettings;
         private readonly ApplicationDataContainer _roamingSettings;
         private ApplicationDataCompositeValue _combinedCreds;
-        private bool _credsSet;
         private Guid _credStableSid;
         private string _credToken;
         private string _credUserId;
+        private bool _isLoggedIn;
 
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
@@ -47,18 +47,9 @@
             _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
-        public bool CredsSet
-        {
-            get { return _credsSet; }
-            private set
-            {
-                if (value == CredsSet) return;
-                _credsSet = value;
-                _combinedCreds[nameof(CredsSet)] = value;
-                OnPropertyChanged();
-            }
-        }
-
+        /// <summary>
+        /// The StableSid extracted from within the token.
+        /// </summary>
         public Guid CredStableSid
         {
             get { return _credStableSid; }
@@ -100,6 +91,59 @@
         /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
 
+        public bool IsLoggedIn
+        {
+            get { return _isLoggedIn; }
+            private set
+            {
+                if (value == IsLoggedIn) return;
+                _isLoggedIn = value;
+                _combinedCreds[nameof(IsLoggedIn)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>The time at which the last upload was performed. Useful for detecting new data in
+        /// histories that have a their UploadedAt date set. It is assumed that any history with a TimeStamp
+        /// after this time needs to be uploaded, regardless of the UploadedAt value. Histories that were
+        /// downloaded as part of the same sync cycle should be excluded.</summary>
+        public DateTimeOffset LastHistoryPostTime
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+
+            set
+            {
+                if (value == LastHistoryPostTime) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>The last time the db (excluding histories) was successfully updated from the internet.</summary>
+        public DateTimeOffset LastSuccessfulGeneralDbGet
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+
+            set
+            {
+                if (value == LastSuccessfulGeneralDbGet) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+        /// <summary>The last time the db (excluding histories) was successfully pushed to the internet.</summary>
+        public DateTimeOffset LastSuccessfulGeneralDbPost
+        {
+            get { return Get(_localSettings, default(DateTimeOffset)); }
+
+            set
+            {
+                if (value == LastSuccessfulGeneralDbPost) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>Local setting that allows the app to run local network for device management. Defaults to
         /// false.</summary>
         public bool LocalDeviceManagementEnabled
@@ -108,30 +152,6 @@
             set
             {
                 if (value == LocalDeviceManagementEnabled) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
-        public DateTimeOffset LastLocalDownloadTime
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-
-            set
-            {
-                if (value == LastLocalDownloadTime) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
-        public DateTimeOffset LastHistoryPostTime
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-
-            set
-            {
-                if (value == LastHistoryPostTime) return;
                 Set(_localSettings, value);
                 OnPropertyChanged();
             }
@@ -181,14 +201,14 @@
             CredToken = token;
             CredUserId = userId;
             CredStableSid = stableSid;
-            CredsSet = true;
+            IsLoggedIn = true;
 
             CombinedCredentials = _combinedCreds;
         }
 
         public void UnsetCreds()
         {
-            CredsSet = false;
+            IsLoggedIn = false;
             CredToken = null;
             CredUserId = null;
             CredStableSid = default(Guid);
@@ -237,7 +257,7 @@
 
             //This would trigger an infinite loop if the simple variable didn't check to see if the value is the same on setting.
 
-            if (cc.ContainsKey(nameof(CredsSet))) _credsSet = (bool) cc[nameof(CredsSet)];
+            if (cc.ContainsKey(nameof(IsLoggedIn))) _isLoggedIn = (bool) cc[nameof(IsLoggedIn)];
             if (cc.ContainsKey(nameof(CredToken))) _credToken = (string) cc[nameof(CredToken)];
             if (cc.ContainsKey(nameof(CredUserId))) _credUserId = (string) cc[nameof(CredUserId)];
             if (cc.ContainsKey(nameof(CredStableSid))) _credStableSid = (Guid) cc[nameof(CredStableSid)];

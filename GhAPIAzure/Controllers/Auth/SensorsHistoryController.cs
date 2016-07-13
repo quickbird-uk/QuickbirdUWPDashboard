@@ -52,8 +52,8 @@ namespace GhAPIAzure.Controllers
 
             List<SensorHistory> sHistories =  await 
                 db.SensorHistories.Where(sHist => sHist.Location.PersonId == _UserID 
-                && sHist.UpdatedAt > afterDate)
-                .OrderBy(sHist => sHist.UpdatedAt)
+                && sHist.UploadedAt > afterDate)
+                .OrderBy(sHist => sHist.UploadedAt)
                 .Take(number).ToListAsync();
 
             //timer.Stop(); 
@@ -124,7 +124,7 @@ namespace GhAPIAzure.Controllers
                     }
 
                     sensHistRecieved.SerialiseData();
-                    sensHistRecieved.UpdatedAt = DateTimeOffset.Now; 
+                    sensHistRecieved.UploadedAt = DateTimeOffset.Now; 
                     db.Entry(sensHistRecieved).State = EntityState.Added;
                 }
                 else
@@ -147,7 +147,7 @@ namespace GhAPIAzure.Controllers
                         SensorHistory chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
                         SensHistoryDB.Data = chMerged.Data;
                         SensHistoryDB.SerialiseData();
-                        SensHistoryDB.UpdatedAt = DateTimeOffset.Now; 
+                        SensHistoryDB.UploadedAt = DateTimeOffset.Now; 
                     }
                 }
             }
