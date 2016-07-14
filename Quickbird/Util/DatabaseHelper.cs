@@ -255,17 +255,17 @@
                 // Each sensor has a history object for each day.
                 foreach (var sensor in sensors)
                 {
-                    var historiesForThisSensor = db.SensorsHistory.Where(sh => sh.SensorID == sensor.ID);
-
                     bool anythingDownloaded;
+                    var lastUploadedTimestamp =
+                        db.SensorsHistory.Where(sh => sh.SensorID == sensor.ID).Max(hist => hist.UploadedAt);
+                    var unixTime = lastUploadedTimestamp == default(DateTimeOffset)
+                        ? 0
+                        : lastUploadedTimestamp.ToUnixTimeSeconds();
+
                     do
                     {
-                        var lastUploadedTimestamp = historiesForThisSensor.Max(hist => hist.UploadedAt);
-
                         var tableName = nameof(db.SensorsHistory);
-                        var unixTime = lastUploadedTimestamp == default(DateTimeOffset)
-                            ? 0
-                            : lastUploadedTimestamp.ToUnixTimeSeconds();
+
                         List<SensorHistory> daysDownloaded;
                         try
                         {
@@ -286,23 +286,40 @@
                         {
                             return ex.ToString();
                         }
-                        Debug.WriteLine($"{daysDownloaded.Count} days downloaded for {sensor.SensorTypeID}");
+
+                        Debug.WriteLine(
+                            $"{daysDownloaded.Count} days downloaded for {sensor.SensorTypeID} " +
+                            $"on {lastUploadedTimestamp.Date}");
 
                         foreach (var downloadedHistoryDay in daysDownloaded)
                         {
+                            if (downloadedHistoryDay.UploadedAt > lastUploadedTimestamp)
+                                lastUploadedTimestamp = downloadedHistoryDay.UploadedAt;
+
                             var existingHistoryDay =
-                                historiesForThisSensor.FirstOrDefault(
-                                    sh => sh.TimeStamp.Date == downloadedHistoryDay.TimeStamp.Date);
-                            if (existingHistoryDay == null)
+                                db.SensorsHistory.FirstOrDefault(
+                                    sh =>
+                                        sh.TimeStamp.Date == downloadedHistoryDay.TimeStamp.Date &&
+                                        sh.SensorID == sensor.ID);
+                            try
                             {
-                                db.SensorsHistory.Add(downloadedHistoryDay);
+                                if (existingHistoryDay == null)
+                                {
+                                    db.SensorsHistory.Add(downloadedHistoryDay);
+                                }
+                                else
+                                {
+                                    var merged = SensorHistory.Merge(existingHistoryDay, downloadedHistoryDay);
+                                    db.SensorsHistory.Update(merged);
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                var merged = SensorHistory.Merge(existingHistoryDay, downloadedHistoryDay);
-                                db.SensorsHistory.Update(merged);
+                                Debug.WriteLine("Failed to database.");
                             }
                         }
+
+
                     } while (anythingDownloaded);
                 }
 
@@ -418,8 +435,9 @@
                 if (!db.SensorsHistory.Any()) return null;
 
                 // This is a list of historical uploads 
-                var needsPost = new Queue<SensorHistory>(
-                    db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
+                var needsPost =
+                    new Queue<SensorHistory>(
+                        db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
 
 
                 while (needsPost.Count > 0)

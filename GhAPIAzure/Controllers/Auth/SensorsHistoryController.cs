@@ -1,71 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using DbStructure.User;
-using GhAPIAzure.Models;
-using System.Security.Claims;
-using EntityFramework.Extensions;
-using EFExtensions;
-using DbStructure;
-using Swashbuckle.Swagger.Annotations;
-using System.Web.Http.ModelBinding;
-
-namespace GhAPIAzure.Controllers
+﻿namespace GhAPIAzure.Controllers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Threading.Tasks;
+    using System.Web.Http;
+    using DbStructure.User;
+    using Models;
+    using DbStructure;
+    using Swashbuckle.Swagger.Annotations;
+    using System.Web.Http.ModelBinding;
 
     [Authorize]
     public class SensorsHistoryController : BaseController
     {
-
-
-        private DataContext db = new DataContext();
+        private readonly DataContext _db = new DataContext();
 
         // GET: api/SensorsHistory
-        /// <summary>
-        /// Gets historical record of sensor's measurements
-        /// </summary>
-        /// <remarks>Gets historical record of sensor's measurements. 
-        /// In the "from" parameter you should spesify the date when you have last synced with the server. 
-        /// The server enforces UpdatedAt as teh time of upload, so you will never miss data. 
-        /// Timestamp on the day should be midnight of the day when recording FINISHES. It's the end of that day.
-        /// All the records attached to that day sould be timestamped before the day!</remarks>
-        /// <param name="sensorId">Id of sensor to get histories for.</param>
-        /// <param name="linuxTime">Date from which we start grabbing data, as lunux ticks in UTC</param>
-        /// <param name="number">How many days to take from that date</param>
-        [Route("api/SensorsHistory/{sensorId}/{linuxTime}/{number}")]
+        /// <summary>Gets historical record of sensor's measurements</summary>
+        /// <remarks>Gets historical data after the specified datetime. </remarks>
+        /// <param name="deviceId">Id of sensor to get histories for.</param>
+        /// <param name="unixTime">Only returns results with a timestamp greater than this.</param>
+        /// <param name="maxDays">Sets a maximum amount of days to return, multiply by number of sensors.</param>
+        [Route("api/SensorsHistory/{deviceId}/{unixTime}/{maxDays}")]
         [SwaggerResponse(HttpStatusCode.OK, Type = typeof(List<SensorHistory>))]
         [SwaggerResponse(HttpStatusCode.Unauthorized)]
-        public async Task<HttpResponseMessage> GetSensorsHistory(Guid sensorId, long linuxTime, int number)
+        public async Task<HttpResponseMessage> GetSensorsHistory(Guid deviceId, long unixTime, int maxDays)
         {
-            DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            DateTimeOffset afterDate = new DateTimeOffset(epoch + TimeSpan.FromSeconds(linuxTime), TimeSpan.Zero);
-
-           // System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            //System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
             //timer.Start(); 
 
-            List<SensorHistory> sHistories =  await 
-                db.SensorHistories.Where(sHist => sHist.Location.PersonId == _UserID 
-                && sHist.UploadedAt > afterDate && sHist.SensorID == sensorId)
-                .OrderBy(sHist => sHist.UploadedAt)
-                .Take(number).ToListAsync();
+            var afterTime = DateTimeOffset.FromUnixTimeSeconds(unixTime);
+            var includingAndAfterDay = afterTime.Date;
+            var daySpan = TimeSpan.FromDays(maxDays);
 
-            //timer.Stop(); 
+            var device = await _db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.ID == deviceId);
 
-            //WE should deserialise ALL of them! 
-            foreach(var ch in sHistories)
+
+            var sensorHistories =
+                await
+                    _db.SensorHistories.AsNoTracking()
+                        .Include(sh => sh.Sensor)
+                        .Where(
+                            sHist =>
+                                sHist.Location.PersonId == _UserID && sHist.TimeStamp >= includingAndAfterDay &&
+                                sHist.Sensor.DeviceID == deviceId)
+                        .OrderBy(sHist => sHist.TimeStamp)
+                        .TakeWhile(sh => sh.TimeStamp.Date - includingAndAfterDay < daySpan)
+                        .ToListAsync();
+ 
+            for (var i = 0; i < sensorHistories.Count; i++)
             {
-                ch.DeserialiseData(); 
+                var hist = sensorHistories[i];
+                if (hist.TimeStamp.Date == includingAndAfterDay)
+                {
+                    sensorHistories[i] = hist.Slice(afterTime);
+                }
+                else
+                {
+                    // Items are sorted so there should be no more on the first day
+                    break;
+                }
             }
 
-            return Request.CreateResponse(HttpStatusCode.OK, sHistories); 
+            // The Json converter uses the deserialised data, ignores the raw blob stored in the DB.
+            foreach (var history in sensorHistories)
+            {
+                history.DeserialiseData();
+            }
+
+            //timer.Stop(); 
+            return Request.CreateResponse(HttpStatusCode.OK, sensorHistories);
         }
 
         // POST: api/SensorsHistory
@@ -92,7 +100,7 @@ namespace GhAPIAzure.Controllers
 
             //Get all relevant sensors, they must both exist and belong to this user! 
             List<Sensor> userSensors =
-                await db.Sensors.Where(rel => sensorIDs.Contains(rel.ID) && rel.Device.Location.PersonId == _UserID)
+                await _db.Sensors.Where(rel => sensorIDs.Contains(rel.ID) && rel.Device.Location.PersonId == _UserID)
                 .ToListAsync();
 
             //If one of the submitted items reffers to a sensor that doesn't exist/belong to user, return error
@@ -107,9 +115,9 @@ namespace GhAPIAzure.Controllers
 
             //Get all the control histories that are being edited
             List<DateTimeOffset> timestamps = shRecievedList.Select(sensHist => sensHist.TimeStamp).ToList();
-            List<SensorHistory> sensHistDbRawList = await db.SensorHistories.Where(sensHist => timestamps.Contains(sensHist.TimeStamp)
+            List<SensorHistory> sensHistDbRawList = await _db.SensorHistories.Where(sensHist => timestamps.Contains(sensHist.TimeStamp)
             && sensorIDs.Contains(sensHist.SensorID)).ToListAsync();
-            List<Location> userLocations = await db.Location.Where(loc => loc.PersonId == _UserID).ToListAsync(); 
+            List<Location> userLocations = await _db.Location.Where(loc => loc.PersonId == _UserID).ToListAsync(); 
 
             foreach (var sensHistRecieved in shRecievedList)
             {
@@ -126,7 +134,7 @@ namespace GhAPIAzure.Controllers
 
                     sensHistRecieved.SerialiseData();
                     sensHistRecieved.UploadedAt = DateTimeOffset.Now; 
-                    db.Entry(sensHistRecieved).State = EntityState.Added;
+                    _db.Entry(sensHistRecieved).State = EntityState.Added;
                 }
                 else
                 {
@@ -153,7 +161,7 @@ namespace GhAPIAzure.Controllers
                 }
             }
 
-            await db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
