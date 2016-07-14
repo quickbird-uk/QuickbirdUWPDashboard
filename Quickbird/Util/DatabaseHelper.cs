@@ -20,7 +20,7 @@
         /// <summary>The Url of the web api that is used to fetch data.</summary>
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
 
-        private const int MaximumDaysToDownload = 5;
+        private const int MaximumDaysToDownloadAtATime = 5;
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
         /// tasks to make sure one completes before another starts.</summary>
@@ -250,17 +250,14 @@
 
             using (var db = new MainDbContext())
             {
-                var sensors = db.Sensors.AsNoTracking().ToList();
+                var devices = db.Devices.AsNoTracking().ToList();
 
                 // Each sensor has a history object for each day.
-                foreach (var sensor in sensors)
+                foreach (var device in devices)
                 {
                     bool anythingDownloaded;
-                    var lastUploadedTimestamp =
-                        db.SensorsHistory.Where(sh => sh.SensorID == sensor.ID).Max(hist => hist.UploadedAt);
-                    var unixTime = lastUploadedTimestamp == default(DateTimeOffset)
-                        ? 0
-                        : lastUploadedTimestamp.ToUnixTimeSeconds();
+
+                    var maxtime = db.SensorsHistory.AsNoTracking().Max(sh => sh.TimeStamp);
 
                     do
                     {
@@ -272,7 +269,7 @@
                             var download =
                                 await
                                     GetRequestTableThrowOnErrorAsync(
-                                            $"{tableName}/{sensor.ID}/{unixTime}/{MaximumDaysToDownload}", cred)
+                                            $"{tableName}/{device.ID}/{unixTime}/{MaximumDaysToDownloadAtATime}", cred)
                                         .ConfigureAwait(false);
 
                             daysDownloaded =
