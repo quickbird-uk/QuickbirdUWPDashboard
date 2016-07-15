@@ -20,7 +20,7 @@
         /// <summary>The Url of the web api that is used to fetch data.</summary>
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
 
-        private const int MaximumDaysToDownloadAtATime = 5;
+        private const int MaxDaysDl = 5;
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
         /// tasks to make sure one completes before another starts.</summary>
@@ -61,31 +61,36 @@
         /// threadpool as appropriate.</remarks>
         public async Task SyncWithServerAsyncQueued()
         {
-            var updateErrors = await GetRequestUpdateAsyncQueued();
-            if (updateErrors?.Any() ?? false)
+            // Sharing a db context allows the use of caching within the context while still being safer than a leaky 
+            //  global context.
+            using (var db = new MainDbContext())
             {
-                Debug.WriteLine(updateErrors);
-                return;
-            }
+                var updateErrors = await GetRequestUpdateAsyncQueued(db);
+                if (updateErrors?.Any() ?? false)
+                {
+                    Debug.WriteLine(updateErrors);
+                    return;
+                }
 
-            var updateHistErrors = await GetRequestSensorHistoryAsyncQueued();
-            if (updateHistErrors?.Any() ?? false)
-            {
-                Debug.WriteLine(updateHistErrors);
-                return;
-            }
+                var updateHistErrors = await GetRequestSensorHistoryAsyncQueued(db);
+                if (updateHistErrors?.Any() ?? false)
+                {
+                    Debug.WriteLine(updateHistErrors);
+                    return;
+                }
 
-            var postErrors = await PostRequestUpdatesAsyncQueued();
-            if (postErrors?.Any() ?? false)
-            {
-                Debug.WriteLine(string.Join(",", postErrors));
-                return;
-            }
+                var postErrors = await PostRequestUpdatesAsyncQueued(db);
+                if (postErrors?.Any() ?? false)
+                {
+                    Debug.WriteLine(string.Join(",", postErrors));
+                    return;
+                }
 
-            var postHistErrors = await PostRequestHistoryAsyncQueued();
-            if (postHistErrors?.Any() ?? false)
-            {
-                Debug.WriteLine(postHistErrors);
+                var postHistErrors = await PostRequestHistoryAsyncQueued(db);
+                if (postHistErrors?.Any() ?? false)
+                {
+                    Debug.WriteLine(postHistErrors);
+                }
             }
         }
 
@@ -243,94 +248,101 @@
         }
 
         /// <summary>Updates sensor history from server.</summary>
-        /// <returns>Errors, null on succes.</returns>
-        private static async Task<string> GetRequestSensorHistoryAsync()
+        /// <returns>Errors, null on succes. Some data may have been successfully saved alongside errors.</returns>
+        private static async Task<string> GetRequestSensorHistoryAsync(MainDbContext db)
         {
-            var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            var devices = db.Devices.AsNoTracking().Include(d => d.Sensors).ToList();
+            var table = nameof(db.SensorsHistory);
+            var errors = "";
 
-            using (var db = new MainDbContext())
+            foreach (var device in devices)
             {
-                var devices = db.Devices.AsNoTracking().ToList();
+                // Find the newest received items so dowloading can resume after it.
+                // It will be updated after each item is added, much cheaper than re-querying.
+                var mostRecentDownloadedTimestamp = db.SensorsHistory.AsNoTracking()
+                    .Include(sh => sh.Sensor)
+                    .Where(sh => sh.Sensor.DeviceID == device.ID)
+                    .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //From server not locally created.
+                    .Max(sh => sh.TimeStamp);
 
-                // Each sensor has a history object for each day.
-                foreach (var device in devices)
+                // This loop will keep requesting data untill the server gives no more.
+                bool itemsReceived;
+                do
                 {
-                    bool anythingDownloaded;
+                    var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+                    var unixTimeSeconds = mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
 
-                    var maxtime = db.SensorsHistory.AsNoTracking().Max(sh => sh.TimeStamp);
-
-                    do
+                    List<SensorHistory> histories;
+                    try
                     {
-                        var tableName = nameof(db.SensorsHistory);
+                        // Download with get request.
+                        var raw =
+                            await
+                                GetRequestTableThrowOnErrorAsync($"{table}/{device.ID}/{unixTimeSeconds}/{MaxDaysDl}",
+                                    cred).ConfigureAwait(false);
 
-                        List<SensorHistory> daysDownloaded;
-                        try
+                        histories =
+                            await DeserializeTableThrowOnErrrorAsync<SensorHistory>(table, raw).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Something went wrong, try moving onto next device.
+                        var message = $"GetRequest or deserialise failed for {device.Name}: {ex}";
+                        errors += message + Environment.NewLine;
+                        Debug.WriteLine(message);
+                        break;
+                    }
+
+                    Debug.WriteLine($"{histories.Count} dl for {device.Name}");
+
+                    if (histories.Any())
+                    {
+                        foreach (var hist in histories)
                         {
-                            var download =
-                                await
-                                    GetRequestTableThrowOnErrorAsync(
-                                            $"{tableName}/{device.ID}/{unixTime}/{MaximumDaysToDownloadAtATime}", cred)
-                                        .ConfigureAwait(false);
+                            var existing =
+                                db.SensorsHistory.AsNoTracking()
+                                    .FirstOrDefault(
+                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
 
-                            daysDownloaded =
-                                await
-                                    DeserializeTableThrowOnErrrorAsync<SensorHistory>(tableName, download)
-                                        .ConfigureAwait(false);
-
-                            anythingDownloaded = daysDownloaded.Any();
-                        }
-                        catch (Exception ex)
-                        {
-                            return ex.ToString();
-                        }
-
-                        Debug.WriteLine(
-                            $"{daysDownloaded.Count} days downloaded for {sensor.SensorTypeID} " +
-                            $"on {lastUploadedTimestamp.Date}");
-
-                        foreach (var downloadedHistoryDay in daysDownloaded)
-                        {
-                            if (downloadedHistoryDay.UploadedAt > lastUploadedTimestamp)
-                                lastUploadedTimestamp = downloadedHistoryDay.UploadedAt;
-
-                            var existingHistoryDay =
-                                db.SensorsHistory.FirstOrDefault(
-                                    sh =>
-                                        sh.TimeStamp.Date == downloadedHistoryDay.TimeStamp.Date &&
-                                        sh.SensorID == sensor.ID);
-                            try
+                            if (existing == null)
                             {
-                                if (existingHistoryDay == null)
-                                {
-                                    db.SensorsHistory.Add(downloadedHistoryDay);
-                                }
-                                else
-                                {
-                                    var merged = SensorHistory.Merge(existingHistoryDay, downloadedHistoryDay);
-                                    db.SensorsHistory.Update(merged);
-                                }
+                                db.Add(hist);
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Debug.WriteLine("Failed to database.");
+                                var merged = SensorHistory.Merge(existing, hist);
+                                db.Update(merged);
                             }
+
+
+                            if (hist.TimeStamp > mostRecentDownloadedTimestamp)
+                                mostRecentDownloadedTimestamp = hist.TimeStamp;
                         }
 
+                        itemsReceived = true;
+                    }
+                    else
+                    {
+                        itemsReceived = false;
+                    }
+                } while (itemsReceived);
 
-                    } while (anythingDownloaded);
-                }
+                // Save the data for this device.
+                await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
 
-                db.SaveChanges();
-                return null;
+                // Move onto next device.
             }
+
+            return string.IsNullOrWhiteSpace(errors) ? null : errors;
         }
 
         /// <summary>Updates sensor history from server. Queued to run after existing database and server
         /// operations.</summary>
+        /// <param name="db"></param>
         /// <returns>Errors, null on succes.</returns>
-        private async Task<string> GetRequestSensorHistoryAsyncQueued()
+        private async Task<string> GetRequestSensorHistoryAsyncQueued(MainDbContext db)
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(GetRequestSensorHistoryAsync));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestSensorHistoryAsync(db)));
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
             await Messenger.Instance.TablesChanged.Invoke(null);
             return updatesFromServerAsync;
@@ -407,9 +419,9 @@
 
         /// <summary>Updates the database from the cloud server.</summary>
         /// <returns>A compilation of errors.</returns>
-        private async Task<List<string>> GetRequestUpdateAsyncQueued()
+        private async Task<List<string>> GetRequestUpdateAsyncQueued(MainDbContext db)
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(GetRequestUpdateAsync));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestUpdateAsync(db)));
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
             await Messenger.Instance.TablesChanged.Invoke(null);
             return updatesFromServerAsync;
