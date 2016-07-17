@@ -109,13 +109,13 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.Select(a => a).AsNoTracking().FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
+                        dbSet.AsNoTracking().Select(a => a).FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
-                        dbSet.Select(a => a)
-                            .AsNoTracking()
+                        dbSet.AsNoTracking()
+                            .Select(a => a)
                             .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
                 }
                 else if (pocoType == typeof(CropType))
@@ -198,7 +198,8 @@
             using (var db = new MainDbContext())
             {
                 return
-                    db.CropCycles.Include(cc => cc.Location)
+                    db.CropCycles.AsNoTracking()
+                        .Include(cc => cc.Location)
                         .Include(cc => cc.CropType)
                         .Include(cc => cc.Location)
                         .ThenInclude(l => l.Devices)
@@ -210,7 +211,6 @@
                         .ThenInclude(d => d.Sensors)
                         .ThenInclude(s => s.SensorType)
                         .ThenInclude(st => st.Place)
-                        .AsNoTracking()
                         .ToList();
             }
         }
@@ -306,11 +306,19 @@
 
                             if (existing == null)
                             {
+                                // The json deserialiser deserialises json to the .Data property.
+                                // The data has to be serialised into raw-data-blobs before saving to the databse.
+                                hist.SerialiseData();
                                 db.Add(hist);
                             }
                             else
                             {
+                                // The data is pulled from the database as serialised raw data blobs.
+                                existing.DeserialiseData();
+                                // The merged object merges using the deserialised Data property.
                                 var merged = SensorHistory.Merge(existing, hist);
+                                // Data has to be serialised again into raw data blobs for the database.
+                                merged.SerialiseData();
                                 db.Update(merged);
                             }
 
@@ -365,7 +373,7 @@
             return response;
         }
 
-        private async Task<List<string>> GetRequestUpdateAsync()
+        private async Task<List<string>> GetRequestUpdateAsync(MainDbContext db)
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
@@ -373,39 +381,38 @@
 
             var res = new List<string>();
 
-            using (var db = new MainDbContext())
+
+            // Setting configure await to false allows all of this method to be run on the threadpool.
+            // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
+            res.Add(await GetReqDeserMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
+
+            if (res.Any(r => r != null))
             {
-                // Setting configure await to false allows all of this method to be run on the threadpool.
-                // Without setting it false the continuation would be posted onto the SynchronisationContext, which is the UI.
-                res.Add(await GetReqDeserMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
-
-                if (res.Any(r => r != null))
-                {
-                    return res.Where(r => r != null).ToList();
-                }
-                db.SaveChanges();
-
-                // Editable types that must be merged:
-
-                res.Add(await GetReqDeserMergeTable(nameof(db.People), db.People, creds).ConfigureAwait(false));
-                // Crop type is the only mergable that is no-auth.
-                res.Add(await GetReqDeserMergeTable(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
-                res.Add(await GetReqDeserMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
-
-                if (res.Any(r => r != null))
-                {
-                    return res.Where(r => r != null).ToList();
-                }
-                db.SaveChanges();
+                return res.Where(r => r != null).ToList();
             }
+            db.SaveChanges();
+
+            // Editable types that must be merged:
+
+            res.Add(await GetReqDeserMergeTable(nameof(db.People), db.People, creds).ConfigureAwait(false));
+            // Crop type is the only mergable that is no-auth.
+            res.Add(await GetReqDeserMergeTable(nameof(db.CropTypes), db.CropTypes).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
+            res.Add(await GetReqDeserMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
+
+            if (res.Any(r => r != null))
+            {
+                return res.Where(r => r != null).ToList();
+            }
+            db.SaveChanges();
+
 
             res = res.Where(r => r != null).ToList();
 
@@ -427,66 +434,65 @@
             return updatesFromServerAsync;
         }
 
-        private async Task<string> PostRequestHistoryAsyncQueued()
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostRequestHistoryChangesAsync));
-            return await await cont.ConfigureAwait(false);
-        }
-
         /// <summary>Posts all new history items since the last time data was posted.</summary>
         /// <returns></returns>
-        private static async Task<string> PostRequestHistoryChangesAsync()
+        private static async Task<string> PostRequestHistoryAsync(MainDbContext db)
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-            using (var db = new MainDbContext())
+
+            var tableName = nameof(db.SensorsHistory);
+            if (!db.SensorsHistory.Any()) return null;
+
+            // This is a list of historical uploads 
+            var needsPost =
+                new Queue<SensorHistory>(
+                    db.SensorsHistory.AsNoTracking().Where(s => s.UploadedAt == default(DateTimeOffset)).ToList());
+
+
+            while (needsPost.Count > 0)
             {
-                var tableName = nameof(db.SensorsHistory);
-                if (!db.SensorsHistory.Any()) return null;
-
-                // This is a list of historical uploads 
-                var needsPost =
-                    new Queue<SensorHistory>(
-                        db.SensorsHistory.Where(s => s.UploadedAt == default(DateTimeOffset)).AsNoTracking().ToList());
-
-
-                while (needsPost.Count > 0)
+                var batch = new List<SensorHistory>();
+                while (batch.Count < 30 && needsPost.Any())
                 {
-                    var batch = new List<SensorHistory>();
-                    while (batch.Count < 30 && needsPost.Any())
-                    {
-                        var item = needsPost.Dequeue();
-                        item.SerialiseData();
-                        batch.Add(item);
-                    }
-                    var json = JsonConvert.SerializeObject(batch);
-                    var result = await Request.PostTable(ApiUrl, tableName, json, creds);
-                    if (result != null)
-                    {
-                        //abort
-                        return result;
-                    }
+                    var item = needsPost.Dequeue();
+                    item.SerialiseData();
+                    batch.Add(item);
                 }
-
-                var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
-
-                var lastPostTime = Settings.Instance.LastHistoryPostTime;
-
-                var recentlyChanged = db.SensorsHistory.Where(sh => sh.TimeStamp > lastPostTime).AsNoTracking().ToList();
-                var locallyChanged = recentlyChanged.Where(sh =>
-                {
-                    var shKey = Tuple.Create(sh.SensorID, sh.TimeStamp);
-                    return posted.Any(po => shKey.Equals(po));
-                }).ToList();
-
-                var localJson = JsonConvert.SerializeObject(locallyChanged);
-                var localResult = await Request.PostTable(ApiUrl, tableName, localJson, creds);
-                if (localResult != null)
+                var json = JsonConvert.SerializeObject(batch);
+                var result = await Request.PostTable(ApiUrl, tableName, json, creds);
+                if (result != null)
                 {
                     //abort
-                    return localResult;
+                    return result;
                 }
             }
+
+            var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
+
+            var lastPostTime = Settings.Instance.LastHistoryPostTime;
+
+            var recentlyChanged = db.SensorsHistory.AsNoTracking().Where(sh => sh.TimeStamp > lastPostTime).ToList();
+            var locallyChanged = recentlyChanged.Where(sh =>
+            {
+                var shKey = Tuple.Create(sh.SensorID, sh.TimeStamp);
+                return posted.Any(po => shKey.Equals(po));
+            }).ToList();
+
+            var localJson = JsonConvert.SerializeObject(locallyChanged);
+            var localResult = await Request.PostTable(ApiUrl, tableName, localJson, creds);
+            if (localResult != null)
+            {
+                //abort
+                return localResult;
+            }
+
             return null;
+        }
+
+        private async Task<string> PostRequestHistoryAsyncQueued(MainDbContext db)
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestHistoryAsync(db)));
+            return await await cont.ConfigureAwait(false);
         }
 
         /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
@@ -498,7 +504,7 @@
         private static async Task<string> PostRequestTableWhereUpdatedAsync(IQueryable<BaseEntity> table,
             string tableName, DateTimeOffset lastPost, Creds creds)
         {
-            var edited = table.Where(t => t.UpdatedAt > lastPost).ToList();
+            var edited = table.AsNoTracking().Where(t => t.UpdatedAt > lastPost).ToList();
 
             if (!edited.Any()) return null;
 
@@ -509,7 +515,7 @@
 
         /// <summary>Posts changes saved in the local DB (excluding histories) to the server. Only Items with
         /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
-        private static async Task<List<string>> PostRequestUpdateAsync()
+        private static async Task<List<string>> PostRequestUpdateAsync(MainDbContext db)
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
 
@@ -520,49 +526,48 @@
 
             // Simple tables that change:
             // CropCycle, Devices.
-            using (var db = new MainDbContext())
+
+            responses.Add(
+                await
+                    PostRequestTableWhereUpdatedAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds)
+                        .ConfigureAwait(false));
+
+            // CropTypes is unique:
+            var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
+
+            if (changedCropTypes.Any())
             {
+                var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
                 responses.Add(
-                    await
-                        PostRequestTableWhereUpdatedAsync(db.Locations, nameof(db.Locations), lastDatabasePost, creds)
-                            .ConfigureAwait(false));
-
-                // CropTypes is unique:
-                var changedCropTypes = db.CropTypes.Where(c => c.CreatedAt > lastDatabasePost);
-
-                if (changedCropTypes.Any())
-                {
-                    var cropTypeData = JsonConvert.SerializeObject(changedCropTypes);
-                    responses.Add(
-                        await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds).ConfigureAwait(false));
-                }
-
-                responses.Add(
-                    await
-                        PostRequestTableWhereUpdatedAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds)
-                            .ConfigureAwait(false));
-                responses.Add(
-                    await
-                        PostRequestTableWhereUpdatedAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds)
-                            .ConfigureAwait(false));
-                responses.Add(
-                    await
-                        PostRequestTableWhereUpdatedAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds)
-                            .ConfigureAwait(false));
-                responses.Add(
-                    await
-                        PostRequestTableWhereUpdatedAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds)
-                            .ConfigureAwait(false));
+                    await Request.PostTable(ApiUrl, nameof(db.CropTypes), cropTypeData, creds).ConfigureAwait(false));
             }
+
+            responses.Add(
+                await
+                    PostRequestTableWhereUpdatedAsync(db.CropCycles, nameof(db.CropCycles), lastDatabasePost, creds)
+                        .ConfigureAwait(false));
+            responses.Add(
+                await
+                    PostRequestTableWhereUpdatedAsync(db.Devices, nameof(db.Devices), lastDatabasePost, creds)
+                        .ConfigureAwait(false));
+            responses.Add(
+                await
+                    PostRequestTableWhereUpdatedAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds)
+                        .ConfigureAwait(false));
+            responses.Add(
+                await
+                    PostRequestTableWhereUpdatedAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds)
+                        .ConfigureAwait(false));
+
 
             var errors = responses.Where(r => r != null).ToList();
             if (!errors.Any()) Settings.Instance.LastSuccessfulGeneralDbPost = postTime;
             return errors;
         }
 
-        private async Task<List<string>> PostRequestUpdatesAsyncQueued()
+        private async Task<List<string>> PostRequestUpdatesAsyncQueued(MainDbContext db)
         {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(PostRequestUpdateAsync));
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestUpdateAsync(db)));
             return await await cont.ConfigureAwait(false);
         }
     }
