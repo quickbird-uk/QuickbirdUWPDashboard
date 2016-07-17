@@ -255,22 +255,50 @@
             var table = nameof(db.SensorsHistory);
             var errors = "";
 
+            // Download all the data for each device in turn.
             foreach (var device in devices)
             {
-                // Find the newest received items so dowloading can resume after it.
+                // Find the newest received item so dowloading can resume after it.
+                // There will be items for multiple sensors with the same time, it diesn't matter which one is used.
                 // It will be updated after each item is added, much cheaper than re-querying.
-                var mostRecentDownloadedTimestamp = db.SensorsHistory.AsNoTracking()
-                    .Include(sh => sh.Sensor)
-                    .Where(sh => sh.Sensor.DeviceID == device.ID)
-                    .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //From server not locally created.
-                    .Max(sh => sh.TimeStamp);
+                var mostRecentDayDownloaded =
+                    db.SensorsHistory.AsNoTracking()
+                        .Include(sh => sh.Sensor)
+                        .Where(sh => sh.Sensor.DeviceID == device.ID)
+                        .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //Ignore never uploaded days.
+                        .OrderBy(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
+
+                DateTimeOffset mostRecentDownloadedTimestamp;
+                if (null == mostRecentDayDownloaded)
+                {
+                    // Data has never been downloaded for this device, so start downloading for time 0.
+                    mostRecentDownloadedTimestamp = default(DateTimeOffset);
+                }
+                else
+                {
+                    // Its pulled out of the database as raw so deserialise to access the data.
+                    mostRecentDayDownloaded.DeserialiseData();
+                    if (mostRecentDayDownloaded.Data.Any())
+                    {
+                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.Data.Max(entry => entry.TimeStamp);
+                    }
+                    else
+                    {
+                        Log.ShouldNeverHappen(
+                            $"Found a history with no entries: {device.Name}, {mostRecentDayDownloaded.TimeStamp}");
+
+                        // This is a broken situation, but it should be  fine if we continue from the start of the day.
+                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.TimeStamp - TimeSpan.FromDays(1);
+                    }
+                }
 
                 // This loop will keep requesting data untill the server gives no more.
                 bool itemsReceived;
                 do
                 {
                     var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-                    var unixTimeSeconds = mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
+                    // Although any time far in the past should work, using 0 makes intent clear in debugging.
+                    var unixTimeSeconds = mostRecentDownloadedTimestamp == default(DateTimeOffset) ? 0 : mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
 
                     List<SensorHistory> histories;
                     try
@@ -280,7 +308,7 @@
                             await
                                 GetRequestTableThrowOnErrorAsync($"{table}/{device.ID}/{unixTimeSeconds}/{MaxDaysDl}",
                                     cred).ConfigureAwait(false);
-
+                        // Deserialise download to POCO object.
                         histories =
                             await DeserializeTableThrowOnErrrorAsync<SensorHistory>(table, raw).ConfigureAwait(false);
                     }
