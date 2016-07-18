@@ -229,6 +229,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\PublishProfiles\DhAPiDev.pubxml" />
+    <None Include="Properties\PublishProfiles\GhAPI46Azure - Web Deploy %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\GhAPI46Azure - Web Deploy %283%29.pubxml" />
     <None Include="Properties\PublishProfiles\GhAPI46Azure - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\GhAPI46Azure-Development - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\GhAPI46Azure-Development - Web Deploy.pubxml" />

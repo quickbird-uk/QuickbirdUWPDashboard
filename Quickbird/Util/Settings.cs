@@ -47,9 +47,7 @@
             _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
-        /// <summary>
-        /// The StableSid extracted from within the token.
-        /// </summary>
+        /// <summary>The StableSid extracted from within the token.</summary>
         public Guid CredStableSid
         {
             get { return _credStableSid; }
@@ -103,22 +101,6 @@
             }
         }
 
-        /// <summary>The time at which the last upload was performed. Useful for detecting new data in
-        /// histories that have a their UploadedAt date set. It is assumed that any history with a TimeStamp
-        /// after this time needs to be uploaded, regardless of the UploadedAt value. Histories that were
-        /// downloaded as part of the same sync cycle should be excluded.</summary>
-        public DateTimeOffset LastHistoryPostTime
-        {
-            get { return Get(_localSettings, default(DateTimeOffset)); }
-
-            set
-            {
-                if (value == LastHistoryPostTime) return;
-                Set(_localSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
         /// <summary>The last time the db (excluding histories) was successfully updated from the internet.</summary>
         public DateTimeOffset LastSuccessfulGeneralDbGet
         {
@@ -131,6 +113,7 @@
                 OnPropertyChanged();
             }
         }
+
         /// <summary>The last time the db (excluding histories) was successfully pushed to the internet.</summary>
         public DateTimeOffset LastSuccessfulGeneralDbPost
         {

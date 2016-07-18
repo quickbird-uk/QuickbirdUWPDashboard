@@ -31,27 +31,53 @@
         public async Task<HttpResponseMessage> GetSensorsHistory(Guid deviceId, long unixTime, int maxDays)
         {
             //System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-            //timer.Start(); 
-
+            //t
             var afterTime = DateTimeOffset.FromUnixTimeSeconds(unixTime);
             var includingAndAfterDay = afterTime.Date;
-            var daySpan = TimeSpan.FromDays(maxDays);
+            
+            //Hist.Sensor.DeviceID is used so dont need device.
+            //var device = await _db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.ID == deviceId);
 
-            var device = await _db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.ID == deviceId);
-
-
-            var sensorHistories =
+            var allSensorHistoriesAfterStart =
                 await
-                    _db.SensorHistories.AsNoTracking()
-                        .Include(sh => sh.Sensor)
+                    _db.SensorHistories.Include(sh => sh.Sensor)
+                        .AsNoTracking()
                         .Where(
                             sHist =>
                                 sHist.Location.PersonId == _UserID && sHist.TimeStamp >= includingAndAfterDay &&
                                 sHist.Sensor.DeviceID == deviceId)
                         .OrderBy(sHist => sHist.TimeStamp)
-                        .TakeWhile(sh => sh.TimeStamp.Date - includingAndAfterDay < daySpan)
                         .ToListAsync();
- 
+
+            if (!allSensorHistoriesAfterStart.Any())
+            {
+                //Return empty collection.
+                return Request.CreateResponse(HttpStatusCode.OK, allSensorHistoriesAfterStart);
+            }
+
+            int daysSeen = 0;
+            var previous = allSensorHistoriesAfterStart.First().TimeStamp.Date;
+            var sensorHistories = new List<SensorHistory>();
+
+            // The list is sorted so we can run through from the top untill we have max days.
+            foreach (var hist in allSensorHistoriesAfterStart)
+            {
+                if (hist.TimeStamp.Date != previous)
+                {
+                    previous = hist.TimeStamp.Date;
+                    daysSeen++;
+
+                    // This will trigger after a minimum of all items of one day being added.
+                    if (daysSeen >= maxDays)
+                    {
+                        break;
+                    }
+                }
+
+                sensorHistories.Add(hist);
+            }
+
+            // Slice on the starting end of the selected data.
             for (var i = 0; i < sensorHistories.Count; i++)
             {
                 var hist = sensorHistories[i];

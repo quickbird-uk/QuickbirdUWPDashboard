@@ -20,7 +20,7 @@
         /// <summary>The Url of the web api that is used to fetch data.</summary>
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
 
-        private const int MaxDaysDl = 5;
+        private const int MaxDaysDl = 3;
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
         /// tasks to make sure one completes before another starts.</summary>
@@ -295,11 +295,14 @@
 
                 // This loop will keep requesting data untill the server gives no more.
                 bool itemsReceived;
+                var added = new List<SensorHistory>();
                 do
                 {
                     var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
                     // Although any time far in the past should work, using 0 makes intent clear in debugging.
-                    var unixTimeSeconds = mostRecentDownloadedTimestamp == default(DateTimeOffset) ? 0 : mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
+                    var unixTimeSeconds = mostRecentDownloadedTimestamp == default(DateTimeOffset)
+                        ? 0
+                        : mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
 
                     List<SensorHistory> histories;
                     try
@@ -326,19 +329,39 @@
 
                     if (histories.Any())
                     {
+                        var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
                         foreach (var hist in histories)
                         {
+                            Debug.WriteLine(
+                                $"[{mostRecentDownloadedTimestamp}]{hist.TimeStamp}#{hist.UploadedAt}#{device.Name}#{hist.SensorID}");
+
+                            // See if this is a new object.
                             var existing =
                                 db.SensorsHistory.AsNoTracking()
                                     .FirstOrDefault(
                                         sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
-
+                            // Make sure that its not an object tracked from a previous loop.
+                            // This can happen because the end of the previous day will always get sliced with no data.
+                            // That end slice isn't perfect but is makes sure all the data was taken.
+                            if (existing == null)
+                            {
+                                existing =
+                                    added.FirstOrDefault(
+                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
+                                if (existing != null)
+                                {
+                                    // Detach the existing object because it will be merged and replaced.
+                                    var entityEntry = db.Entry(existing);
+                                    entityEntry.State = EntityState.Detached;
+                                    added.Remove(existing);
+                                }
+                            }
                             if (existing == null)
                             {
                                 // The json deserialiser deserialises json to the .Data property.
                                 // The data has to be serialised into raw-data-blobs before saving to the databse.
                                 hist.SerialiseData();
-                                db.Add(hist);
+                                added.Add(db.Add(hist).Entity);
                             }
                             else
                             {
@@ -348,14 +371,16 @@
                                 var merged = SensorHistory.Merge(existing, hist);
                                 // Data has to be serialised again into raw data blobs for the database.
                                 merged.SerialiseData();
-                                db.Update(merged);
+
+                                added.Add(db.Update(merged).Entity);
                             }
 
-
-                            if (hist.TimeStamp > mostRecentDownloadedTimestamp)
-                                mostRecentDownloadedTimestamp = hist.TimeStamp;
+                            // This day was just downloaded so it must be completed
+                            if (hist.TimeStamp > lastDayOfThisDownloadSet)
+                                lastDayOfThisDownloadSet = hist.TimeStamp;
                         }
-
+                        // The GET request allways gets days completed to the end (start may be missing but not the end)
+                        mostRecentDownloadedTimestamp = lastDayOfThisDownloadSet + TimeSpan.FromDays(1);
                         itemsReceived = true;
                     }
                     else
@@ -366,6 +391,15 @@
 
                 // Save the data for this device.
                 await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
+
+                foreach (var entity in added)
+                {
+                    var entry = db.Entry(entity);
+                    if (entry.State != EntityState.Detached)
+                    {
+                        entry.State = EntityState.Detached;
+                    }
+                }
 
                 // Move onto next device.
             }
@@ -472,27 +506,31 @@
 
             if (!db.SensorsHistory.Any()) return null;
 
+            var uploadedAtWillBe = DateTimeOffset.Now;
 
             // This is a list of never uploaded histories (half uploaded locally updated histories will be exluded).
-            var needsPost =
-                new Queue<SensorHistory>(
-                    db.SensorsHistory.AsNoTracking().Where(s => s.UploadedAt == default(DateTimeOffset)).ToList());
-            
-            // This will be used after needsPost is emptied.
-            var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
+            // It should be noted that it is impossible to have a never-uploaded history older than a half uploaded one.
+            //TRACKING
+            var uploadSet = db.SensorsHistory.AsTracking().Where(s => s.UploadedAt == default(DateTimeOffset)).ToList();
+            var uploadQueue = new Queue<SensorHistory>(uploadSet);
 
-            while (needsPost.Count > 0)
+            while (uploadQueue.Count > 0)
             {
                 // Collect a batch of a sensible size.
                 var batch = new List<SensorHistory>();
                 const int maxUploadBatch = 30;
-                while (batch.Count < maxUploadBatch && needsPost.Any())
+                while (batch.Count < maxUploadBatch && uploadQueue.Any())
                 {
-                    var item = needsPost.Dequeue();
+                    var item = uploadQueue.Dequeue();
                     // Histories come out of the database as raw blobs, serialise to populate the Data property.
                     // The json converter needs the Data property.
                     item.SerialiseData();
                     batch.Add(item);
+                    // This will only be saved if the whole upload is successful.
+                    item.UploadedAt = uploadedAtWillBe;
+
+                    // This next line combined with AsNoTracking would be efficient, but i dont trust EFCore.
+                    //db.Entry(item).Property(nameof(item.UploadedAt)).IsModified = true;
                 }
 
                 // Prepare and upload collection of histories.
@@ -505,25 +543,59 @@
                 }
             }
 
+            // Upload success, we can save the changes to UploadedAt
+            await Task.Run(() => db.SaveChanges()).ConfigureAwait(true);
 
-            var lastPostTime = Settings.Instance.LastHistoryPostTime;
-            // Set the post time as jsut before we compile a list of stuff to be uploaded.
-            Settings.Instance.LastHistoryPostTime = DateTimeOffset.Now;
-
-            var recentlyChanged = db.SensorsHistory.AsNoTracking().Where(sh => sh.TimeStamp > lastPostTime).ToList();
-            var locallyChanged = recentlyChanged.Where(sh =>
+            // Untrack the items so they cant clash with the next part.
+            foreach (var tracked in uploadSet)
             {
-                var shKey = Tuple.Create(sh.SensorID, sh.TimeStamp);
-                return posted.Any(po => shKey.Equals(po));
-            }).ToList();
+                db.Entry(tracked).State = EntityState.Detached;
+            }
 
-            var localJson = JsonConvert.SerializeObject(locallyChanged);
-            var localResult = await Request.PostTable(ApiUrl, tableName, localJson, creds);
-            if (localResult != null)
+            // Now we need to upload anything that could have been uploaded after having its UploadedAt set.
+            // We can recognise these because the UploadedAt will be on the same date as the timestamp.
+
+            //TRACKED.
+            var uploadedButMayBeChangedSet =
+                db.SensorsHistory.AsTracking().Where(sh => sh.TimeStamp.Date == sh.UploadedAt.Date).ToList();
+
+            var haveChanged = new List<SensorHistory>();
+
+            foreach (var uploadedButMayBeChanged in uploadedButMayBeChangedSet)
+            {
+                // Detect local modifications by looking for datapoint timestamps newer than UploadedAt.
+                uploadedButMayBeChanged.DeserialiseData();
+                if (uploadedButMayBeChanged.Data.Any(d => d.TimeStamp > uploadedButMayBeChanged.UploadedAt))
+                {
+                    var updatedTime = DateTimeOffset.Now;
+                    // Get the new part by clicing after the UploadAt date.
+                    var hasChanged = uploadedButMayBeChanged.Slice(uploadedButMayBeChanged.UploadedAt);
+
+                    haveChanged.Add(hasChanged);
+
+                    uploadedButMayBeChanged.UploadedAt = updatedTime;
+                }
+            }
+
+
+            var jsonOfLocallyChanged = JsonConvert.SerializeObject(haveChanged);
+            var uploadLocallyChangedResult = await Request.PostTable(ApiUrl, tableName, jsonOfLocallyChanged, creds);
+            if (uploadLocallyChangedResult != null)
             {
                 //abort
-                return localResult;
+                return uploadLocallyChangedResult;
             }
+
+            // Upload success, we can save the changes to UploadedAt
+            await Task.Run(() => db.SaveChanges()).ConfigureAwait(true);
+
+            // Untracking the items isn't necessary because this is the last part of Sync, context to be disposed.
+            // However its much safer to do so incase someone updates Sync with new stuff.
+            foreach (var tracked in uploadedButMayBeChangedSet)
+            {
+                db.Entry(tracked).State = EntityState.Detached;
+            }
+            // Return success.
 
             return null;
         }
