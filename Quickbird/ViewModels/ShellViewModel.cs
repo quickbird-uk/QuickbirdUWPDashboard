@@ -216,7 +216,7 @@
             // Disables the sync button in every CropView (there is one for each crop).
             await SetSyncEnabled(false);
 
-            await DatabaseHelper.Instance.SyncWithServerAsyncQueued();
+            await DatabaseHelper.Instance.SyncWithServerAsync();
 
             await SetSyncEnabled(true);
 

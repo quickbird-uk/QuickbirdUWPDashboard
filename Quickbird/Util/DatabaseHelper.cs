@@ -59,7 +59,7 @@
         /// <summary>Requires UI thread. Syncs databse data with the server.</summary>
         /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the
         /// threadpool as appropriate.</remarks>
-        public async Task SyncWithServerAsyncQueued()
+        public async Task SyncWithServerAsync()
         {
             // Sharing a db context allows the use of caching within the context while still being safer than a leaky 
             //  global context.
@@ -265,6 +265,7 @@
                     db.SensorsHistory.AsNoTracking()
                         .Include(sh => sh.Sensor)
                         .Where(sh => sh.Sensor.DeviceID == device.ID)
+                        // Never uploaded days may be much newer than items that have not yet been downloaded.
                         .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //Ignore never uploaded days.
                         .OrderBy(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
 
@@ -467,37 +468,47 @@
         private static async Task<string> PostRequestHistoryAsync(MainDbContext db)
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-
             var tableName = nameof(db.SensorsHistory);
+
             if (!db.SensorsHistory.Any()) return null;
 
-            // This is a list of historical uploads 
+
+            // This is a list of never uploaded histories (half uploaded locally updated histories will be exluded).
             var needsPost =
                 new Queue<SensorHistory>(
                     db.SensorsHistory.AsNoTracking().Where(s => s.UploadedAt == default(DateTimeOffset)).ToList());
-
+            
+            // This will be used after needsPost is emptied.
+            var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
 
             while (needsPost.Count > 0)
             {
+                // Collect a batch of a sensible size.
                 var batch = new List<SensorHistory>();
-                while (batch.Count < 30 && needsPost.Any())
+                const int maxUploadBatch = 30;
+                while (batch.Count < maxUploadBatch && needsPost.Any())
                 {
                     var item = needsPost.Dequeue();
+                    // Histories come out of the database as raw blobs, serialise to populate the Data property.
+                    // The json converter needs the Data property.
                     item.SerialiseData();
                     batch.Add(item);
                 }
+
+                // Prepare and upload collection of histories.
                 var json = JsonConvert.SerializeObject(batch);
-                var result = await Request.PostTable(ApiUrl, tableName, json, creds);
+                var result = await Request.PostTable(ApiUrl, tableName, json, creds).ConfigureAwait(false);
                 if (result != null)
                 {
-                    //abort
+                    //abort, non-null responses are descriptions of errors 
                     return result;
                 }
             }
 
-            var posted = needsPost.Select(sh => Tuple.Create(sh.SensorID, sh.TimeStamp));
 
             var lastPostTime = Settings.Instance.LastHistoryPostTime;
+            // Set the post time as jsut before we compile a list of stuff to be uploaded.
+            Settings.Instance.LastHistoryPostTime = DateTimeOffset.Now;
 
             var recentlyChanged = db.SensorsHistory.AsNoTracking().Where(sh => sh.TimeStamp > lastPostTime).ToList();
             var locallyChanged = recentlyChanged.Where(sh =>

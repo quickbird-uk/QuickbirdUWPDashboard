@@ -178,7 +178,7 @@
             _syncing = true;
             SyncButtonEnabled = false;
 
-            await DatabaseHelper.Instance.SyncWithServerAsyncQueued();
+            await DatabaseHelper.Instance.SyncWithServerAsync();
 
             _syncing = false;
             if (_isInternetAvailable)
