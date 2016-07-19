@@ -33,7 +33,7 @@
         /// only by the server. For the local computer this is a gaurantee that data up to this point has been
         /// downloaded from the server.</summary>
         [Required]
-        public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset UploadedAt { get; set; } = default(DateTimeOffset);
 
         public void DeserialiseData()
         {
@@ -79,7 +79,8 @@
                 TimeStamp = slice1.TimeStamp,
                 Location = slice1.Location,
                 LocationID = slice1.LocationID,
-                UploadedAt = DateTimeOffset.Now,
+                // Take the smaller uploaded at so all the data after that can be uploaded.
+                UploadedAt = slice1.UploadedAt < slice2.UploadedAt ? slice1.UploadedAt : slice2.UploadedAt,
                 Data = new List<SensorDatapoint>()
             };
 

@@ -267,7 +267,7 @@
                         .Where(sh => sh.Sensor.DeviceID == device.ID)
                         // Never uploaded days may be much newer than items that have not yet been downloaded.
                         .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //Ignore never uploaded days.
-                        .OrderBy(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
+                        .OrderByDescending(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
 
                 DateTimeOffset mostRecentDownloadedTimestamp;
                 if (null == mostRecentDayDownloaded)
@@ -526,13 +526,13 @@
                     var item = uploadQueue.Dequeue();
                     // Histories come out of the database as raw blobs, serialise to populate the Data property.
                     // The json converter needs the Data property.
-                    item.SerialiseData();
+                    item.DeserialiseData();
                     batch.Add(item);
                     // This will only be saved if the whole upload is successful.
                     item.UploadedAt = uploadedAtWillBe;
 
                     // This next line combined with AsNoTracking would be efficient, but i dont trust EFCore.
-                    //db.Entry(item).Property(nameof(item.UploadedAt)).IsModified = true;
+                    db.Entry(item).Property(nameof(item.UploadedAt)).IsModified = true;
                 }
 
                 // Prepare and upload collection of histories.
@@ -581,6 +581,7 @@
 
 
             var jsonOfLocallyChanged = JsonConvert.SerializeObject(haveChanged);
+            Debug.WriteLine($"Uploading {haveChanged.Count} histories.");
             var uploadLocallyChangedResult = await Request.PostTable(ApiUrl, tableName, jsonOfLocallyChanged, creds);
             if (uploadLocallyChangedResult != null)
             {

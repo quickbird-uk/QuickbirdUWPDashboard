@@ -293,8 +293,8 @@
             {
                 var settings = Settings.Instance;
 
-                if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
-                {
+                //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))
+                //{
                     Debug.WriteLine("Datasaver started, recent update detected.");
 
                     var db = new MainDbContext();
@@ -373,11 +373,11 @@
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data");
                     db.Dispose();
-                }
-                else
-                {
-                    Debug.WriteLine("Skipped datasaver due to lack of recent update.");
-                }
+                //}
+                //else
+                //{
+                //    Debug.WriteLine("Skipped datasaver due to lack of recent update.");
+                //}
             });
         }
 
