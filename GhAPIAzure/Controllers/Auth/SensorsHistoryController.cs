@@ -31,20 +31,17 @@
         public async Task<HttpResponseMessage> GetSensorsHistory(Guid deviceId, long unixTime, int maxDays)
         {
             //System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-            //t
-            var afterTime = DateTimeOffset.FromUnixTimeSeconds(unixTime);
-            var includingAndAfterDay = afterTime.Date;
-            
-            //Hist.Sensor.DeviceID is used so dont need device.
-            //var device = await _db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.ID == deviceId);
 
+            var afterTime = DateTimeOffset.FromUnixTimeSeconds(unixTime);
+
+            // The bigger than operator will always capture the whole day, the timestamps are the start of the next day.
             var allSensorHistoriesAfterStart =
                 await
                     _db.SensorHistories.Include(sh => sh.Sensor)
                         .AsNoTracking()
                         .Where(
                             sHist =>
-                                sHist.Location.PersonId == _UserID && sHist.TimeStamp >= includingAndAfterDay &&
+                                sHist.Location.PersonId == _UserID && sHist.TimeStamp > afterTime &&
                                 sHist.Sensor.DeviceID == deviceId)
                         .OrderBy(sHist => sHist.TimeStamp)
                         .ToListAsync();
@@ -77,17 +74,19 @@
                 sensorHistories.Add(hist);
             }
 
-            // Slice on the starting end of the selected data.
+            var oldestDate = sensorHistories.First().TimeStamp.Date;
+            // Slice on the starting-end of the selected data.
             for (var i = 0; i < sensorHistories.Count; i++)
             {
                 var hist = sensorHistories[i];
-                if (hist.TimeStamp.Date == includingAndAfterDay)
+                if (hist.TimeStamp.Date == oldestDate)
                 {
+                    hist.DeserialiseData();
                     sensorHistories[i] = hist.Slice(afterTime);
                 }
                 else
                 {
-                    // Items are sorted so there should be no more on the first day
+                    // Items are sorted so there should be no more first day items
                     break;
                 }
             }

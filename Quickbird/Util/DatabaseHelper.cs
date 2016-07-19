@@ -277,6 +277,8 @@
                 }
                 else
                 {
+                    //The timestamp is always the end of the day so look inside to see what time the data actually ends.
+
                     // Its pulled out of the database as raw so deserialise to access the data.
                     mostRecentDayDownloaded.DeserialiseData();
                     if (mostRecentDayDownloaded.Data.Any())
@@ -380,7 +382,7 @@
                                 lastDayOfThisDownloadSet = hist.TimeStamp;
                         }
                         // The GET request allways gets days completed to the end (start may be missing but not the end)
-                        mostRecentDownloadedTimestamp = lastDayOfThisDownloadSet + TimeSpan.FromDays(1);
+                        mostRecentDownloadedTimestamp = lastDayOfThisDownloadSet;
                         itemsReceived = true;
                     }
                     else
@@ -553,11 +555,11 @@
             }
 
             // Now we need to upload anything that could have been uploaded after having its UploadedAt set.
-            // We can recognise these because the UploadedAt will be on the same date as the timestamp.
+            // We can recognise these because the UploadedAt will be newer than the timestamp.
 
             //TRACKED.
             var uploadedButMayBeChangedSet =
-                db.SensorsHistory.AsTracking().Where(sh => sh.TimeStamp.Date == sh.UploadedAt.Date).ToList();
+                db.SensorsHistory.AsTracking().Where(sh => sh.TimeStamp > sh.UploadedAt).ToList();
 
             var haveChanged = new List<SensorHistory>();
 
