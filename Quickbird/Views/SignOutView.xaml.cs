@@ -51,11 +51,9 @@
 
             Type navPage;
 
-            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain)
+            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain && Settings.Instance.ReplaceLocalWithRoamingCreds())
             {
                 CurrentOperation = "Signing in with new credentials";
-
-                Settings.Instance.ReplaceLocalWithRoamingCreds();
 
                 await Task.Delay(TimeSpan.FromSeconds(2)); // Show sign in for minimum 2 secs
 

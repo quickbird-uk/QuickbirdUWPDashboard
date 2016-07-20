@@ -150,13 +150,13 @@
                 OnPropertyChanged();
             }
         }
+
         private ApplicationDataCompositeValue RoamingCombinedCredentials
         {
             get { return Get(_roamingSettings, default(ApplicationDataCompositeValue)); }
             set
             {
                 Set(_roamingSettings, value);
-                UpdateCredPropsFromCombined();
                 OnPropertyChanged();
             }
         }
@@ -187,7 +187,46 @@
                 container.Values.Remove(settingsName);
         }
 
-        public void ResetDatabaseAndPostSettings() { throw new NotImplementedException(); }
+        /// <summary>Checks that the tokens of local and roaming creds are the same.</summary>
+        /// <returns>True if the cred tokens are the same.</returns>
+        public bool IsLocalCredsSameAsRoamingCreds()
+        {
+            var localToken = CredToken;
+            var roamingToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
+                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
+                : null;
+
+            return localToken == roamingToken;
+        }
+
+        /// <summary>Replaces the lcoal creds with the roaming creds.</summary>
+        /// <returns>True if replace with valid creds, false if all nulled.</returns>
+        public bool ReplaceLocalWithRoamingCreds()
+        {
+            CredToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
+                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
+                : null;
+
+            CredUserId = RoamingCombinedCredentials?.ContainsKey(nameof(CredUserId)) ?? false
+                ? (string) RoamingCombinedCredentials[nameof(CredUserId)]
+                : null;
+
+            CredStableSid = RoamingCombinedCredentials?.ContainsKey(nameof(CredStableSid)) ?? false
+                ? (Guid) RoamingCombinedCredentials[nameof(CredStableSid)]
+                : default(Guid);
+
+            IsLoggedIn = null == CredToken;
+
+            CombinedCredentials = _combinedCreds;
+
+            return IsLoggedIn;
+        }
+
+        public void ResetDatabaseAndPostSettings()
+        {
+            LastSuccessfulGeneralDbGet = default(DateTimeOffset);
+            LastSuccessfulGeneralDbPost = default(DateTimeOffset);
+        }
 
         public void SetNewCreds(string token, string userId, Guid stableSid)
         {
@@ -207,37 +246,6 @@
             CredUserId = null;
             CredStableSid = default(Guid);
             Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
-        }
-
-        /// <summary>
-        /// Checks that the tokens of local and roaming creds are the same.
-        /// </summary>
-        /// <returns>True if the cred tokens are the same.</returns>
-        public bool IsLocalCredsSameAsRoamingCreds()
-        {
-            var localToken = CredToken;
-            var roamingToken = RoamingCombinedCredentials.ContainsKey(nameof(CredToken))
-                ? (string)RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-
-            return localToken == roamingToken;
-        }
-
-        public void ReplaceLocalWithRoamingCreds()
-        {
-            CredToken = RoamingCombinedCredentials.ContainsKey(nameof(CredToken))
-                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-            CredUserId = RoamingCombinedCredentials.ContainsKey(nameof(CredUserId))
-                ? (string)RoamingCombinedCredentials[nameof(CredUserId)]
-                : null; ;
-            CredStableSid = RoamingCombinedCredentials.ContainsKey(nameof(CredStableSid))
-                ? (Guid) RoamingCombinedCredentials[nameof(CredStableSid)]
-                : default(Guid);
-
-            IsLoggedIn = null == CredToken;
-
-            CombinedCredentials = _combinedCreds;
         }
 
         [NotifyPropertyChangedInvocator]
