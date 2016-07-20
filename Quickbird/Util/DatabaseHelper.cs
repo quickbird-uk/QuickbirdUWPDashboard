@@ -56,6 +56,32 @@
             return userData;
         }
 
+        /// <summary>Gets the most recent sensor value and timestamp from the database. This method is not
+        /// queued, but it does not edit so is fine.</summary>
+        /// <param name="sensor">Sensor POCO object to get value for.</param>
+        /// <returns>Null if fails to find, othewise the most recent value and its timestamp.</returns>
+        public static Tuple<double, DateTimeOffset> QueryMostRecentSensorValue(Sensor sensor)
+        {
+            using (var db = new MainDbContext())
+            {
+                var newestHistoryForSensor =
+                    db.SensorsHistory.AsNoTracking()
+                        .Where(sh => sh.SensorID == sensor.ID)
+                        .OrderByDescending(sh => sh.TimeStamp)
+                        .FirstOrDefault();
+
+                if (null == newestHistoryForSensor) return null;
+
+                newestHistoryForSensor.DeserialiseData();
+
+                var newestDatapoint = newestHistoryForSensor.Data.OrderByDescending(d => d.TimeStamp).FirstOrDefault();
+
+                if (null == newestDatapoint) return null;
+
+                return Tuple.Create(newestDatapoint.Value, newestDatapoint.TimeStamp);
+            }
+        }
+
         /// <summary>Requires UI thread. Syncs databse data with the server.</summary>
         /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the
         /// threadpool as appropriate.</remarks>

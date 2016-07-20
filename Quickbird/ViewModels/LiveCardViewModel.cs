@@ -83,6 +83,12 @@
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
+
+            var senVals = DatabaseHelper.QueryMostRecentSensorValue(poco);
+            if (null != senVals)
+            {
+                UpdateValueAndAgeStatusIfNew(senVals.Item1, senVals.Item2);
+            }
         }
 
         public string AgeStatus
