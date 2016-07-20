@@ -15,10 +15,8 @@
     {
         private const int DefaultTimeout = 30;
 
-        /// <summary>
-        ///     Fetches a table, catches errors either returns the resonse or a message starting with "Error".
-        ///     A valid message will be Json starting enad ending with either [] or {}.
-        /// </summary>
+        /// <summary>Fetches a table, catches errors either returns the resonse or a message starting with
+        /// "Error". A valid message will be Json starting enad ending with either [] or {}.</summary>
         /// <param name="baseUrl">Base url of the request API.</param>
         /// <param name="tableName">The name of the table to put on the end of the baseUrl.</param>
         /// <param name="cred">A credentials object used to authenticate the request, optional.</param>
@@ -64,9 +62,14 @@
             }
         }
 
-        /// <summary>
-        ///     Submits a POST request. Returns null on success, otherwise returns error information.
-        /// </summary>
+        public static bool IsInternetAvailable()
+        {
+            var icp = NetworkInformation.GetInternetConnectionProfile();
+            return (icp?.GetNetworkConnectivityLevel() ?? NetworkConnectivityLevel.None) ==
+                   NetworkConnectivityLevel.InternetAccess;
+        }
+
+        /// <summary>Submits a POST request. Returns null on success, otherwise returns error information.</summary>
         /// <param name="baseUrl">Root URL for the API.</param>
         /// <param name="tableName">The table name to add to the end of the baseUrl.</param>
         /// <param name="data">The data payload to post.</param>
@@ -120,13 +123,6 @@
                 Debug.WriteLine($"Req '{tableName}' error: {ex}");
                 return $"Error: NetFail: {ex.Message}, {ex.InnerException}, END";
             }
-        }
-
-        public static bool IsInternetAvailable()
-        {
-            var icp = NetworkInformation.GetInternetConnectionProfile();
-            return (icp?.GetNetworkConnectivityLevel() ?? NetworkConnectivityLevel.None) ==
-                   NetworkConnectivityLevel.InternetAccess;
         }
     }
 }

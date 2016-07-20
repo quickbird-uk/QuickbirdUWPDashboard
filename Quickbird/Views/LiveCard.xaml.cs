@@ -19,9 +19,7 @@
             Bindings.Update();
         }
 
-        /// <summary>
-        ///     Dep prop for setting the ViewModel in an ItemTemplate.
-        /// </summary>
+        /// <summary>Dep prop for setting the ViewModel in an ItemTemplate.</summary>
         public LiveCardViewModel ViewModel
         {
             get { return (LiveCardViewModel) GetValue(ViewModelProperty); }

@@ -2,14 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using Windows.ApplicationModel.Core;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
-    using DatabasePOCOs;
-    using Util;
+    using DbStructure;
     using MoreLinq;
+    using Util;
 
     public class LiveCardViewModel : ViewModelBase
     {
@@ -24,6 +22,7 @@
         public const string ErrorCardColour = "#FFFF0000";
         private const string Visible = "Visible";
         private const string Collapsed = "Collapsed";
+        private readonly DispatcherTimer _ageStatusUpdateTime;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
@@ -58,7 +57,11 @@
             PlacementId = poco.SensorType.PlaceID;
             ParameterID = poco.SensorType.ParamID;
             SensorTypeID = poco.SensorTypeID;
-            _dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+
+            _dispatcher = ((App) Application.Current).Dispatcher;
+            if (_dispatcher == null)
+                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
+
             _dataUpdater = async readings =>
             {
                 var ofThisSensor = readings.Where(r => r.SensorId == poco.ID).ToList();
@@ -71,21 +74,16 @@
                 }
             };
 
-            var ageStatusUpdateTime = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
+            _ageStatusUpdateTime = new DispatcherTimer {Interval = TimeSpan.FromSeconds(1)};
 
-            ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
-            ageStatusUpdateTime.Start();
+            _ageStatusUpdateTime.Tick += AgeStatusUpdateTimeOnTick;
+            _ageStatusUpdateTime.Start();
 
-            DispatcherTimers.Add(ageStatusUpdateTime);
+            DispatcherTimers.Add(_ageStatusUpdateTime);
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
         }
-
-        private DateTimeOffset TimeOfCurrentValue { get; set; }
 
         public string AgeStatus
         {
@@ -98,36 +96,102 @@
             }
         }
 
-        public long PlacementId { get; }
-
-        public long SensorTypeID { get; }
-
-        public long ParameterID { get; }
-
-        /// <summary>
-        ///     Current Sensor Value
-        /// </summary>
-        public string Value
+        public string CardBackColour
         {
-            get { return _value; }
+            get { return _cardBackColour; }
             set
             {
-                if (value == _value) return;
-                _value = value;
+                if (value == _cardBackColour) return;
+                _cardBackColour = value;
                 OnPropertyChanged();
             }
         }
 
-        /// <summary>
-        ///     Units of the sensor value.
-        /// </summary>
-        public string Units
+        public bool HighAlertIsEnabled
         {
-            get { return _units; }
+            get { return _highAlertIsEnabled; }
             set
             {
-                if (value == _units) return;
-                _units = value;
+                if (value == _highAlertIsEnabled) return;
+                _highAlertIsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Guid Id { get; }
+
+        public bool LowAlertIsEnabled
+        {
+            get { return _lowAlertIsEnabled; }
+            set
+            {
+                if (value == _lowAlertIsEnabled) return;
+                _lowAlertIsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public long ParameterID { get; }
+
+        public string Placement { get; }
+
+        public long PlacementId { get; }
+
+        public string ReadingSideVisible
+        {
+            get { return _readingSideVisible; }
+            private set
+            {
+                if (value == _readingSideVisible) return;
+                _readingSideVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double ScaleX
+        {
+            get { return _scaleX; }
+            set
+            {
+                _scaleX = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double ScaleY
+        {
+            get { return _scaleY; }
+            set
+            {
+                _scaleY = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public long SensorTypeID { get; }
+
+        public string SettingSideVisible
+        {
+            get { return _settingSideVisible; }
+            private set
+            {
+                if (value == _settingSideVisible) return;
+                _settingSideVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool? ShowSettingsToggleChecked
+        {
+            get { return _showSettingsToggleChecked; }
+            set
+            {
+                if (value == _showSettingsToggleChecked) return;
+                _showSettingsToggleChecked = value ?? false;
+                if (_showSettingsToggleChecked)
+                {
+                    DisplaySettingsPage();
+                }
                 OnPropertyChanged();
             }
         }
@@ -154,108 +218,84 @@
             }
         }
 
-        public string CardBackColour
+        /// <summary>Units of the sensor value.</summary>
+        public string Units
         {
-            get { return _cardBackColour; }
+            get { return _units; }
             set
             {
-                if (value == _cardBackColour) return;
-                _cardBackColour = value;
+                if (value == _units) return;
+                _units = value;
                 OnPropertyChanged();
             }
         }
 
-        public string ReadingSideVisible
+        /// <summary>Current Sensor Value</summary>
+        public string Value
         {
-            get { return _readingSideVisible; }
-            private set
-            {
-                if (value == _readingSideVisible) return;
-                _readingSideVisible = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SettingSideVisible
-        {
-            get { return _settingSideVisible; }
-            private set
-            {
-                if (value == _settingSideVisible) return;
-                _settingSideVisible = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public Guid Id { get; }
-
-        public string Placement { get; }
-
-        public bool? ShowSettingsToggleChecked
-        {
-            get { return _showSettingsToggleChecked; }
+            get { return _value; }
             set
             {
-                if (value == _showSettingsToggleChecked) return;
-                _showSettingsToggleChecked = value ?? false;
-                if (_showSettingsToggleChecked)
-                {
-                    DisplaySettingsPage();
-                }
+                if (value == _value) return;
+                _value = value;
                 OnPropertyChanged();
             }
         }
 
-        public bool HighAlertIsEnabled
+        private DateTimeOffset TimeOfCurrentValue { get; set; }
+
+        /// <summary>Hides the settings page.</summary>
+        public void CancelSettingsChanges()
         {
-            get { return _highAlertIsEnabled; }
-            set
-            {
-                if (value == _highAlertIsEnabled) return;
-                _highAlertIsEnabled = value;
-                OnPropertyChanged();
-            }
+            ReadingSideVisible = Visible;
+            SettingSideVisible = Collapsed;
+            ShowSettingsToggleChecked = false;
         }
 
-        public bool LowAlertIsEnabled
+        public override void Kill()
         {
-            get { return _lowAlertIsEnabled; }
-            set
-            {
-                if (value == _lowAlertIsEnabled) return;
-                _lowAlertIsEnabled = value;
-                OnPropertyChanged();
-            }
+            _ageStatusUpdateTime.Stop();
+            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_dataUpdater);
         }
 
-        public double ScaleX
+        public void SaveSettingsChanges()
         {
-            get { return _scaleX; }
-            set
-            {
-                _scaleX = value;
-                OnPropertyChanged();
-            }
+            //TODO: Save settings.
+
+            // Now hide the settings page.
+            CancelSettingsChanges();
         }
 
-        public double ScaleY
+        /// <summary>Updates the basic data on the live card.</summary>
+        /// <param name="poco"></param>
+        public void Update(Sensor poco)
         {
-            get { return _scaleY; }
-            set
-            {
-                _scaleY = value;
-                OnPropertyChanged();
-            }
+            Units = poco.SensorType.Param.Unit;
+            UnitName = poco.SensorType.Place.Name + " " + poco.SensorType.Param.Name;
+            //TODO: Status = poco.AlertStatus
         }
 
-        private void AgeStatusUpdateTimeOnTick(object sender, object o)
+        private void AgeStatusUpdateTimeOnTick(object sender, object o) { UpdateAgeStatusMessage(); }
+
+        private void DisplaySettingsPage()
         {
-            UpdateAgeStatusMessage();
+            SettingSideVisible = Visible;
+            ReadingSideVisible = Collapsed;
+
+            //TODO: Get the high and low alert numbers.
+            //TODO: Get high and low alert enabled vars.
+            //TODO: Set the fetched values on the settings page.
         }
 
-        /// <summary>
-        /// Update the age status message according to how old it is.
-        /// </summary>
+        /// <summary>Formats the raw datavalue for display.</summary>
+        /// <param name="value">The sensor reading number.</param>
+        /// <returns>A formatted number ready for display.</returns>
+        private string FormatValue(double value)
+        {
+            return string.Format(value < 10 ? "{0:0.0}" : "{0:0}", value);
+        }
+
+        /// <summary>Update the age status message according to how old it is.</summary>
         private void UpdateAgeStatusMessage()
         {
             var now = DateTimeOffset.Now;
@@ -290,9 +330,7 @@
             }
         }
 
-        /// <summary>
-        /// Only updates the UI if the value is newer.
-        /// </summary>
+        /// <summary>Only updates the UI if the value is newer.</summary>
         /// <param name="value">The value to display.</param>
         /// <param name="time">The datestamp of the reading.</param>
         private void UpdateValueAndAgeStatusIfNew(double value, DateTimeOffset time)
@@ -304,55 +342,6 @@
                 Value = formattedValue;
                 UpdateAgeStatusMessage();
             }
-        }
-
-        /// <summary>
-        /// Updates the basic data on the live card.
-        /// </summary>
-        /// <param name="poco"></param>
-        public void Update(Sensor poco)
-        {
-            Units = poco.SensorType.Param.Unit;
-            UnitName = poco.SensorType.Place.Name + " " + poco.SensorType.Param.Name;
-            //TODO: Status = poco.AlertStatus
-        }
-
-        private void DisplaySettingsPage()
-        {
-            SettingSideVisible = Visible;
-            ReadingSideVisible = Collapsed;
-
-            //TODO: Get the high and low alert numbers.
-            //TODO: Get high and low alert enabled vars.
-            //TODO: Set the fetched values on the settings page.
-        }
-
-        public void SaveSettingsChanges()
-        {
-            //TODO: Save settings.
-
-            // Now hide the settings page.
-            CancelSettingsChanges();
-        }
-
-        /// <summary>
-        ///     Hides the settings page.
-        /// </summary>
-        public void CancelSettingsChanges()
-        {
-            ReadingSideVisible = Visible;
-            SettingSideVisible = Collapsed;
-            ShowSettingsToggleChecked = false;
-        }
-
-        /// <summary>
-        ///     Formats the raw datavalue for display.
-        /// </summary>
-        /// <param name="value">The sensor reading number.</param>
-        /// <returns>A formatted number ready for display.</returns>
-        private string FormatValue(double value)
-        {
-            return string.Format(value < 10 ? "{0:0.0}" : "{0:0}", value);
         }
     }
 }

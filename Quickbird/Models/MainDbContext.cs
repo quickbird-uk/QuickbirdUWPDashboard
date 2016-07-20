@@ -1,13 +1,15 @@
 ﻿namespace Quickbird.Models
 {
-    using DatabasePOCOs;
-    using DatabasePOCOs.Global;
-    using DatabasePOCOs.User;
+    using DbStructure;
+    using DbStructure.Global;
+    using DbStructure.User;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
 
     public class MainDbContext : DbContext
     {
+        public const string FileName = "maindb.db";
+
         public DbSet<CropCycle> CropCycles { get; set; }
         public DbSet<CropType> CropTypes { get; set; }
         public DbSet<Device> Devices { get; set; }
@@ -23,18 +25,14 @@
         public DbSet<SensorType> SensorTypes { get; set; }
         public DbSet<Subsystem> Subsystems { get; set; }
 
-        /// <summary>
-        ///     Set filename for db.
-        /// </summary>
+        /// <summary>Set filename for db.</summary>
         /// <param name="optionsBuilder"></param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Filename=maindb.db");
+            optionsBuilder.UseSqlite($"Filename={FileName}");
         }
 
-        /// <summary>
-        ///     Configure the database model.
-        /// </summary>
+        /// <summary>Configure the database model.</summary>
         /// <param name="mb"></param>
         protected override void OnModelCreating(ModelBuilder mb)
         {
@@ -44,7 +42,8 @@
             mb.Entity<Location>()
                 .HasOne(l => l.Person)
                 .WithMany(p => p.Locations)
-                .HasForeignKey(l => l.PersonId).IsRequired()
+                .HasForeignKey(l => l.PersonId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Skip the person init, it can't be editied on this side anyway.
@@ -57,16 +56,14 @@
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            mb.Entity<CropType>()
-                .HasKey(ct => ct.Name);
+            mb.Entity<CropType>().HasKey(ct => ct.Name);
 
-            mb.Entity<CropType>()
-                .Property(ct => ct.Name)
-                .ValueGeneratedNever();
+            mb.Entity<CropType>().Property(ct => ct.Name).ValueGeneratedNever();
 
             mb.Entity<CropType>()
                 .HasMany(ct => ct.CropCycles)
-                .WithOne(cc => cc.CropType).IsRequired()
+                .WithOne(cc => cc.CropType)
+                .IsRequired()
                 .HasForeignKey(cc => cc.CropTypeName);
 
             mb.Entity<RelayHistory>().Ignore(rh => rh.Data);

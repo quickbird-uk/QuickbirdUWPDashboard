@@ -48,7 +48,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Create New Crop Run" Style="{StaticResource HeaderTextBlockStyle}"
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Create New Crop Run"
+                   Style="{StaticResource HeaderTextBlockStyle}"
                    HorizontalAlignment="Center" Margin="15" VerticalAlignment="Center" />
 
         <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center">
@@ -64,13 +65,14 @@
             <TextBlock Grid.Column="1" Grid.Row="0" Text="Select a box to monitor your new crops:"
                        HorizontalAlignment="Left" Margin="10"
                        Style="{StaticResource TitleTextBlockStyle}" />
-            <ListView Grid.Row="1" Grid.Column="1" ItemsSource="{x:Bind ViewModel.PlaceList, Mode=OneWay}" Margin="10" MinHeight="100" 
-                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}" Background="{StaticResource ListBoxBackgroundThemeBrush}">
+            <ListView Grid.Row="1" Grid.Column="1" ItemsSource="{x:Bind ViewModel.PlaceList, Mode=OneWay}" Margin="10"
+                      MinHeight="100"
+                      SelectedItem="{x:Bind ViewModel.SelectedPlace, Mode=TwoWay}"
+                      Background="{StaticResource ListBoxBackgroundThemeBrush}">
                 <!--Grid 1 items-->
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}"
-                                   />
+                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubtitleTextBlockStyle}" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

@@ -1,6 +1,7 @@
-namespace Quickbird.Views
+namespace Quickbird.Views.Converters
 {
     using System;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Data;
 
     public class TrueVisible : IValueConverter
@@ -9,9 +10,9 @@ namespace Quickbird.Views
         {
             if (value is bool && (bool) value)
             {
-                return Windows.UI.Xaml.Visibility.Visible;
+                return Visibility.Visible;
             }
-            return Windows.UI.Xaml.Visibility.Collapsed;
+            return Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

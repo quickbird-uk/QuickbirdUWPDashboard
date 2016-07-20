@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.25302.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quickbird", "Quickbird\Quickbird.csproj", "{5E8CF554-0D07-47EF-A46F-ACEF42243188}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GnatMQ", "GnatMQ\GnatMQ.csproj", "{53EF8541-BF62-46C4-8D2A-FB305B77F1A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbStructure", "DbStructure\DbStructure.csproj", "{3FE9490B-D60E-4103-823D-8D37B8E5AC91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhAPIAzure", "GhAPIAzure\GhAPIAzure.csproj", "{38252610-46A0-4062-9F91-FA5BD65E6115}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbStructure (Server)", "dbStructure(Server)\DbStructure (Server).csproj", "{0BC3F38C-ED61-4568-8520-1925208F4D06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +77,38 @@ Global
 		{3FE9490B-D60E-4103-823D-8D37B8E5AC91}.Release|x64.Build.0 = Release|x64
 		{3FE9490B-D60E-4103-823D-8D37B8E5AC91}.Release|x86.ActiveCfg = Release|x86
 		{3FE9490B-D60E-4103-823D-8D37B8E5AC91}.Release|x86.Build.0 = Release|x86
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|ARM.Build.0 = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|x64.Build.0 = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Debug|x86.Build.0 = Debug|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|ARM.ActiveCfg = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|ARM.Build.0 = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|x64.ActiveCfg = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|x64.Build.0 = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|x86.ActiveCfg = Release|Any CPU
+		{38252610-46A0-4062-9F91-FA5BD65E6115}.Release|x86.Build.0 = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|ARM.Build.0 = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|x64.Build.0 = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Debug|x86.Build.0 = Debug|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|ARM.ActiveCfg = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|ARM.Build.0 = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|x64.ActiveCfg = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|x64.Build.0 = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|x86.ActiveCfg = Release|Any CPU
+		{0BC3F38C-ED61-4568-8520-1925208F4D06}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

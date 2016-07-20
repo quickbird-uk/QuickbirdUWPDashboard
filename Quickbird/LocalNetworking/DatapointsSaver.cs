@@ -5,10 +5,12 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
-    using DatabasePOCOs;
-    using DatabasePOCOs.Global;
-    using DatabasePOCOs.User;
+    using DbStructure;
+    using DbStructure.Global;
+    using DbStructure.User;
+    using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
@@ -17,47 +19,40 @@
     {
         private const int _saveIntervalSeconds = 60;
         private static DatapointsSaver _Instance;
+        private readonly Action<string> _onHardwareChanged;
+
+        private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
         private List<Device> _dbDevices;
 
         //Flow management
         //private volatile int _pendingLoads= 1;
-        private readonly Task _localTask;
-        private readonly Action<string> _onHardwareChanged;
+        private Task _localTask;
 
         private List<KeyValuePair<Relay, List<RelayDatapoint>>> _relayBuffer =
             new List<KeyValuePair<Relay, List<RelayDatapoint>>>();
 
-        private readonly DispatcherTimer _saveTimer;
-        private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
+        private DispatcherTimer _saveTimer;
         private List<SensorHistory> _sensorDays = new List<SensorHistory>();
         //Local Cache
         private List<SensorType> _sensorTypes;
-
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _resumeAction;
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<TaskCompletionSource<object>> _suspendAction;
 
         public DatapointsSaver()
         {
             if (_Instance == null)
             {
                 _Instance = this;
-                var factory = new TaskFactory(TaskCreationOptions.LongRunning,
-                    TaskContinuationOptions.LongRunning);
-                _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(_saveIntervalSeconds)};
-                _saveTimer.Tick += SaveBufferedReadings;
-                _saveTimer.Start();
+
+                Task.Run(() => ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(_saveIntervalSeconds)};
+                    _saveTimer.Tick += SaveBufferedReadings;
+                    _saveTimer.Start();
+                }));
 
                 _onHardwareChanged = HardwareChanged;
                 Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged);
 
-                _localTask = factory.StartNew(() => { LoadData(); }, TaskCreationOptions.LongRunning);
-
-                _resumeAction = Resume;
-                _suspendAction = Suspend;
-                Messenger.Instance.Suspending.Subscribe(_suspendAction);
-                Messenger.Instance.Resuming.Subscribe(_resumeAction);
+                _localTask = Task.Run(() => { LoadData(); });
             }
             else
             {
@@ -65,21 +60,7 @@
             }
         }
 
-        /// <summary>
-        ///     The date of yesturday with hours, minutes and seconds set to zero
-        /// </summary>
-        public static DateTimeOffset Yesturday
-        {
-            get
-            {
-                var yesturday = DateTimeOffset.Now.AddDays(-1);
-                return yesturday.Subtract(yesturday.TimeOfDay);
-            }
-        }
-
-        /// <summary>
-        ///     The date with hours, minutes and seconds set to zero
-        /// </summary>
+        /// <summary>The date with hours, minutes and seconds set to zero</summary>
         public static DateTimeOffset Today
         {
             get
@@ -98,11 +79,166 @@
             }
         }
 
+        /// <summary>The date of yesturday with hours, minutes and seconds set to zero</summary>
+        public static DateTimeOffset Yesturday
+        {
+            get
+            {
+                var yesturday = DateTimeOffset.Now.AddDays(-1);
+                return yesturday.Subtract(yesturday.TimeOfDay);
+            }
+        }
+
+        public void Dispose()
+        {
+            BlockingDispatcher.Run(() => _saveTimer?.Stop());
+            _Instance = null;
+        }
+
+        public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        {
+            //Purposefull fire and forget
+            _localTask = _localTask.ContinueWith(previous =>
+            {
+                var device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
+
+                if (device == null)
+                {
+                    CreateDevice(values);
+                }
+                else
+                {
+                    var sensorReadings = new List<Messenger.SensorReading>();
+                    foreach (var message in values.Value)
+                    {
+                        try
+                        {
+                            var sensorBuffer = _sensorBuffer.First(sb => sb.sensor.SensorTypeID == message.SensorTypeID);
+                            var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
+                            var timeStamp = DateTimeOffset.Now;
+                            var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
+                            sensorBuffer.freshBuffer.Add(datapoint);
+                            var sensorReading = new Messenger.SensorReading(sensorBuffer.sensor.ID, datapoint.Value,
+                                datapoint.TimeStamp, datapoint.Duration);
+                            sensorReadings.Add(sensorReading);
+                        }
+                        catch (ArgumentNullException)
+                        {
+                            //TODO add a new sensor to the device! 
+                        }
+                    }
+
+
+                    //this is meant to be fire-forget, that's cool 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    WebSocketConnection.Instance.SendAsync(sensorReadings);
+                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                }
+            });
+        }
+
+        public void Resume()
+        {
+            Debug.WriteLine("resuming datasaver");
+            BlockingDispatcher.Run(() => _saveTimer?.Start());
+        }
+
+
+        public void Suspend()
+        {
+            Debug.WriteLine("suspending datasaver");
+            BlockingDispatcher.Run(() => _saveTimer?.Stop());
+        }
+
+        /// <summary>To be used internaly</summary>
+        /// <param name="values"></param>
+        private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        {
+            //Make sure that if fired several times, the constraints are maintained
+            
+            if (Settings.Instance.IsLoggedIn && Settings.Instance.LastSuccessfulGeneralDbGet != default(DateTimeOffset) &&
+                _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
+            {
+                Debug.WriteLine("addingDevice");
+                var db = new MainDbContext();
+
+                var device = new Device
+                {
+                    ID = Guid.NewGuid(),
+                    SerialNumber = values.Key,
+                    Deleted = false,
+                    CreatedAt = DateTimeOffset.Now,
+                    UpdatedAt = DateTimeOffset.Now,
+                    Name = string.Format("Box Number {0}", _dbDevices.Count),
+                    Relays = new List<Relay>(),
+                    Sensors = new List<Sensor>(),
+                    Version = new byte[32],
+                    Location =
+                        new Location
+                        {
+                            ID = Guid.NewGuid(),
+                            Deleted = false,
+                            Name = string.Format("Box Number {0}", _dbDevices.Count),
+                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
+                            Version = new byte[32],
+                            CropCycles = new List<CropCycle>(),
+                            Devices = new List<Device>(),
+                            RelayHistory = new List<RelayHistory>(),
+                            SensorHistory = new List<SensorHistory>(),
+                            CreatedAt = DateTimeOffset.Now,
+                            UpdatedAt = DateTimeOffset.Now
+                        }
+                };
+
+                db.Devices.Add(device);
+                db.Locations.Add(device.Location);
+                //Add sensors
+                foreach (var inSensors in values.Value)
+                {
+                    //Todo check correctness of hte sensorType
+                    var newSensor = new Sensor
+                    {
+                        CreatedAt = DateTimeOffset.Now,
+                        UpdatedAt = DateTimeOffset.Now,
+                        ID = Guid.NewGuid(),
+                        DeviceID = device.ID,
+                        Deleted = false,
+                        SensorTypeID = inSensors.SensorTypeID,
+                        Enabled = true,
+                        Multiplier = 1,
+                        Offset = 0,
+                        Version = new byte[32]
+                    };
+                    device.Sensors.Add(newSensor);
+                }
+                db.SaveChanges();
+
+                //Add the device to the cached data? 
+                _dbDevices.Add(device);
+                foreach (var sensor in device.Sensors)
+                {
+                    _sensorBuffer.Add(new SensorBuffer(sensor));
+                }
+                db.Dispose();
+
+                return true;
+            }
+            return false;
+        }
+
+
+        //TODO make usefull
+        private void DeviceNotInDB() { }
+
+        private void HardwareChanged(string value)
+        {
+            _localTask = _localTask.ContinueWith(previous => { LoadData(); });
+        }
+
 
         //TODO register this with an event in messenger class
-        /// <summary>
-        ///     Don't make publich or call directly! always push onto the task!
-        /// </summary>
+        /// <summary>Don't make publich or call directly! always push onto the task!</summary>
         /// <returns>true if it loaded something, false otherwise</returns>
         private void LoadData()
         {
@@ -148,138 +284,17 @@
             db.Dispose();
         }
 
-        public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
-        {
-            //Purposefull fire and forget
-            _localTask.ContinueWith(previous =>
-            {
-                var device = _dbDevices.FirstOrDefault(dv => dv.SerialNumber == values.Key);
-
-                if (device == null)
-                {
-                    CreateDevice(values);
-                }
-                else
-                {
-                    var sensorReadings = new List<Messenger.SensorReading>();
-                    foreach (var message in values.Value)
-                    {
-                        try
-                        {
-                            var sensorBuffer = _sensorBuffer.First(sb => sb.sensor.SensorTypeID == message.SensorTypeID);
-                            var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
-                            var timeStamp = DateTimeOffset.Now;
-                            var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
-                            sensorBuffer.freshBuffer.Add(datapoint);
-                            var sensorReading = new Messenger.SensorReading(sensorBuffer.sensor.ID,
-                                datapoint.Value, datapoint.TimeStamp, datapoint.Duration);
-                            sensorReadings.Add(sensorReading);
-                        }
-                        catch (ArgumentNullException)
-                        {
-                            //TODO add a new sensor to the device! 
-                        }
-                    }
-                    //this is meant to be fire-forget, that's cool 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                }
-            });
-        }
-
-        /// <summary>
-        ///     To be used internaly
-        /// </summary>
-        /// <param name="values"></param>
-        private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
-        {
-            //Make sure that if fired several times, the constraints are maintained
-
-            var settings = Settings.Instance;
-
-            if (settings.CredsSet &&
-                settings.LastDatabaseUpdate != default(DateTimeOffset) &&
-                _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
-            {
-                Debug.WriteLine("addingDevice");
-                var db = new MainDbContext();
-
-                var device = new Device
-                {
-                    ID = Guid.NewGuid(),
-                    SerialNumber = values.Key,
-                    Deleted = false,
-                    CreatedAt = DateTimeOffset.Now,
-                    UpdatedAt = DateTimeOffset.Now,
-                    Name = string.Format("Box Number {0}", _dbDevices.Count),
-                    Relays = new List<Relay>(),
-                    Sensors = new List<Sensor>(),
-                    Version = new byte[32],
-                    Location = new Location
-                    {
-                        ID = Guid.NewGuid(),
-                        Deleted = false,
-                        Name = string.Format("Box Number {0}", _dbDevices.Count),
-                        PersonId = settings.CredStableSid, //TODO use the thing from settings! 
-                        Version = new byte[32],
-                        CropCycles = new List<CropCycle>(),
-                        Devices = new List<Device>(),
-                        RelayHistory = new List<RelayHistory>(),
-                        SensorHistory = new List<SensorHistory>(),
-                        CreatedAt = DateTimeOffset.Now,
-                        UpdatedAt = DateTimeOffset.Now
-                    }
-                };
-
-                db.Devices.Add(device);
-                db.Locations.Add(device.Location);
-                //Add sensors
-                foreach (var inSensors in values.Value)
-                {
-                    //Todo check correctness of hte sensorType
-                    var newSensor = new Sensor
-                    {
-                        CreatedAt = DateTimeOffset.Now,
-                        UpdatedAt = DateTimeOffset.Now,
-                        ID = Guid.NewGuid(),
-                        DeviceID = device.ID,
-                        Deleted = false,
-                        SensorTypeID = inSensors.SensorTypeID,
-                        Enabled = true,
-                        Multiplier = 1,
-                        Offset = 0,
-                        Version = new byte[32]
-                    };
-                    device.Sensors.Add(newSensor);
-                }
-                db.SaveChanges();
-
-                //Add the device to the cached data? 
-                _dbDevices.Add(device);
-                foreach (var sensor in device.Sensors)
-                {
-                    _sensorBuffer.Add(
-                        new SensorBuffer(sensor));
-                }
-                db.Dispose();
-
-                return true;
-            }
-            return false;
-        }
-
 
         //Closes sensor Histories that are no longer usefull
         private void SaveBufferedReadings(object sender, object e)
         {
             Toast.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
-            _localTask.ContinueWith(previous =>
+            _localTask = _localTask.ContinueWith(previous =>
             {
                 var settings = Settings.Instance;
 
-                if (settings.LastDatabaseUpdate > DateTimeOffset.Now - TimeSpan.FromMinutes(1))
-                {
+                //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))
+                //{
                     Debug.WriteLine("Datasaver started, recent update detected.");
 
                     var db = new MainDbContext();
@@ -358,46 +373,20 @@
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data");
                     db.Dispose();
-                }
-                else
-                {
-                    Debug.WriteLine("Skipped datasaver due to lack of recent update.");
-                }
+                //}
+                //else
+                //{
+                //    Debug.WriteLine("Skipped datasaver due to lack of recent update.");
+                //}
             });
-        }
-
-
-        //TODO make usefull
-        private void DeviceNotInDB()
-        {
-        }
-
-        private void HardwareChanged(string value)
-        {
-            _localTask.ContinueWith(previous => { LoadData(); });
-        }
-
-
-        private void Suspend(TaskCompletionSource<object> taskCompletionSource)
-        {
-            Debug.WriteLine("suspending datasaver");
-            _saveTimer?.Stop();
-            taskCompletionSource.SetResult(null);
-        }
-
-        private void Resume(TaskCompletionSource<object> taskCompletionSource)
-        {
-            Debug.WriteLine("resuming datasaver");
-            _saveTimer?.Start();
-            taskCompletionSource.SetResult(null);
         }
 
 
         private class SensorBuffer
         {
+            public readonly SensorHistory dataDay;
             public readonly List<SensorDatapoint> freshBuffer;
             public readonly Sensor sensor;
-            public readonly SensorHistory dataDay;
 
             public SensorBuffer(Sensor assignSensor, SensorHistory inDataDay = null)
             {
@@ -405,12 +394,6 @@
                 freshBuffer = new List<SensorDatapoint>();
                 dataDay = inDataDay;
             }
-        }
-
-        public void Dispose()
-        {
-            _saveTimer?.Stop();
-            _Instance = null;
         }
     }
 }

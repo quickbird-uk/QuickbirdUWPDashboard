@@ -1,67 +1,67 @@
 ﻿<Page x:Class="Quickbird.Views.AnalyticsMode"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:charts="using:Syncfusion.UI.Xaml.Charts"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:charts="using:Syncfusion.UI.Xaml.Charts"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d">
 
     <Grid x:Name="PageGrid"
-        Background="#FFE2E2E2"
-        RequestedTheme="Light">
+          Background="#FFE2E2E2"
+          RequestedTheme="Light">
         <Button Name="Close"
-            Width="40"
-            Height="40"
-            Margin="40,40,0,0"
-            VerticalAlignment="Top"
-            Background="#01000000"
-            Click="OnCloseButtonClick"
-            Content="&#xE106;"
-            FontFamily="Segoe MDL2 Assets"
-            FontSize="26.667"
-            Foreground="#FF424242"
-            Padding="0" />
+                Width="40"
+                Height="40"
+                Margin="40,40,0,0"
+                VerticalAlignment="Top"
+                Background="#01000000"
+                Click="OnCloseButtonClick"
+                Content="&#xE106;"
+                FontFamily="Segoe MDL2 Assets"
+                FontSize="26.667"
+                Foreground="#FF424242"
+                Padding="0" />
         <TextBlock Width="320"
-            Margin="800,30,800,0"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Style="{StaticResource HeaderTextBlockStyle}"
-            Text="Analytics Mode"
-            TextWrapping="Wrap" />
+                   Margin="800,30,800,0"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Style="{StaticResource HeaderTextBlockStyle}"
+                   Text="Analytics Mode"
+                   TextWrapping="Wrap" />
 
         <!--  BEGIN Sensor Grid  -->
         <GridView x:Name="SensorGridView"
-            Height="165"
-            Margin="0,120,0,0"
-            VerticalAlignment="Top"
-            Background="#FF424242"
-            Foreground="{x:Null}"
-            ItemsSource="{Binding Sensors}"
-            Padding="80,22,60,10"
-            SelectionMode="None">
+                  Height="165"
+                  Margin="0,120,0,0"
+                  VerticalAlignment="Top"
+                  Background="#FF424242"
+                  Foreground="{x:Null}"
+                  ItemsSource="{Binding Sensors}"
+                  Padding="80,22,60,10"
+                  SelectionMode="None">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <ToggleButton x:Name="SensorToggleButton"
-                        Width="230"
-                        Height="50"
-                        Margin="0,0,20,20"
-                        Background="#00FFFFFF"
-                        BorderBrush="#FFE2E2E2"
-                        BorderThickness="2"
-                        Checked="OnSensorToggleChecked"
-                        RequestedTheme="Dark"
-                        Unchecked="OnSensorToggleUnchecked">
+                                  Width="230"
+                                  Height="50"
+                                  Margin="0,0,20,20"
+                                  Background="#00FFFFFF"
+                                  BorderBrush="#FFE2E2E2"
+                                  BorderThickness="2"
+                                  Checked="OnSensorToggleChecked"
+                                  RequestedTheme="Dark"
+                                  Unchecked="OnSensorToggleUnchecked">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Margin="0,0,10,0"
-                                FontWeight="SemiBold"
-                                Style="{StaticResource BodyTextBlockStyle}"
-                                Text="{Binding Device.Placement.Name}" />
+                                       FontWeight="SemiBold"
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Text="{Binding Device.Placement.Name}" />
                             <TextBlock Margin="0,0,10,0"
-                                Style="{StaticResource BodyTextBlockStyle}"
-                                Text="-" />
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Text="-" />
                             <TextBlock FontWeight="SemiBold"
-                                Style="{StaticResource BodyTextBlockStyle}"
-                                Text="{Binding Name}" />
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Text="{Binding Name}" />
                         </StackPanel>
                     </ToggleButton>
                 </DataTemplate>
@@ -73,10 +73,10 @@
         <!--  BEGIN Crop Run Selector  -->
 
         <ComboBox x:Name="CropRunComboBox"
-            Width="340"
-            Margin="75,313,0,0"
-            ItemsSource="{Binding Cycles}"
-            SelectionChanged="OnCropRunSelectionChanged">
+                  Width="340"
+                  Margin="75,313,0,0"
+                  ItemsSource="{Binding Cycles}"
+                  SelectionChanged="OnCropRunSelectionChanged">
             <ComboBox.HeaderTemplate>
                 <DataTemplate>
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Crop Run" />
@@ -94,10 +94,10 @@
         <!--  BEGIN Date Pickers  -->
 
         <DatePicker x:Name="StartDatePicker"
-            Margin="475,313,0,0"
-            VerticalAlignment="Top"
-            DateChanged="OnStartDateChanged"
-            RequestedTheme="Light">
+                    Margin="475,313,0,0"
+                    VerticalAlignment="Top"
+                    DateChanged="OnStartDateChanged"
+                    RequestedTheme="Light">
             <DatePicker.HeaderTemplate>
                 <DataTemplate>
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Start Date" />
@@ -106,12 +106,12 @@
         </DatePicker>
 
         <TimePicker x:Name="StartTimePicker"
-            Margin="780,313,898,0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
-            ClockIdentifier="12HourClock"
-            TimeChanged="OnStartTimeChanged"
-            d:LayoutOverrides="Width, LeftPosition, RightPosition">
+                    Margin="780,313,898,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
+                    ClockIdentifier="12HourClock"
+                    TimeChanged="OnStartTimeChanged"
+                    d:LayoutOverrides="Width, LeftPosition, RightPosition">
             <TimePicker.HeaderTemplate>
                 <DataTemplate>
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Start Time" />
@@ -120,10 +120,10 @@
         </TimePicker>
 
         <DatePicker x:Name="EndDatePicker"
-            Margin="0,313,539,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            DateChanged="OnEndDateChanged">
+                    Margin="0,313,539,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    DateChanged="OnEndDateChanged">
             <DatePicker.HeaderTemplate>
                 <DataTemplate>
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="End Date" />
@@ -132,11 +132,11 @@
         </DatePicker>
 
         <TimePicker x:Name="EndTimePicker"
-            Margin="0,313,288,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            ClockIdentifier="12HourClock"
-            TimeChanged="OnEndTimeChanged">
+                    Margin="0,313,288,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    ClockIdentifier="12HourClock"
+                    TimeChanged="OnEndTimeChanged">
             <TimePicker.HeaderTemplate>
                 <DataTemplate>
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="End Time" />
@@ -147,57 +147,54 @@
         <!--  END Date Pickers  -->
 
         <StackPanel Width="150"
-            Height="70"
-            Margin="0,310,75,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Orientation="Vertical">
+                    Height="70"
+                    Margin="0,310,75,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Orientation="Vertical">
             <TextBlock Margin="0,0,0,12"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Style="{StaticResource SubtitleTextBlockStyle}"
-                Text="Export As"
-                TextWrapping="Wrap" />
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Style="{StaticResource SubtitleTextBlockStyle}"
+                       Text="Export As"
+                       TextWrapping="Wrap" />
             <Button x:Name="ExportToExcelButton"
-                Width="140"
-                Margin="0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#FF0078D7"
-                Click="ExportToExcel"
-                Content="Excel (.xls)"
-                Foreground="#FFE2E2E2"
-                RequestedTheme="Dark" />
+                    Width="140"
+                    Margin="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#FF0078D7"
+                    Click="ExportToExcel"
+                    Content="Excel (.xls)"
+                    Foreground="#FFE2E2E2"
+                    RequestedTheme="Dark" />
         </StackPanel>
 
         <!--  Chart  -->
         <charts:SfChart x:Name="ChartView"
-            Height="640"
-            Margin="40,0,40,20"
-            VerticalAlignment="Bottom"
-            HorizontalContentAlignment="Stretch"
-            VerticalContentAlignment="Stretch"
-            Canvas.ZIndex="1"
-            Padding="0">
+                        Height="640"
+                        Margin="40,0,40,20"
+                        VerticalAlignment="Bottom"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Canvas.ZIndex="1"
+                        Padding="0">
             <charts:SfChart.PrimaryAxis>
                 <charts:DateTimeAxis x:Name="DateAxis"
-                    FontSize="16"
-                    IntervalType="Hours"
-                    LabelFormat="dd/MM" />
+                                     FontSize="16"
+                                     IntervalType="Hours"
+                                     LabelFormat="dd/MM" />
             </charts:SfChart.PrimaryAxis>
             <charts:SfChart.Legend>
                 <charts:ChartLegend Margin="0,0,0,5"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    DockPosition="Top"
-                    IconHeight="10"
-                    IconVisibility="Visible"
-                    IconWidth="10"
-                    ItemMargin="10" />
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    DockPosition="Top"
+                                    IconHeight="10"
+                                    IconVisibility="Visible"
+                                    IconWidth="10"
+                                    ItemMargin="10" />
             </charts:SfChart.Legend>
         </charts:SfChart>
     </Grid>
 </Page>
-
-
-

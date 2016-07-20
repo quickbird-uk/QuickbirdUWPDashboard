@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.IdentityModel.Logging</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.IdentityModel.Logging.IdentityModelEventSource">
+            <summary>
+            Event source based logger to log different events.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IdentityModel.Logging.IdentityModelEventSource.Logger">
+            <summary>
+            Static logger that is exposed externally. An external application or framework can hook up a listener to this event source to log data in a custom way.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IdentityModel.Logging.IdentityModelEventSource.LogLevel">
+            <summary>
+            Minimum log level to log events. Default is Warning.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IdentityModel.Logging.LogHelper">
+            <summary>
+            Helper class for logging.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogArgumentNullException(System.String)">
+            <summary>
+            Logs an event using the event source logger and returns new <see cref="T:System.ArgumentNullException"/> exception.
+            </summary>
+            <param name="argument">argument that is null or empty.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.String)">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="message">message to log.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.String,System.Object[])">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="format">Format string of the log message.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Exception,System.String)">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="innerException">the inner <see cref="T:System.Exception"/> to be added to the outer exception.</param>
+            <param name="message">message to log.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Exception,System.String,System.Object[])">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="innerException">the inner <see cref="T:System.Exception"/> to be added to the outer exception.</param>
+            <param name="format">Format string of the log message.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Diagnostics.Tracing.EventLevel,System.String)">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="eventLevel">Identifies the level of an event to be logged.</param>
+            <param name="message">message to log.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Diagnostics.Tracing.EventLevel,System.String,System.Object[])">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="eventLevel">Identifies the level of an event to be logged.</param>
+            <param name="format">Format string of the log message.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Diagnostics.Tracing.EventLevel,System.Exception,System.String)">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="eventLevel">Identifies the level of an event to be logged. Default is Error.</param>
+            <param name="innerException">the inner <see cref="T:System.Exception"/> to be added to the outer exception.</param>
+            <param name="message">message to log.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.LogHelper.LogException``1(System.Diagnostics.Tracing.EventLevel,System.Exception,System.String,System.Object[])">
+            <summary>
+            Logs an event using the event source logger and returns new typed exception.
+            </summary>
+            <param name="eventLevel">Identifies the level of an event to be logged. Default is Error.</param>
+            <param name="innerException">the inner <see cref="T:System.Exception"/> to be added to the outer exception.</param>
+            <param name="format">Format string of the log message.</param>
+            <param name="args">An object array that contains zero or more objects to format.</param>
+        </member>
+        <member name="T:Microsoft.IdentityModel.Logging.LogMessages">
+            <summary>
+            Log messages and codes for Microsoft.IdentityModel.Logging
+            </summary>
+        </member>
+        <member name="T:Microsoft.IdentityModel.Logging.TextWriterEventListener">
+            <summary>
+            Event listener that writes logs to a file or a fileStream provided by user.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.TextWriterEventListener.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:Microsoft.IdentityModel.Logging.TextWriterEventListener"/> that writes logs to text file.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.TextWriterEventListener.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of <see cref="T:Microsoft.IdentityModel.Logging.TextWriterEventListener"/> that writes logs to text file.
+            </summary>
+            <param name="filePath">location of the file where log messages will be written.</param>
+        </member>
+        <member name="M:Microsoft.IdentityModel.Logging.TextWriterEventListener.#ctor(System.IO.StreamWriter)">
+            <summary>
+            Initializes a new instance of <see cref="T:Microsoft.IdentityModel.Logging.TextWriterEventListener"/> that writes logs to text file.
+            </summary>
+            <param name="streamWriter">StreamWriter where logs will be written.</param>
+        </member>
+    </members>
+</doc>

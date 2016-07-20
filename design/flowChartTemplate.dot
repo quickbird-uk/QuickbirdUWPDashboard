@@ -1,0 +1,48 @@
+digraph G {
+    # Defaults
+    graph[fontname="consolas"];
+    edge[fontname="consolas"];
+    node[style="filled", fillcolor="white", fontname="consolas", fixedsize="true", width="4"];
+
+    subgraph cluster0 {
+        label="Sync Process";
+        style="filled";
+        color="lightgray";
+
+        # Terminators
+        node[shape=box, style="rounded,filled", fillcolor="orange", width="2"];
+        start[label="Start"];
+        end[label="End"];
+        abort[label="Abort", fillcolor="red"];
+
+        {rank=source; start}
+        {rank=sink; end, abort}
+
+        # Reset defaults
+        node[fillcolor="white", width="4", style="filled"]
+        
+        # Inputs
+        node[shape="polygon", sides="4", skew="0.2"]
+        request[label="GET:Hist/$device/$5/$lastDate"]
+        
+        # Processes
+        node[shape="box"]
+
+        # Branches
+        node[shape="diamond"]
+        
+    }
+
+    subgraph cluster1 {
+        label="Legend"
+        style="filled";
+        color="lightgray";
+
+        Terminator[shape="box", style="rounded, filled", width="2"];
+        Process[shape="box"];
+        Input[shape="polygon", sides="4", skew="0.2"];
+        Branch[shape="diamond"];
+
+        Terminator -> Process -> Input -> Branch;
+    }
+}

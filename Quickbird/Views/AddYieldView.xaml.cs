@@ -1,61 +1,42 @@
-﻿using Quickbird.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
+﻿// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace Quickbird.Views
 {
+    using System;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Navigation;
     using ViewModels;
 
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
+    /// <summary>An empty page that can be used on its own or navigated to within a Frame.</summary>
     public sealed partial class AddYieldView : Page
     {
-        public AddYieldViewModel ViewModel = null; 
+        public AddYieldViewModel ViewModel;
 
-        public AddYieldView()
-        {
-            this.InitializeComponent();
-        }
+        public AddYieldView() { InitializeComponent(); }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e) { ViewModel.Kill(); }
 
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             if (e.Parameter is Guid)
             {
-                ViewModel = new AddYieldViewModel((Guid)e.Parameter);
+                ViewModel = new AddYieldViewModel((Guid) e.Parameter);
             }
-        }
-
-        private void TextBox_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
-        {
-            ViewModel.UserEnteredText = sender.Text;
-            
         }
 
         private async void AddYieldAndOrEndRunClick(object sender, RoutedEventArgs e)
         {
-            await ViewModel.SaveCropRun(); 
-            this.Frame.GoBack();
+            await ViewModel.SaveCropRun();
+            Frame.GoBack();
         }
 
-        private void CancelClick(object sender, RoutedEventArgs e)
+        private void CancelClick(object sender, RoutedEventArgs e) { Frame.GoBack(); }
+
+        private void TextBox_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
         {
-            this.Frame.GoBack();
+            ViewModel.UserEnteredText = sender.Text;
         }
     }
 }

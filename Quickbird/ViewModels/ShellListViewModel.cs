@@ -2,7 +2,7 @@
 {
     using System;
     using System.Linq;
-    using DatabasePOCOs.User;
+    using DbStructure.User;
 
     public class ShellListViewModel : ViewModelBase
     {
@@ -16,6 +16,8 @@
 
         private bool _isAlerted;
 
+        private bool _isSelected;
+
         public ShellListViewModel(CropCycle cropCycle)
         {
             CropRunId = cropCycle.ID;
@@ -23,8 +25,16 @@
             Update(cropCycle);
         }
 
-        public Guid CropRunId { get; }
-
+        public string BoxName
+        {
+            get { return _boxName; }
+            set
+            {
+                if (value == _boxName) return;
+                _boxName = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string CropName
         {
@@ -37,6 +47,23 @@
             }
         }
 
+        public Guid CropRunId { get; }
+
+        public CropViewModel CropViewModel
+        {
+            get { return _cropViewModel; }
+            set
+            {
+                if (value == _cropViewModel) return;
+                _cropViewModel = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Provides the shell the ability to enable and disable the sync button on every CropView.
+        /// Ideally the sync button should be part of the shell but we havn't found a nice place to put it.</summary>
+        public bool CropViewSyncButtonEnabled { set { CropViewModel.SyncButtonEnabled = value; } }
+
         public string IconLetter
         {
             get { return _iconLetter; }
@@ -44,18 +71,6 @@
             {
                 if (value == _iconLetter) return;
                 _iconLetter = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-        public string BoxName
-        {
-            get { return _boxName; }
-            set
-            {
-                if (value == _boxName) return;
-                _boxName = value;
                 OnPropertyChanged();
             }
         }
@@ -71,25 +86,18 @@
             }
         }
 
-        public CropViewModel CropViewModel
+        public bool IsSelected
         {
-            get { return _cropViewModel; }
+            get { return _isSelected; }
             set
             {
-                if (value == _cropViewModel) return;
-                _cropViewModel = value;
+                if (value == _isSelected) return;
+                _isSelected = value;
                 OnPropertyChanged();
             }
         }
 
-        /// <summary>
-        ///     Provides the shell the ability to enable and disable the sync button on every CropView.
-        ///     Ideally the sync button should be part of the shell but we havn't found a nice place to put it.
-        /// </summary>
-        public bool CropViewSyncButtonEnabled
-        {
-            set { CropViewModel.SyncButtonEnabled = value; }
-        }
+        public override void Kill() { _cropViewModel.Kill(); }
 
         public void Update(CropCycle cropCycle)
         {
@@ -101,6 +109,11 @@
             IsAlerted = cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed);
 
             _cropViewModel.Update(cropCycle);
+        }
+
+        public void UpdateInternetStatus(bool isInternetAvailable)
+        {
+            CropViewModel.UpdateInternetStatus(isInternetAvailable);
         }
     }
 }

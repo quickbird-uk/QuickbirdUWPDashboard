@@ -1,4 +1,4 @@
-﻿namespace DatabasePOCOs.User
+﻿namespace DbStructure.User
 {
     using Newtonsoft.Json;
     using System;
@@ -10,6 +10,7 @@
         [JsonIgnore]
         public virtual Relay Relay { get; set; }
 
+        // TODO: This need to be the same name (for an interface) and SensorHistory.SensorID
         [Required]
         public Guid RelayID { get; set; }
 

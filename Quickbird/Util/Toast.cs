@@ -1,12 +1,10 @@
 ﻿namespace Quickbird.Util
 {
     using Windows.UI.Notifications;
-    using System.Diagnostics;
+
     public static class Toast
     {
-        /// <summary>
-        /// Toast used for debug messages.
-        /// </summary>
+        /// <summary>Toast used for debug messages.</summary>
         /// <param name="title"></param>
         /// <param name="text"></param>
         public static void Debug(string title, string text)
@@ -17,15 +15,9 @@
 #endif
         }
 
-        public static void NotifyUserOfError(string text)
-        {
-            FireToast("Error", text);
-        }
+        public static void NotifyUserOfError(string text) { FireToast("Error", text); }
 
-        public static void NotifyUserOfInformation(string text)
-        {
-            FireToast("Info", text);
-        }
+        public static void NotifyUserOfInformation(string text) { FireToast("Info", text); }
 
 
         private static void FireToast(string title, string text)
