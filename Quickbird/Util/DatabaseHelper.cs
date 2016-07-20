@@ -14,13 +14,15 @@
     using Models;
     using Newtonsoft.Json;
 
-    /// <summary>Methods to access and update the database. </summary>
+    /// <summary>Methods to access and update the database. Methods that modify the database are queued to
+    /// make sure they do not interfere with one another. </summary>
     public class DatabaseHelper
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
 
-        private const int MaxDaysDl = 3;
+        /// <summary>The maximum number of days to download at a time.</summary>
+        private const int MaxDaysDl = 5;
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
         /// tasks to make sure one completes before another starts.</summary>
@@ -33,6 +35,7 @@
 
         /// <summary>Gets all of the non-reading data that the UI uses as a big tree starting from each crop
         /// cycle.</summary>
+        /// <remarks>This does not modify data so it doen't neeed to be queued.</remarks>
         /// <returns>CropCycle objects with all the non-reading data the UI uses included.</returns>
         public async Task<List<CropCycle>> GetDataTreeAsyncQueued()
         {
