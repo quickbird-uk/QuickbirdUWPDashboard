@@ -31,20 +31,20 @@
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
         {
-            _roamingSettings = ApplicationData.Current.RoamingSettings;
+            _localSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
 
-            if (!_roamingSettings.Values.ContainsKey(nameof(CombinedCredentials)))
+            if (!_localSettings.Values.ContainsKey(nameof(CombinedCredentials)))
             {
                 _combinedCreds = new ApplicationDataCompositeValue();
-                _roamingSettings.Values[nameof(CombinedCredentials)] = _combinedCreds;
+                _localSettings.Values[nameof(CombinedCredentials)] = _combinedCreds;
             }
             else
             {
                 _combinedCreds = CombinedCredentials;
                 UpdateCredPropsFromCombined();
             }
-            _roamingSettings.Values.MapChanged += ValuesOnMapChanged;
+            _localSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
         /// <summary>The StableSid extracted from within the token.</summary>
@@ -142,6 +142,16 @@
 
         private ApplicationDataCompositeValue CombinedCredentials
         {
+            get { return Get(_localSettings, default(ApplicationDataCompositeValue)); }
+            set
+            {
+                Set(_localSettings, value);
+                UpdateCredPropsFromCombined();
+                OnPropertyChanged();
+            }
+        }
+        private ApplicationDataCompositeValue RoamingCombinedCredentials
+        {
             get { return Get(_roamingSettings, default(ApplicationDataCompositeValue)); }
             set
             {
@@ -167,7 +177,7 @@
                     container = _localSettings;
                     break;
                 case SettingsType.Roaming:
-                    container = _roamingSettings;
+                    container = _localSettings;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(settingsType), settingsType, null);
@@ -187,6 +197,7 @@
             IsLoggedIn = true;
 
             CombinedCredentials = _combinedCreds;
+            RoamingCombinedCredentials = _combinedCreds;
         }
 
         public void UnsetCreds()
