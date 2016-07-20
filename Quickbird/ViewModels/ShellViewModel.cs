@@ -220,6 +220,14 @@
 
             await SetSyncEnabled(true);
 
+            // Check that the romaing creds are unchanged.
+            if (!Settings.Instance.IsLocalCredsSameAsRoamingCreds())
+            {
+                // A remote log-out has occured and we must sign out.
+                ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView),
+                    SignOutView.ShouldItSignBackIn.YesSignBackInAgain);
+            }
+
             Debug.WriteLine("...Auto Sync finished.");
             _syncTimer.Start();
         }

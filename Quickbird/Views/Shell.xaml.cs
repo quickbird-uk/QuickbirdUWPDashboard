@@ -22,8 +22,6 @@
         /// <param name="e"></param>
         protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
-            Settings.Instance.CredsChanged -= OnCredsChanged;
-
             // Murders all the DashboardViewModels in a cascade (timers, event subs etc.).
             ViewModel.Kill();
             //Shutsdown the networking daemon code.
@@ -43,16 +41,6 @@
 
             var t = Task.Run(() => ((App) Application.Current).StartSession());
             ((App) Application.Current).AddSessionTask(t);
-
-            Settings.Instance.CredsChanged += OnCredsChanged;
-        }
-
-        /// <summary>Detects changes in roaming credentials and triggers a sign-out and sign-in.</summary>
-        private void OnCredsChanged()
-        {
-            // Tigger a nav, OnNavigatedFrom() takes care of the rest.
-            ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView),
-                SignOutView.ShouldItSignBackIn.YesSignBackInAgain);
         }
     }
 }

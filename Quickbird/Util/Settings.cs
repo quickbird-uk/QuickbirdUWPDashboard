@@ -31,7 +31,7 @@
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
         {
-            _localSettings = ApplicationData.Current.RoamingSettings;
+            _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
 
             if (!_localSettings.Values.ContainsKey(nameof(CombinedCredentials)))
@@ -206,6 +206,38 @@
             CredToken = null;
             CredUserId = null;
             CredStableSid = default(Guid);
+            Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
+        }
+
+        /// <summary>
+        /// Checks that the tokens of local and roaming creds are the same.
+        /// </summary>
+        /// <returns>True if the cred tokens are the same.</returns>
+        public bool IsLocalCredsSameAsRoamingCreds()
+        {
+            var localToken = CredToken;
+            var roamingToken = RoamingCombinedCredentials.ContainsKey(nameof(CredToken))
+                ? (string)RoamingCombinedCredentials[nameof(CredToken)]
+                : null;
+
+            return localToken == roamingToken;
+        }
+
+        public void ReplaceLocalWithRoamingCreds()
+        {
+            CredToken = RoamingCombinedCredentials.ContainsKey(nameof(CredToken))
+                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
+                : null;
+            CredUserId = RoamingCombinedCredentials.ContainsKey(nameof(CredUserId))
+                ? (string)RoamingCombinedCredentials[nameof(CredUserId)]
+                : null; ;
+            CredStableSid = RoamingCombinedCredentials.ContainsKey(nameof(CredStableSid))
+                ? (Guid) RoamingCombinedCredentials[nameof(CredStableSid)]
+                : default(Guid);
+
+            IsLoggedIn = null == CredToken;
+
+            CombinedCredentials = _combinedCreds;
         }
 
         [NotifyPropertyChangedInvocator]
