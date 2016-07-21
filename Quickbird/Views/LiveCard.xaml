@@ -20,51 +20,49 @@
                 <RowDefinition Height="*" />
                 <!--  2,3 Alert symbol, reading and units  -->
                 <RowDefinition Height="2*" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="1*" />
                 <!--  4- Bottom Margin before buttons  -->
                 <RowDefinition Height="15" />
                 <!--  5- Buttons HIDDEN, increase size to reveal them  -->
                 <RowDefinition Height="0" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="3*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="1"
-                Grid.ColumnSpan="2"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
+            <TextBlock Grid.Row="2"
+                Grid.Column="0"
+                Margin="10,0,-0.333,0"
+                Padding="10,0,20,0"
                 Style="{StaticResource TitleTextBlockStyle}"
                 Text="{x:Bind ViewModel.UnitName, Mode=OneWay, FallbackValue=Unit Type}" />
             <StackPanel Grid.Row="2"
                 Grid.Column="0"
                 HorizontalAlignment="Center"
-                Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center"
-                    FontFamily="Segoe MDL2 Assets"
-                    Style="{StaticResource SubheaderTextBlockStyle}"
-                    Text="{x:Bind ViewModel.StatusSymbol, Mode=OneWay, FallbackValue=&#xE8C9;}"
-                    TextAlignment="Right" />
-            </StackPanel>
-            <StackPanel Grid.Row="2"
+                Orientation="Horizontal" />
+            <TextBlock Grid.Row="2"
                 Grid.Column="1"
-                HorizontalAlignment="Center"
-                Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center"
-                    FontSize="60"
-                    Style="{StaticResource HeaderTextBlockStyle}"
-                    Text="{x:Bind ViewModel.Value, Mode=OneWay, FallbackValue=0.0}" />
-                <TextBlock Margin="10,5,0,0"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource BaseTextBlockStyle}"
-                    Text="{x:Bind ViewModel.Units, Mode=OneWay, FallbackValue=units}" />
-            </StackPanel>
+                VerticalAlignment="Bottom"
+                FontSize="60"
+                Padding="0,0,20,0"
+                Style="{StaticResource HeaderTextBlockStyle}"
+                Text="{x:Bind ViewModel.Value, FallbackValue=0.0, Mode=OneWay}"
+                TextAlignment="Right" />
             <TextBlock Grid.Row="3"
-                Grid.Column="1"
-                Margin="0,0,15,0"
-                HorizontalAlignment="Right"
+                Grid.Column="0"
+                Margin="10,0,-0.333,0"
+                VerticalAlignment="Bottom"
+                Padding="10,0,20,0"
                 Style="{StaticResource CaptionTextBlockStyle}"
                 Text="{x:Bind ViewModel.AgeStatus, Mode=OneWay}" />
+            <TextBlock Grid.Row="3"
+                Grid.Column="1"
+                Margin="0.333,0,0,0"
+                VerticalAlignment="Bottom"
+                Padding="0,0,20,0"
+                Style="{StaticResource BaseTextBlockStyle}"
+                Text="{x:Bind ViewModel.Units, Mode=OneWay, FallbackValue=units}"
+                TextAlignment="Right" />
 
             <!--  The bottom button panel.  -->
             <Grid Grid.Row="5"
