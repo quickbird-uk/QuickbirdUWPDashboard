@@ -8,23 +8,14 @@
 
     public class CropViewModel : ViewModelBase
     {
-        private const string ShowNotificationsString = "Journal";
         private readonly DashboardViewModel _dashboardViewModel;
 
         private readonly Guid _id;
-
         private string _boxName;
-
         private Frame _cropContentFrame;
         private string _cropName;
-
         private bool _isInternetAvailable;
-
-        private bool _isNotificationsOpen;
-        private string _notificationsButtonText = ShowNotificationsString;
-        private string _notificationsCount = "0";
         private string _plantingDate;
-
         private bool _syncButtonEnabled = true;
         private bool _syncing;
         private string _varietyName;
@@ -74,47 +65,7 @@
                 OnPropertyChanged();
             }
         }
-
-        /// <summary>Bound two way because the notifications drawer closes automatically.</summary>
-        public bool IsNotificationsOpen
-        {
-            get { return _isNotificationsOpen; }
-            set
-            {
-                if (value == _isNotificationsOpen) return;
-                _isNotificationsOpen = value;
-                // Notifcations closing is an automatic popup event, so we need to handle it here.
-                if (value == false)
-                {
-                    CloseNotifications();
-                }
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>Text changes when the notifications drawer is opened and closed.</summary>
-        public string NotificationsButtonText
-        {
-            get { return _notificationsButtonText; }
-            set
-            {
-                if (value == _notificationsButtonText) return;
-                _notificationsButtonText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string NotificationsCount
-        {
-            get { return _notificationsCount; }
-            set
-            {
-                if (value == _notificationsCount) return;
-                _notificationsCount = value;
-                OnPropertyChanged();
-            }
-        }
-
+               
         public string PlantingDate
         {
             get { return _plantingDate; }
@@ -185,18 +136,6 @@
                 SyncButtonEnabled = true;
         }
 
-        public void ToggleNotifications()
-        {
-            if (IsNotificationsOpen)
-            {
-                CloseNotifications();
-            }
-            else
-            {
-                OpenNotifications();
-            }
-        }
-
         /// <summary>Updates the properties of this viewmodel with data from POCO.</summary>
         /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
         public void Update(CropCycle cropRun)
@@ -224,18 +163,6 @@
             {
                 SyncButtonEnabled = false;
             }
-        }
-
-        private void CloseNotifications()
-        {
-            IsNotificationsOpen = false;
-            NotificationsButtonText = ShowNotificationsString;
-        }
-
-        private void OpenNotifications()
-        {
-            IsNotificationsOpen = true;
-            NotificationsButtonText = "Hide Journal";
         }
     }
 }
