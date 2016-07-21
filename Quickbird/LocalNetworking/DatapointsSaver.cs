@@ -15,36 +15,34 @@
     using Models;
     using Util;
 
+    /// <summary>Non-threadsafe singleton manager of the saving of datapoints.</summary>
     public class DatapointsSaver : IDisposable
     {
-        private const int _saveIntervalSeconds = 60;
-        private static DatapointsSaver _Instance;
+        private const int SaveIntervalSeconds = 60;
+
+        private static DatapointsSaver _instance;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        /// <summary>Action for BroadcastMessaged, cannot be inlined due to weak ref use.</summary>
         private readonly Action<string> _onHardwareChanged;
 
         private readonly List<SensorBuffer> _sensorBuffer = new List<SensorBuffer>();
         private List<Device> _dbDevices;
 
-        //Flow management
-        //private volatile int _pendingLoads= 1;
+        /// <summary>Most operations replace this task with a continuation on it to make the tasks sequential.</summary>
         private Task _localTask;
 
-        private List<KeyValuePair<Relay, List<RelayDatapoint>>> _relayBuffer =
-            new List<KeyValuePair<Relay, List<RelayDatapoint>>>();
-
         private DispatcherTimer _saveTimer;
-        private List<SensorHistory> _sensorDays = new List<SensorHistory>();
-        //Local Cache
         private List<SensorType> _sensorTypes;
 
         public DatapointsSaver()
         {
-            if (_Instance == null)
+            if (_instance == null)
             {
-                _Instance = this;
+                _instance = this;
 
                 Task.Run(() => ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(_saveIntervalSeconds)};
+                    _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(SaveIntervalSeconds)};
                     _saveTimer.Tick += SaveBufferedReadings;
                     _saveTimer.Start();
                 }));
@@ -92,7 +90,7 @@
         public void Dispose()
         {
             BlockingDispatcher.Run(() => _saveTimer?.Stop());
-            _Instance = null;
+            _instance = null;
         }
 
         public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
@@ -113,12 +111,12 @@
                     {
                         try
                         {
-                            var sensorBuffer = _sensorBuffer.First(sb => sb.sensor.SensorTypeID == message.SensorTypeID);
+                            var sensorBuffer = _sensorBuffer.First(sb => sb.Sensor.SensorTypeID == message.SensorTypeID);
                             var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
-                            sensorBuffer.freshBuffer.Add(datapoint);
-                            var sensorReading = new Messenger.SensorReading(sensorBuffer.sensor.ID, datapoint.Value,
+                            sensorBuffer.FreshBuffer.Add(datapoint);
+                            var sensorReading = new Messenger.SensorReading(sensorBuffer.Sensor.ID, datapoint.Value,
                                 datapoint.TimeStamp, datapoint.Duration);
                             sensorReadings.Add(sensorReading);
                         }
@@ -156,7 +154,7 @@
         private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
             //Make sure that if fired several times, the constraints are maintained
-            
+
             if (Settings.Instance.IsLoggedIn && Settings.Instance.LastSuccessfulGeneralDbGet != default(DateTimeOffset) &&
                 _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
             {
@@ -227,10 +225,6 @@
             return false;
         }
 
-
-        //TODO make usefull
-        private void DeviceNotInDB() { }
-
         private void HardwareChanged(string value)
         {
             _localTask = _localTask.ContinueWith(previous => { LoadData(); });
@@ -238,50 +232,42 @@
 
 
         //TODO register this with an event in messenger class
-        /// <summary>Don't make publich or call directly! always push onto the task!</summary>
-        /// <returns>true if it loaded something, false otherwise</returns>
+        /// <summary>Loads device and sensor info from the DB.</summary>
+        /// <remarks>Don't make publish or call directly! always push onto the task!</remarks>
+        /// <returns>True if it loaded something, false otherwise.</returns>
         private void LoadData()
         {
             Debug.WriteLine("DatapointsSaver refreshing cache");
-            var db = new MainDbContext();
-            _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
-            var sensorsHistory = db.SensorsHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
-            _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).AsNoTracking().ToList();
+            using (var db = new MainDbContext())
+            {
+                _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
+                var sensorsHistory = db.SensorsHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
+                _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).AsNoTracking().ToList();
 
-            //Add missing sensors and relays 
-            foreach (var sensor in _dbDevices.SelectMany(dv => dv.Sensors))
-            {
-                if (_sensorBuffer.Any(sb => sb.sensor.ID == sensor.ID) == false)
+                //Add missing sensors and relays 
+                foreach (var sensor in _dbDevices.SelectMany(dv => dv.Sensors))
                 {
-                    _sensorBuffer.Add(new SensorBuffer(sensor));
-                }
-            } //TODO merge the datapoints! 
-            foreach (var sHistory in sensorsHistory)
-            {
-                sHistory.DeserialiseData();
-                var mIndex = _sensorBuffer.FindIndex(sb => sb.sensor.ID == sHistory.SensorID);
-                if (_sensorBuffer[mIndex].dataDay == null ||
-                    _sensorBuffer[mIndex].dataDay.TimeStamp < sHistory.TimeStamp)
+                    if (_sensorBuffer.Any(sb => sb.Sensor.ID == sensor.ID) == false)
+                    {
+                        _sensorBuffer.Add(new SensorBuffer(sensor));
+                    }
+                } //TODO merge the datapoints! 
+                foreach (var sHistory in sensorsHistory)
                 {
-                    _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistory);
-                }
-                else if (_sensorBuffer[mIndex].dataDay.Data != null && sHistory.Data != null)
-                {
-                    var sHistMerged = SensorHistory.Merge(_sensorBuffer[mIndex].dataDay, sHistory);
-                    _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].sensor, sHistMerged);
+                    sHistory.DeserialiseData();
+                    var mIndex = _sensorBuffer.FindIndex(sb => sb.Sensor.ID == sHistory.SensorID);
+                    if (_sensorBuffer[mIndex].DataDay == null ||
+                        _sensorBuffer[mIndex].DataDay.TimeStamp < sHistory.TimeStamp)
+                    {
+                        _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].Sensor, sHistory);
+                    }
+                    else if (_sensorBuffer[mIndex].DataDay.Data != null && sHistory.Data != null)
+                    {
+                        var sHistMerged = SensorHistory.Merge(_sensorBuffer[mIndex].DataDay, sHistory);
+                        _sensorBuffer[mIndex] = new SensorBuffer(_sensorBuffer[mIndex].Sensor, sHistMerged);
+                    }
                 }
             }
-
-
-            //foreach (Relay relay in _dbDevices.SelectMany(dv => dv.Relays))
-            //{
-            //    if (_relayBuffer.Any(rb => rb.Key.ID == relay.ID) == false)
-            //    {
-            //        _relayBuffer.Add(new KeyValuePair<Relay, List<RelayDatapoint>>(
-            //            relay, new List<RelayDatapoint>()));
-            //    }
-            //}
-            db.Dispose();
         }
 
 
@@ -291,40 +277,35 @@
             Toast.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
             _localTask = _localTask.ContinueWith(previous =>
             {
-                var settings = Settings.Instance;
-
                 //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))
                 //{
-                    Debug.WriteLine("Datasaver started, recent update detected.");
+                Debug.WriteLine("Datasaver started, did not bother detecting a recent update.");
 
-                    var db = new MainDbContext();
-                    // List<SensorHistory> updatedSensorHistories = new List<SensorHistory>(); 
-
-                    //loop for each sensorBuffer
+                using (var db = new MainDbContext())
+                {
                     for (var i = 0; i < _sensorBuffer.Count; i++)
                     {
                         var sbuffer = _sensorBuffer[i];
 
-
                         SensorDatapoint sensorDatapoint = null;
 
-                        if (sbuffer.freshBuffer.Count > 0)
+                        if (sbuffer.FreshBuffer.Count > 0)
                         {
-                            var startTime = sbuffer.freshBuffer[0].TimeStamp;
-                            var endTime = sbuffer.freshBuffer.Last().TimeStamp;
-                            var duration = (endTime - startTime).Subtract(sbuffer.freshBuffer[0].Duration);
+                            var startTime = sbuffer.FreshBuffer[0].TimeStamp;
+                            var endTime = sbuffer.FreshBuffer.Last().TimeStamp;
+                            var duration = (endTime - startTime).Subtract(sbuffer.FreshBuffer[0].Duration);
 
                             var cumulativeDuration = TimeSpan.Zero;
                             double cumulativeValue = 0;
 
-                            for (var b = 0; b < sbuffer.freshBuffer.Count; b++)
+                            for (var b = 0; b < sbuffer.FreshBuffer.Count; b++)
                             {
-                                cumulativeDuration += sbuffer.freshBuffer[b].Duration;
-                                cumulativeValue += sbuffer.freshBuffer[b].Value;
+                                cumulativeDuration += sbuffer.FreshBuffer[b].Duration;
+                                cumulativeValue += sbuffer.FreshBuffer[b].Value;
                             }
 
-                            var sensorType = _sensorTypes.First(st => st.ID == sbuffer.sensor.SensorTypeID);
-                            var value = cumulativeValue/sbuffer.freshBuffer.Count;
+                            var sensorType = _sensorTypes.First(st => st.ID == sbuffer.Sensor.SensorTypeID);
+                            var value = cumulativeValue/sbuffer.FreshBuffer.Count;
 
                             if (sensorType.ParamID == 5) // Level
                             {
@@ -339,40 +320,40 @@
                                 sensorDatapoint = new SensorDatapoint(value, endTime, duration);
                             }
 
-                            sbuffer.freshBuffer.RemoveRange(0, sbuffer.freshBuffer.Count);
+                            sbuffer.FreshBuffer.RemoveRange(0, sbuffer.FreshBuffer.Count);
                         }
                         //only if new data is present
                         if (sensorDatapoint != null)
                         {
                             //check if corresponding dataDay is too old or none exists at all 
-                            if (sbuffer.dataDay?.TimeStamp < sensorDatapoint?.TimeStamp || sbuffer.dataDay == null)
+                            if (sbuffer.DataDay?.TimeStamp < sensorDatapoint.TimeStamp || sbuffer.DataDay == null)
                             {
                                 var dataDay = new SensorHistory
                                 {
-                                    LocationID = sbuffer.sensor.Device.LocationID,
-                                    SensorID = sbuffer.sensor.ID,
-                                    Sensor = sbuffer.sensor,
+                                    LocationID = sbuffer.Sensor.Device.LocationID,
+                                    SensorID = sbuffer.Sensor.ID,
+                                    Sensor = sbuffer.Sensor,
                                     TimeStamp = Tomorrow,
                                     Data = new List<SensorDatapoint>()
                                 };
-                                _sensorBuffer[i] = new SensorBuffer(sbuffer.sensor, dataDay);
+                                _sensorBuffer[i] = new SensorBuffer(sbuffer.Sensor, dataDay);
                                 //Only uses this entity, and does not follow the references to stick related references in the DB  
                                 db.Entry(dataDay).State = EntityState.Added;
                             }
                             else
                             {
                                 //this will not attach related entities, which is good 
-                                db.Entry(sbuffer.dataDay).State = EntityState.Unchanged;
+                                db.Entry(sbuffer.DataDay).State = EntityState.Unchanged;
                             }
 
-                            _sensorBuffer[i].dataDay.Data.Add(sensorDatapoint);
-                            _sensorBuffer[i].dataDay.SerialiseData();
+                            _sensorBuffer[i].DataDay.Data.Add(sensorDatapoint);
+                            _sensorBuffer[i].DataDay.SerialiseData();
                         }
                     } //for loop ends 
                     //Once we are done here, mark changes to the db
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data");
-                    db.Dispose();
+                }
                 //}
                 //else
                 //{
@@ -384,15 +365,15 @@
 
         private class SensorBuffer
         {
-            public readonly SensorHistory dataDay;
-            public readonly List<SensorDatapoint> freshBuffer;
-            public readonly Sensor sensor;
+            public readonly SensorHistory DataDay;
+            public readonly List<SensorDatapoint> FreshBuffer;
+            public readonly Sensor Sensor;
 
             public SensorBuffer(Sensor assignSensor, SensorHistory inDataDay = null)
             {
-                sensor = assignSensor;
-                freshBuffer = new List<SensorDatapoint>();
-                dataDay = inDataDay;
+                Sensor = assignSensor;
+                FreshBuffer = new List<SensorDatapoint>();
+                DataDay = inDataDay;
             }
         }
     }
