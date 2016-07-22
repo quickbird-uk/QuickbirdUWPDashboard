@@ -19,7 +19,7 @@
     <PackageCertificateKeyFile>Quickbird_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86</AppxBundlePlatforms>
     <PackageCertificateThumbprint>FDA329C2652A209AC992FC825F8ECF637CF4C055</PackageCertificateThumbprint>
     <AppxPackageDir>C:\Users\bongo\dev\packages\</AppxPackageDir>
   </PropertyGroup>
