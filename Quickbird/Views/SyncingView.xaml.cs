@@ -2,6 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,14 @@
 
             await DatabaseHelper.Instance.SyncWithServerAsync();
             await x;
+
+            // Now that all the data has been safely synced it is ok to check for a remote sign-out.
+            if (!Settings.Instance.IsLocalCredsSameAsRoamingCreds())
+            {
+                // A remote log-out has occured and we must sign out.
+                ((App)Application.Current).RootFrame.Navigate(typeof(SignOutView),
+                    SignOutView.ShouldItSignBackIn.YesSignBackInAgain);
+            }
 
             Frame.Navigate(typeof(Shell));
         }

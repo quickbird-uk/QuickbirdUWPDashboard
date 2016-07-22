@@ -1,10 +1,10 @@
 ﻿<Page x:Class="Quickbird.Views.CropView"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:converters="using:Quickbird.Views.Converters"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      mc:Ignorable="d">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Quickbird.Views.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
 
     <Page.Resources>
         <converters:BoolString x:Key="BoolString" />
@@ -19,73 +19,73 @@
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
-                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="220" />
             </Grid.ColumnDefinitions>
 
             <!--  Page Header  -->
             <Grid x:Name="PageHeader"
-                  Grid.ColumnSpan="2"
-                  VerticalAlignment="Stretch"
-                  Style="{ThemeResource PageHeaderLightTheme}"
-                  d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
+                Grid.ColumnSpan="2"
+                VerticalAlignment="Stretch"
+                Style="{ThemeResource PageHeaderLightTheme}"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
-                    <ColumnDefinition Width="330" />
+                    <ColumnDefinition Width="220" />
                 </Grid.ColumnDefinitions>
 
                 <!--  Crop Run Info  -->
                 <RelativePanel Margin="0"
-                               HorizontalAlignment="Stretch"
-                               VerticalAlignment="Stretch">
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
                     <ScrollViewer Margin="0,14,0,14"
-                                  BorderBrush="#4C515C6B"
-                                  BorderThickness="0,0,1,0"
-                                  HorizontalScrollBarVisibility="Auto"
-                                  HorizontalScrollMode="Enabled"
-                                  RelativePanel.AlignLeftWithPanel="True"
-                                  RelativePanel.AlignRightWithPanel="True"
-                                  VerticalScrollBarVisibility="Hidden"
-                                  VerticalScrollMode="Disabled">
+                        BorderBrush="#4C515C6B"
+                        BorderThickness="0,0,1,0"
+                        HorizontalScrollBarVisibility="Auto"
+                        HorizontalScrollMode="Enabled"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        RelativePanel.AlignRightWithPanel="True"
+                        VerticalScrollBarVisibility="Hidden"
+                        VerticalScrollMode="Disabled">
                         <ScrollViewer.Content>
                             <!--  Crop info panel  -->
                             <StackPanel Orientation="Horizontal" Padding="0,14,0,14">
                                 <StackPanel Margin="48,0,72,0">
                                     <TextBlock FontSize="24"
-                                               Foreground="#FF515C6B"
-                                               Text="{x:Bind ViewModel.CropName, Mode=OneWay, FallbackValue=--}"
-                                               TextTrimming="CharacterEllipsis" />
+                                        Foreground="#FF515C6B"
+                                        Text="{x:Bind ViewModel.CropName, Mode=OneWay, FallbackValue=--}"
+                                        TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
-                                               Style="{ThemeResource Subtitle}"
-                                               Text="Crop" />
+                                        Style="{ThemeResource Subtitle}"
+                                        Text="Crop" />
 
                                 </StackPanel>
                                 <StackPanel Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
-                                               Foreground="#FF515C6B"
-                                               Text="{x:Bind ViewModel.VarietyName, Mode=OneWay, FallbackValue=--}"
-                                               TextTrimming="CharacterEllipsis" />
+                                        Foreground="#FF515C6B"
+                                        Text="{x:Bind ViewModel.VarietyName, Mode=OneWay, FallbackValue=--}"
+                                        TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
-                                               Style="{ThemeResource Subtitle}"
-                                               Text="Variety" />
+                                        Style="{ThemeResource Subtitle}"
+                                        Text="Variety" />
 
                                 </StackPanel>
                                 <StackPanel Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
-                                               Foreground="#FF515C6B"
-                                               Text="{x:Bind ViewModel.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
-                                               TextTrimming="CharacterEllipsis" />
+                                        Foreground="#FF515C6B"
+                                        Text="{x:Bind ViewModel.PlantingDate, Mode=OneWay, FallbackValue=dd/mm/yy}"
+                                        TextTrimming="CharacterEllipsis" />
                                     <TextBlock Foreground="#FF515C6B"
-                                               Style="{ThemeResource Subtitle}"
-                                               Text="Planted" />
+                                        Style="{ThemeResource Subtitle}"
+                                        Text="Planted" />
 
                                 </StackPanel>
                                 <StackPanel Margin="0,0,72,0">
                                     <TextBlock FontSize="24"
-                                               Foreground="#FF515C6B"
-                                               Text="{x:Bind ViewModel.Yield, Mode=OneWay, FallbackValue=0kg}" />
+                                        Foreground="#FF515C6B"
+                                        Text="{x:Bind ViewModel.Yield, Mode=OneWay, FallbackValue=0kg}" />
                                     <TextBlock Foreground="#FF515C6B"
-                                               Style="{ThemeResource Subtitle}"
-                                               Text="Yield So Far" />
+                                        Style="{ThemeResource Subtitle}"
+                                        Text="Yield So Far" />
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer.Content>
@@ -96,7 +96,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="0" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
@@ -104,59 +104,37 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Button Grid.Row="1"
-                            Grid.Column="0"
-                            Click="{x:Bind ViewModel.NavToAddYield}"
-                            Style="{ThemeResource ShellButtonOuter}">
+                        Grid.Column="0"
+                        Click="{x:Bind ViewModel.NavToAddYield}"
+                        Style="{ThemeResource ShellButtonOuter}">
                         <StackPanel>
                             <Border Height="40" BorderBrush="{x:Null}">
                                 <TextBlock Style="{ThemeResource Icon}" Text="&#xE109;" />
                             </Border>
                             <Border Height="50" BorderBrush="{x:Null}">
                                 <TextBlock Foreground="#FF4A90E2"
-                                           Style="{StaticResource ShellButtonText}"
-                                           Text="Yield"
-                                           TextAlignment="Center"
-                                           TextWrapping="WrapWholeWords" />
+                                    Style="{StaticResource ShellButtonText}"
+                                    Text="Yield"
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
                             </Border>
                         </StackPanel>
                     </Button>
                     <Button Grid.Row="1"
-                            Grid.Column="1"
-                            Click="{x:Bind ViewModel.Sync}"
-                            IsEnabled="{x:Bind ViewModel.SyncButtonEnabled, Mode=OneWay}"
-                            Style="{ThemeResource ShellButtonOuter}">
+                        Grid.Column="1"
+                        Click="{x:Bind ViewModel.Sync}"
+                        IsEnabled="{x:Bind ViewModel.SyncButtonEnabled, Mode=OneWay}"
+                        Style="{ThemeResource ShellButtonOuter}">
                         <StackPanel>
                             <Border Height="40" BorderBrush="{x:Null}">
                                 <TextBlock Style="{ThemeResource Icon}" Text="" />
                             </Border>
                             <Border Height="50" BorderBrush="{x:Null}">
                                 <TextBlock Foreground="#FF4A90E2"
-                                           Style="{StaticResource ShellButtonText}"
-                                           Text="{x:Bind ViewModel.IsInternetAvailable, Mode=OneWay, Converter={StaticResource BoolString}, ConverterParameter='Sync|No Internet', FallbackValue='Sync Internet'}"
-                                           TextAlignment="Center"
-                                           TextWrapping="WrapWholeWords" />
-                            </Border>
-                        </StackPanel>
-                    </Button>
-                    <Button Grid.Row="1"
-                            Grid.Column="2"
-                            Click="{x:Bind ViewModel.ToggleNotifications}"
-                            Style="{ThemeResource ShellButtonOuter}">
-                        <StackPanel>
-                            <Border Height="40" BorderBrush="{x:Null}">
-                                <TextBlock VerticalAlignment="Center"
-                                           FontFamily="Segoe UI Symbol Mono"
-                                           FontSize="32"
-                                           Style="{ThemeResource Icon}"
-                                           Text="{x:Bind ViewModel.NotificationsCount, Mode=OneWay, FallbackValue=0}" />
-                            </Border>
-                            <Border Height="50" BorderBrush="{x:Null}">
-                                <TextBlock VerticalAlignment="Center"
-                                           Foreground="#FF4A90E2"
-                                           Style="{StaticResource ShellButtonText}"
-                                           Text="{x:Bind ViewModel.NotificationsButtonText, Mode=OneWay, FallbackValue=Journal}"
-                                           TextAlignment="Center"
-                                           TextWrapping="WrapWholeWords" />
+                                    Style="{StaticResource ShellButtonText}"
+                                    Text="{x:Bind ViewModel.IsInternetAvailable, Mode=OneWay, Converter={StaticResource BoolString}, ConverterParameter='Sync|No Internet', FallbackValue='Sync Internet'}"
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
                             </Border>
                         </StackPanel>
                     </Button>
@@ -165,18 +143,18 @@
 
             <!--  Content Frame  -->
             <Frame x:Name="ContentFrame"
-                   Grid.Row="1"
-                   Grid.Column="0"
-                   Grid.ColumnSpan="2" />
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2" />
 
             <!--  Notification Panel  -->
             <SplitView Grid.Row="1"
-                       Grid.Column="1"
-                       DisplayMode="Overlay"
-                       IsPaneOpen="{x:Bind ViewModel.IsNotificationsOpen, Mode=TwoWay}"
-                       OpenPaneLength="330"
-                       PaneBackground="#CC515C6B"
-                       PanePlacement="Right">
+                Grid.Column="1"
+                DisplayMode="Overlay"
+                IsPaneOpen="False"
+                OpenPaneLength="330"
+                PaneBackground="#CC515C6B"
+                PanePlacement="Right">
                 <SplitView.Pane>
                     <ListView />
                 </SplitView.Pane>

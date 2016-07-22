@@ -8,6 +8,7 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using JetBrains.Annotations;
+    using Util;
 
     /// <summary>Signs out then navigates to Landing OR re-signs in and goes back to shell (requires
     /// parameter).</summary>
@@ -50,12 +51,13 @@
 
             Type navPage;
 
-            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain)
+            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain && Settings.Instance.ReplaceLocalWithRoamingCreds())
             {
                 CurrentOperation = "Signing in with new credentials";
+
                 await Task.Delay(TimeSpan.FromSeconds(2)); // Show sign in for minimum 2 secs
 
-                navPage = typeof(Shell);
+                navPage = typeof(SyncingView);
             }
             else
             {

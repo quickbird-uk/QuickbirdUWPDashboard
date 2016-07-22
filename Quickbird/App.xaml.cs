@@ -306,7 +306,7 @@
                 var settings = Settings.Instance;
                 if (settings.IsLoggedIn)
                 {
-                    pageType = typeof(Shell);
+                    pageType = typeof(SyncingView);
                 }
                 else
                 {

@@ -83,6 +83,12 @@
 
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
+
+            var senVals = DatabaseHelper.QueryMostRecentSensorValue(poco);
+            if (null != senVals)
+            {
+                UpdateValueAndAgeStatusIfNew(senVals.Item1, senVals.Item2);
+            }
         }
 
         public string AgeStatus
@@ -322,11 +328,15 @@
                 var plural = hours == 1 ? "" : "s";
                 AgeStatus = $"{hours} hour{plural} ago";
             }
-            else
+            else if (age < TimeSpan.FromDays(365000))
             {
                 var days = (int) Math.Floor(age.TotalDays);
                 var plural = days == 1 ? "" : "s";
                 AgeStatus = $"{days} day{plural} ago";
+            }
+            else
+            {
+                AgeStatus = $"No data available";
             }
         }
 
