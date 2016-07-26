@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Entity;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-
 namespace EFExtensions
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using System.Data.Entity;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+    using System.Text;
+
     public static class EFExtensions
     {
         public static EntityOp<TEntity> Upsert<TEntity>(this DbContext context, TEntity entity) where TEntity : class
@@ -21,29 +21,18 @@ namespace EFExtensions
     {
         public readonly DbContext Context;
         public readonly TEntity Entity;
-        public readonly string TableName;
-
-        private readonly List<string> keyNames = new List<string>();
-        public IEnumerable<string> KeyNames { get { return keyNames; } }
 
         private readonly List<string> excludeProperties = new List<string>();
 
-        private static string GetMemberName<T>(Expression<Func<TEntity, T>> selectMemberLambda)
-        {
-            var member = selectMemberLambda.Body as MemberExpression;
-            if (member == null)
-            {
-                throw new ArgumentException("The parameter selectMemberLambda must be a member accessing labda such as x => x.Id", "selectMemberLambda");
-            }
-            return member.Member.Name;
-        }
+        private readonly List<string> keyNames = new List<string>();
+        public readonly string TableName;
 
         public EntityOp(DbContext context, TEntity entity)
         {
             Context = context;
             Entity = entity;
 
-            object[] mappingAttrs = typeof(TEntity).GetCustomAttributes(typeof(TableAttribute), false);
+            var mappingAttrs = typeof(TEntity).GetCustomAttributes(typeof(TableAttribute), false);
             TableAttribute tableAttr = null;
             if (mappingAttrs.Length > 0)
             {
@@ -58,17 +47,12 @@ namespace EFExtensions
             TableName = tableAttr.Name;
         }
 
-        public abstract TRet Execute();
-        public void Run()
+        public IEnumerable<PropertyInfo> ColumnProperties
         {
-            Execute();
+            get { return typeof(TEntity).GetProperties().Where(pr => !excludeProperties.Contains(pr.Name)); }
         }
 
-        public EntityOp<TEntity, TRet> Key<TKey>(Expression<Func<TEntity, TKey>> selectKey)
-        {
-            keyNames.Add(GetMemberName(selectKey));
-            return this;
-        }
+        public IEnumerable<string> KeyNames { get { return keyNames; } }
 
         public EntityOp<TEntity, TRet> ExcludeField<TField>(Expression<Func<TEntity, TField>> selectField)
         {
@@ -76,12 +60,26 @@ namespace EFExtensions
             return this;
         }
 
-        public IEnumerable<PropertyInfo> ColumnProperties
+        public abstract TRet Execute();
+
+        public EntityOp<TEntity, TRet> Key<TKey>(Expression<Func<TEntity, TKey>> selectKey)
         {
-            get
+            keyNames.Add(GetMemberName(selectKey));
+            return this;
+        }
+
+        public void Run() { Execute(); }
+
+        private static string GetMemberName<T>(Expression<Func<TEntity, T>> selectMemberLambda)
+        {
+            var member = selectMemberLambda.Body as MemberExpression;
+            if (member == null)
             {
-                return typeof(TEntity).GetProperties().Where(pr => !excludeProperties.Contains(pr.Name));
+                throw new ArgumentException(
+                    "The parameter selectMemberLambda must be a member accessing labda such as x => x.Id",
+                    "selectMemberLambda");
             }
+            return member.Member.Name;
         }
     }
 
@@ -104,9 +102,9 @@ namespace EFExtensions
 
         protected override void ExecuteNoRet()
         {
-            StringBuilder sql = new StringBuilder();
+            var sql = new StringBuilder();
 
-            int notNullFields = 0;
+            var notNullFields = 0;
             var valueKeyList = new List<string>();
             var columnList = new List<string>();
             var valueList = new List<object>();
@@ -116,7 +114,7 @@ namespace EFExtensions
                 var val = p.GetValue(Entity, null);
                 if (val != null)
                 {
-                    valueKeyList.Add("{" + (notNullFields++) + "}");
+                    valueKeyList.Add("{" + notNullFields++ + "}");
                     valueList.Add(val);
                 }
                 else
