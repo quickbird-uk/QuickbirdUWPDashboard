@@ -2,6 +2,10 @@
 
 Quickbird UWP App and corresponding server.
 
+
+__ DASHBOARD__
+https://waffle.io/t3hmun/QuickbirdUWP
+
 ## Change Log
 
 ### 1.7.0 (WIP)
