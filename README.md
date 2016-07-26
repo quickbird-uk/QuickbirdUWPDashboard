@@ -3,8 +3,7 @@
 Quickbird UWP App and corresponding server.
 
 
-__ DASHBOARD__
-https://waffle.io/t3hmun/QuickbirdUWP
+__DASHBOARD__: https://waffle.io/t3hmun/QuickbirdUWP
 
 ## Change Log
 
