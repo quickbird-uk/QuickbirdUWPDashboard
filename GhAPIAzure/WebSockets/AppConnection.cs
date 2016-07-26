@@ -1,20 +1,25 @@
-﻿namespace GhAPIAzure.WebSockets
-{
-    using System;
-    using System.Net.WebSockets;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Web.WebSockets;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.WebSockets;
 
+namespace GhAPIAzure.WebSockets
+{
     public class AppConnection : IDisposable
     {
-        private readonly BroadcastContext _broadcastContext;
-        public readonly Guid AppConID = Guid.NewGuid();
-        public readonly Task GetDataTask;
         public readonly Guid UserId;
-        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        public readonly Guid AppConID = Guid.NewGuid();
+
+        private readonly BroadcastContext _broadcastContext;
+        public readonly Task GetDataTask;
 
         private WebSocket socket;
+        private CancellationTokenSource _cancellation = new CancellationTokenSource();
 
 
         public AppConnection(AspNetWebSocketContext ctx, Guid userId, BroadcastContext broadcastContext)
@@ -26,23 +31,10 @@
             GetDataTask = RecieveLoop();
         }
 
-
-        public async void SendCloseAndDispose()
-        {
-            var timeout = new CancellationTokenSource(500);
-            try
-            {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye", timeout.Token);
-            }
-            catch
-            {
-            }
-            timeout.Dispose();
-            Dispose();
-        }
-
         //TODO: detect multiple threads trying to send
-        /// <summary>This point is entered by foreign threads</summary>
+        /// <summary>
+        /// This point is entered by foreign threads
+        /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public async Task SendData(ArraySegment<byte> data)
@@ -57,7 +49,7 @@
                 }
                 else
                     Timeout.Dispose();
-            }
+                }
             catch
             { //if there is an error, setup the socket for disposal 
                 _cancellation.Cancel();
@@ -67,11 +59,11 @@
         private async Task RecieveLoop()
         {
             //Set up a simple send / receive loop
-            var buffer = new ArraySegment<byte>(new byte[10240]);
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[10240]);
 
             while (true)
             {
-                WebSocketReceiveResult retVal = null;
+                WebSocketReceiveResult retVal = null; 
                 try
                 {
                     retVal = await socket.ReceiveAsync(buffer, _cancellation.Token);
@@ -83,18 +75,31 @@
 
                 if (retVal?.CloseStatus != null)
                 {
-                    _cancellation.Cancel();
+                    _cancellation.Cancel(); 
                 }
-                else // Broadcast to all peers! 
-                {
-                    await _broadcastContext.Broadcast(new ArraySegment<byte>(buffer.Array, 0, retVal.Count), AppConID);
+                else  // Broadcast to all peers! 
+                {                                                   
+                    await _broadcastContext.Broadcast(new ArraySegment<byte>(buffer.Array, 0, retVal.Count), AppConID); 
                 }
             }
+
+        }
+
+
+        public async void SendCloseAndDispose()
+        {
+            var timeout = new CancellationTokenSource(500);
+            try
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye", timeout.Token);
+            }
+            catch { }
+            timeout.Dispose();
+            Dispose(); 
         }
 
         #region IDisposable Support
-
-        private bool disposedValue; // To detect redundant calls
+        private bool disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
@@ -121,14 +126,16 @@
         }
 
         // This code added to correctly implement the disposable pattern.
-        public void Dispose()
+        public void  Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             //uncomment the following line if the finalizer is overridden above.
             GC.SuppressFinalize(this);
         }
-
         #endregion
+
+
+
     }
 }
