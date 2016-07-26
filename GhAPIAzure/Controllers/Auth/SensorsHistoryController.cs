@@ -8,11 +8,11 @@
     using System.Net.Http;
     using System.Threading.Tasks;
     using System.Web.Http;
+    using System.Web.Http.ModelBinding;
+    using DbStructure;
     using DbStructure.User;
     using Models;
-    using DbStructure;
     using Swashbuckle.Swagger.Annotations;
-    using System.Web.Http.ModelBinding;
 
     [Authorize]
     public class SensorsHistoryController : BaseController
@@ -52,7 +52,7 @@
                 return Request.CreateResponse(HttpStatusCode.OK, allSensorHistoriesAfterStart);
             }
 
-            int daysSeen = 0;
+            var daysSeen = 0;
             var previous = allSensorHistoriesAfterStart.First().TimeStamp.Date;
             var sensorHistories = new List<SensorHistory>();
 
@@ -102,18 +102,16 @@
         }
 
         // POST: api/SensorsHistory
-        /// <summary>
-        /// Accepts a list of SensorHistories you want to edit. 
-        /// </summary>
-        /// <remarks> This accepts delta updates. 
-        /// So you can add a SensorsHistory that has only one new datapoint each, and it will just add it on top of what's already in the DB
-        /// UpdatedAt will be overwritten with the time of upload, even if no changes were made to the item</remarks>
+        /// <summary>Accepts a list of SensorHistories you want to edit.</summary>
+        /// <remarks> This accepts delta updates. So you can add a SensorsHistory that has only one new
+        /// datapoint each, and it will just add it on top of what's already in the DB UpdatedAt will be
+        /// overwritten with the time of upload, even if no changes were made to the item</remarks>
         /// <param name="shRecievedList">A list of sensorHistories that you want to add or edit.</param>
         /// <returns>Ok if all good, otherwise you will get an ErrorResponce</returns>
-
         [SwaggerResponse(HttpStatusCode.OK, Type = typeof(void))]
         [SwaggerResponse(HttpStatusCode.BadRequest, Type = typeof(ModelStateDictionary))]
-        [SwaggerResponse(HttpStatusCode.Forbidden, "Happens when you try to edit someone else's stuff",Type = typeof(ErrorResponse<SensorHistory>))]
+        [SwaggerResponse(HttpStatusCode.Forbidden, "Happens when you try to edit someone else's stuff",
+             Type = typeof(ErrorResponse<SensorHistory>))]
         public async Task<HttpResponseMessage> PostSensorsHistory(List<SensorHistory> shRecievedList)
         {
             if (!ModelState.IsValid)
@@ -121,15 +119,16 @@
                 return Request.CreateResponse(HttpStatusCode.BadRequest, ModelState);
             }
 
-            List<Guid> sensorIDs = shRecievedList.Select(chR => chR.SensorID).ToList();
+            var sensorIDs = shRecievedList.Select(chR => chR.SensorID).ToList();
 
             //Get all relevant sensors, they must both exist and belong to this user! 
-            List<Sensor> userSensors =
-                await _db.Sensors.Where(rel => sensorIDs.Contains(rel.ID) && rel.Device.Location.PersonId == _UserID)
-                .ToListAsync();
+            var userSensors =
+                await
+                    _db.Sensors.Where(rel => sensorIDs.Contains(rel.ID) && rel.Device.Location.PersonId == _UserID)
+                        .ToListAsync();
 
             //If one of the submitted items reffers to a sensor that doesn't exist/belong to user, return error
-            foreach (SensorHistory sHistory in shRecievedList)
+            foreach (var sHistory in shRecievedList)
             {
                 if (userSensors.Any(rel => rel.ID == sHistory.SensorID) == false)
                 {
@@ -139,36 +138,42 @@
             }
 
             //Get all the control histories that are being edited
-            List<DateTimeOffset> timestamps = shRecievedList.Select(sensHist => sensHist.TimeStamp).ToList();
-            List<SensorHistory> sensHistDbRawList = await _db.SensorHistories.Where(sensHist => timestamps.Contains(sensHist.TimeStamp)
-            && sensorIDs.Contains(sensHist.SensorID)).ToListAsync();
-            List<Location> userLocations = await _db.Location.Where(loc => loc.PersonId == _UserID).ToListAsync(); 
+            var timestamps = shRecievedList.Select(sensHist => sensHist.TimeStamp).ToList();
+            var sensHistDbRawList =
+                await
+                    _db.SensorHistories.Where(
+                            sensHist => timestamps.Contains(sensHist.TimeStamp) && sensorIDs.Contains(sensHist.SensorID))
+                        .ToListAsync();
+            var userLocations = await _db.Location.Where(loc => loc.PersonId == _UserID).ToListAsync();
 
             foreach (var sensHistRecieved in shRecievedList)
             {
-                SensorHistory SensHistoryDB = sensHistDbRawList.FirstOrDefault(rHist => rHist.SensorID == sensHistRecieved.SensorID
-                && rHist.TimeStamp == sensHistRecieved.TimeStamp);
+                var SensHistoryDB =
+                    sensHistDbRawList.FirstOrDefault(
+                        rHist =>
+                            rHist.SensorID == sensHistRecieved.SensorID &&
+                            rHist.TimeStamp == sensHistRecieved.TimeStamp);
 
                 if (SensHistoryDB == null) //create new
                 {
-                    if(false == userLocations.Any(loc => loc.ID == sensHistRecieved.LocationID))
+                    if (false == userLocations.Any(loc => loc.ID == sensHistRecieved.LocationID))
                     {
                         return Request.CreateResponse(HttpStatusCode.BadRequest,
-                      new ErrorResponse<SensorHistory>("Referenced location doesn't exist", sensHistRecieved));
+                            new ErrorResponse<SensorHistory>("Referenced location doesn't exist", sensHistRecieved));
                     }
 
                     sensHistRecieved.SerialiseData();
-                    sensHistRecieved.UploadedAt = DateTimeOffset.Now; 
+                    sensHistRecieved.UploadedAt = DateTimeOffset.Now;
                     _db.Entry(sensHistRecieved).State = EntityState.Added;
                 }
                 else
                 {
-                    if(SensHistoryDB.LocationID != sensHistRecieved.LocationID)
+                    if (SensHistoryDB.LocationID != sensHistRecieved.LocationID)
                     {
                         return Request.CreateResponse(HttpStatusCode.Forbidden,
-                       new ErrorResponse<SensorHistory>("You are not allowed to change location of SensorHistory", sensHistRecieved));
+                            new ErrorResponse<SensorHistory>("You are not allowed to change location of SensorHistory",
+                                sensHistRecieved));
                     }
-
 
 
                     //Check if changed were made by comparing raw bytes data
@@ -178,10 +183,10 @@
                     if (Compare(sensHistRecieved.RawData, SensHistoryDB.RawData) == false)
                     {
                         SensHistoryDB.DeserialiseData();
-                        SensorHistory chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
+                        var chMerged = SensorHistory.Merge(SensHistoryDB, sensHistRecieved);
                         SensHistoryDB.Data = chMerged.Data;
                         SensHistoryDB.SerialiseData();
-                        SensHistoryDB.UploadedAt = DateTimeOffset.Now; 
+                        SensHistoryDB.UploadedAt = DateTimeOffset.Now;
                     }
                 }
             }
@@ -196,7 +201,7 @@
             if (a1.Length != a2.Length)
                 return false;
 
-            for (int i = 0; i < a1.Length; i++)
+            for (var i = 0; i < a1.Length; i++)
                 if (a1[i] != a2[i])
                     return false;
 
