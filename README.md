@@ -4,6 +4,8 @@ Quickbird UWP App and corresponding server.
 
 
 __DASHBOARD__: https://waffle.io/quickbird-uk/QuickbirdUWP
+
+
 __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 
 ## Milestones
