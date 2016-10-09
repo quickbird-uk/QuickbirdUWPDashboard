@@ -96,6 +96,8 @@
         {
             ChosenIsVacant = false;
             var settings = Settings.Instance;
+
+            //TODO: BUG here! Does not check if the CropType already exists correctly, tries to create new one regardless
             var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value ??
                            new CropType
                            {
