@@ -4,10 +4,10 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using DbStructure;
-    using DbStructure.User;
     using Microsoft.EntityFrameworkCore;
     using Models;
+    using Qb.Poco.Global;
+    using Qb.Poco.User;
     using Util;
 
     public class AddCropCycleViewModel : ViewModelBase
@@ -102,25 +102,22 @@
                            new CropType
                            {
                                Name = UserCropType,
-                               Approved = false,
                                CreatedAt = DateTimeOffset.Now,
                                CreatedBy = settings.CredStableSid
                            };
             var cropCycle = new CropCycle
             {
-                ID = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 Name = "Unnamed",
                 Yield = 0,
                 CropType = cropType,
                 CropTypeName = cropType.Name,
-                CropVariety = CropVariety,
-                LocationID = _chosenPlace.Location.ID,
+                LocationId = _chosenPlace.Location.Id,
                 CreatedAt = DateTimeOffset.Now,
                 UpdatedAt = DateTimeOffset.Now,
                 StartDate = DateTimeOffset.Now,
                 EndDate = null,
                 Deleted = false,
-                Version = new byte[32]
             };
 
             using (var db = new MainDbContext())
@@ -167,8 +164,7 @@
                     var runningCropCycle = loc.CropCycles.FirstOrDefault(cc => cc.EndDate == null);
                     if (runningCropCycle != null)
                     {
-                        tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName +
-                                            " of variety " + runningCropCycle.CropVariety;
+                        tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName;
                         tuple.IsVacant = false;
                     }
                     else
@@ -191,7 +187,7 @@
 
             //public override bool Equals(object obj)
             //{
-            //    PlaceTuple other = obj as PlaceTuple; 
+            //    PlaceTuple other = obj as PlaceTuple;
             //    return other?._displayName.ToLower().Equals(_displayName.ToLower()) ?? false;
             //}
 

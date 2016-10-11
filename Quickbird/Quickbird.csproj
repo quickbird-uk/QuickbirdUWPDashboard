@@ -113,11 +113,6 @@
     <Compile Include="LocalNetworking\DatapointsSaver.cs" />
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
-    <Compile Include="Migrations\20160713161741_initial.cs" />
-    <Compile Include="Migrations\20160713161741_initial.designer.cs">
-      <DependentUpon>20160713161741_initial.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BlockingDispatcher.cs" />
@@ -318,16 +313,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DbStructure\DbStructure.csproj">
-      <Project>{3fe9490b-d60e-4103-823d-8d37b8e5ac91}</Project>
-      <Name>DbStructure</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GnatMQ\GnatMQ.csproj">
       <Project>{53ef8541-bf62-46c4-8d2a-fb305b77f1a1}</Project>
       <Name>GnatMQ</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Qb.Poco\Qb.Poco.csproj">
+      <Project>{0e283c8e-d3b8-471b-8b39-93cf6fe26b77}</Project>
+      <Name>Qb.Poco</Name>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

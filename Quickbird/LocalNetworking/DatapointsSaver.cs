@@ -7,12 +7,11 @@
     using System.Threading.Tasks;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
-    using DbStructure;
-    using DbStructure.Global;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;
+    using Qb.Poco.Global;
     using Util;
 
     /// <summary>Non-threadsafe singleton manager of the saving of datapoints.</summary>
@@ -111,7 +110,7 @@
                     {
                         try
                         {
-                            var sensorBuffer = _sensorBuffer.First(sb => sb.Sensor.SensorTypeID == message.SensorTypeID);
+                            var sensorBuffer = _sensorBuffer.First(sb => sb.Sensor.SensorTypeId == message.SensorTypeID);
                             var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
@@ -122,12 +121,12 @@
                         }
                         catch (ArgumentNullException)
                         {
-                            //TODO add a new sensor to the device! 
+                            //TODO add a new sensor to the device!
                         }
                     }
 
 
-                    //this is meant to be fire-forget, that's cool 
+                    //this is meant to be fire-forget, that's cool
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     WebSocketConnection.Instance.SendAsync(sensorReadings);
                     Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
@@ -178,7 +177,7 @@
                             ID = Guid.NewGuid(),
                             Deleted = false,
                             Name = string.Format("Box Number {0}", _dbDevices.Count),
-                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
+                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings!
                             Version = new byte[32],
                             CropCycles = new List<CropCycle>(),
                             Devices = new List<Device>(),
@@ -199,10 +198,10 @@
                     {
                         CreatedAt = DateTimeOffset.Now,
                         UpdatedAt = DateTimeOffset.Now,
-                        ID = Guid.NewGuid(),
-                        DeviceID = device.ID,
+                        Id = Guid.NewGuid(),
+                        DeviceId = device.Id,
                         Deleted = false,
-                        SensorTypeID = inSensors.SensorTypeID,
+                        SensorTypeId = inSensors.SensorTypeID,
                         Enabled = true,
                         Multiplier = 1,
                         Offset = 0,
@@ -212,7 +211,7 @@
                 }
                 db.SaveChanges();
 
-                //Add the device to the cached data? 
+                //Add the device to the cached data?
                 _dbDevices.Add(device);
                 foreach (var sensor in device.Sensors)
                 {
@@ -244,18 +243,18 @@
                 var sensorsHistory = db.SensorsHistory.Where(sh => sh.TimeStamp > Today).ToList(); // we will edit this
                 _sensorTypes = db.SensorTypes.Include(st => st.Param).Include(st => st.Place).AsNoTracking().ToList();
 
-                //Add missing sensors and relays 
+                //Add missing sensors and relays
                 foreach (var sensor in _dbDevices.SelectMany(dv => dv.Sensors))
                 {
-                    if (_sensorBuffer.Any(sb => sb.Sensor.ID == sensor.ID) == false)
+                    if (_sensorBuffer.Any(sb => sb.Sensor.Id == sensor.Id) == false)
                     {
                         _sensorBuffer.Add(new SensorBuffer(sensor));
                     }
-                } //TODO merge the datapoints! 
+                } //TODO merge the datapoints!
                 foreach (var sHistory in sensorsHistory)
                 {
                     sHistory.DeserialiseData();
-                    var mIndex = _sensorBuffer.FindIndex(sb => sb.Sensor.ID == sHistory.SensorID);
+                    var mIndex = _sensorBuffer.FindIndex(sb => sb.Sensor.Id == sHistory.SensorId);
                     if (_sensorBuffer[mIndex].DataDay == null ||
                         _sensorBuffer[mIndex].DataDay.TimeStamp < sHistory.TimeStamp)
                     {
@@ -304,14 +303,14 @@
                                 cumulativeValue += sbuffer.FreshBuffer[b].Value;
                             }
 
-                            var sensorType = _sensorTypes.First(st => st.ID == sbuffer.Sensor.SensorTypeID);
+                            var sensorType = _sensorTypes.First(st => st.Id == sbuffer.Sensor.SensorTypeId);
                             var value = cumulativeValue/sbuffer.FreshBuffer.Count;
 
-                            if (sensorType.ParamID == 5) // Level
+                            if (sensorType.ParameterId == 5) // Level
                             {
                                 sensorDatapoint = new SensorDatapoint(Math.Round(value), endTime, duration);
                             }
-                            else if (sensorType.ParamID == 9) //water flow
+                            else if (sensorType.ParameterId == 9) //water flow
                             {
                                 sensorDatapoint = new SensorDatapoint(value, endTime, cumulativeDuration);
                             }
@@ -325,31 +324,31 @@
                         //only if new data is present
                         if (sensorDatapoint != null)
                         {
-                            //check if corresponding dataDay is too old or none exists at all 
+                            //check if corresponding dataDay is too old or none exists at all
                             if (sbuffer.DataDay?.TimeStamp < sensorDatapoint.TimeStamp || sbuffer.DataDay == null)
                             {
                                 var dataDay = new SensorHistory
                                 {
-                                    LocationID = sbuffer.Sensor.Device.LocationID,
-                                    SensorID = sbuffer.Sensor.ID,
+                                    LocationId = sbuffer.Sensor.Device.LocationId,
+                                    SensorId = sbuffer.Sensor.Id,
                                     Sensor = sbuffer.Sensor,
                                     TimeStamp = Tomorrow,
                                     Data = new List<SensorDatapoint>()
                                 };
                                 _sensorBuffer[i] = new SensorBuffer(sbuffer.Sensor, dataDay);
-                                //Only uses this entity, and does not follow the references to stick related references in the DB  
+                                //Only uses this entity, and does not follow the references to stick related references in the DB
                                 db.Entry(dataDay).State = EntityState.Added;
                             }
                             else
                             {
-                                //this will not attach related entities, which is good 
+                                //this will not attach related entities, which is good
                                 db.Entry(sbuffer.DataDay).State = EntityState.Unchanged;
                             }
 
                             _sensorBuffer[i].DataDay.Data.Add(sensorDatapoint);
                             _sensorBuffer[i].DataDay.SerialiseData();
                         }
-                    } //for loop ends 
+                    } //for loop ends
                     //Once we are done here, mark changes to the db
                     db.SaveChanges();
                     Debug.WriteLine("Saved Sensor Data");

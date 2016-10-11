@@ -3,7 +3,7 @@
     using System;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using JetBrains.Annotations;
 
     public class DashboardViewModel : ViewModelBase
@@ -19,7 +19,7 @@
         /// <param name="run"></param>
         public DashboardViewModel([NotNull] CropCycle run)
         {
-            CropId = run.ID;
+            CropId = run.Id;
             Update(run);
         }
 
@@ -81,7 +81,7 @@
         public void Update(CropCycle run)
         {
             var sensors = run.Location.Devices.SelectMany(device => device.Sensors);
-            var missingSensors = _cards.Where(c => sensors.FirstOrDefault(s => s.ID == c.Id) == null).ToList();
+            var missingSensors = _cards.Where(c => sensors.FirstOrDefault(s => s.Id == c.Id) == null).ToList();
             foreach (var missingSensor in missingSensors)
             {
                 _cards.Remove(missingSensor);
@@ -92,7 +92,7 @@
             // Add, remove or update for each sensor.
             foreach (var sensor in sensors)
             {
-                var existing = _cards.FirstOrDefault(c => c.Id == sensor.ID);
+                var existing = _cards.FirstOrDefault(c => c.Id == sensor.Id);
                 if (existing == null)
                 {
                     if (!sensor.Deleted)

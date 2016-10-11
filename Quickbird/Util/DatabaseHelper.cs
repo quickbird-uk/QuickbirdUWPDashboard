@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
     using DbStructure;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;

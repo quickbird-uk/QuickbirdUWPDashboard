@@ -1,10 +1,10 @@
 ﻿namespace Quickbird.Models
 {
-    using DbStructure;
-    using DbStructure.Global;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
+    using Qb.Poco;
+    using Qb.Poco.Global;
 
     public class MainDbContext : DbContext
     {

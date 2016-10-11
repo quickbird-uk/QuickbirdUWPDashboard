@@ -2,7 +2,7 @@
 {
     using System;
     using Windows.UI.Xaml.Controls;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Util;
     using Views;
 
@@ -26,7 +26,7 @@
         /// <param name="cropCycle"></param>
         public CropViewModel(CropCycle cropCycle)
         {
-            _id = cropCycle.ID;
+            _id = cropCycle.Id;
             _dashboardViewModel = new DashboardViewModel(cropCycle);
             Update(cropCycle);
         }
@@ -65,7 +65,7 @@
                 OnPropertyChanged();
             }
         }
-               
+
         public string PlantingDate
         {
             get { return _plantingDate; }
@@ -140,9 +140,8 @@
         /// <param name="cropRun">Requires CropType (for Variety) and Location (for name) to be included.</param>
         public void Update(CropCycle cropRun)
         {
-            CropRunId = cropRun.ID;
+            CropRunId = cropRun.Id;
             CropName = cropRun.CropTypeName;
-            VarietyName = cropRun.CropVariety;
             PlantingDate = cropRun.StartDate.ToString("dd/MM/yyyy");
             BoxName = cropRun.Location.Name;
             Yield = $"{cropRun.Yield}kg";

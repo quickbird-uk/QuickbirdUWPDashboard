@@ -6,8 +6,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
-    using DbStructure;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using MoreLinq;
@@ -30,7 +29,7 @@
 
         //Other stuff
         //Hour Long Buffer
-        //Histrotical Buffer 
+        //Histrotical Buffer
 
         private readonly Action _pauseChart;
 
@@ -56,7 +55,7 @@
             _loadCacheAction = LoadCache;
             Messenger.Instance.NewSensorDataPoint.Subscribe(_recieveDatapointAction);
 
-            //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame. 
+            //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame.
             //Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
 
             //LoadData
@@ -71,7 +70,7 @@
                 if (value == _cache) return;
                 _cache = value;
                 if (_selectedCropCycle != null)
-                    SelectedCropCycle = _cache.First(l => l.cropCycle.ID == _selectedCropCycle.ID).cropCycle;
+                    SelectedCropCycle = _cache.First(l => l.cropCycle.Id == _selectedCropCycle.Id).cropCycle;
 
                 OnPropertyChanged();
                 OnPropertyChanged("Locations");
@@ -161,14 +160,14 @@
                         LiveCropRun = false;
                     }
 
-                    var sensors = _cache.First(c => c.cropCycle.ID == value.ID).sensors;
+                    var sensors = _cache.First(c => c.cropCycle.Id == value.Id).sensors;
 
                     foreach (var sensor in sensors)
                     {
-                        var tuple = new SensorTuple {displayName = sensor.SensorType.Param.Name, sensor = sensor};
+                        var tuple = new SensorTuple {displayName = sensor.SensorType.Parameter.Name, sensor = sensor};
                         SensorsToGraph.Add(tuple);
                     }
-                    SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Place.Name);
+                    SensorsGrouped = SensorsToGraph.GroupBy(tup => tup.sensor.SensorType.Placement.Name);
                     LoadHistoricalData();
                     GraphPeriod = (_selectedCropCycle.EndDate ?? DateTimeOffset.Now) - _selectedCropCycle.StartDate;
                     _selectedEndTime = _selectedCropCycle.EndDate;
@@ -238,7 +237,7 @@
                 var Added = false;
                 foreach (var reading in readings)
                 {
-                    var tuple = SensorsToGraph.FirstOrDefault(stup => stup.sensor.ID == reading.SensorId);
+                    var tuple = SensorsToGraph.FirstOrDefault(stup => stup.sensor.Id == reading.SensorId);
                     if (tuple != null)
                     {
                         if (tuple.hourlyDatapoints.Count == 0 ||
@@ -281,11 +280,11 @@
 
                 var sensorListRet =
                     _db.Sensors.Include(sen => sen.SensorType)
-                        .Include(sen => sen.SensorType.Place)
-                        .Include(sen => sen.SensorType.Param)
+                        .Include(sen => sen.SensorType.Placement)
+                        .Include(sen => sen.SensorType.Parameter)
                         .Include(sen => sen.SensorType.Subsystem)
                         .AsNoTracking()
-                        .ToList(); //Need to edit 
+                        .ToList(); //Need to edit
 
                 return new Tuple<List<Location>, List<Sensor>>(dbLocationsRet, sensorListRet);
             });
@@ -302,10 +301,10 @@
             {
                 var cacheItem = new CroprunTuple(crop, crop.Location);
 
-                var deviceIDs = crop.Location.Devices.Select(dev => dev.ID).ToList();
+                var deviceIDs = crop.Location.Devices.Select(dev => dev.Id).ToList();
                 foreach (var sensor in sensorList)
                 {
-                    if (deviceIDs.Contains(sensor.DeviceID))
+                    if (deviceIDs.Contains(sensor.DeviceId))
                     {
                         cacheItem.sensors.Add(sensor);
                     }
@@ -327,13 +326,13 @@
                 await
                     _db.SensorsHistory.Where(
                         sh =>
-                            sh.LocationID == _selectedCropCycle.LocationID &&
+                            sh.LocationId == _selectedCropCycle.LocationId &&
                             sh.TimeStamp > _selectedCropCycle.StartDate && sh.TimeStamp < endDate).ToListAsync();
 
 
             Parallel.ForEach(SensorsToGraph, tuple =>
             {
-                var shCollection = sensorsHistories.Where(sh => sh.SensorID == tuple.sensor.ID);
+                var shCollection = sensorsHistories.Where(sh => sh.SensorId == tuple.sensor.Id);
                 var datapointCollection = new List<BindableDatapoint>();
                 foreach (var sh in shCollection)
                 {

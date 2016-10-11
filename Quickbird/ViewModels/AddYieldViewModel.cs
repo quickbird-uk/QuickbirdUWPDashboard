@@ -5,14 +5,14 @@
     using Windows.UI;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Media;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
 
     public class AddYieldViewModel : ViewModelBase
     {
-        private readonly Guid _cropCycleID;
+        private readonly Guid _cropCycleId;
         private string _buttonText = "Add Yield";
         private bool _closeCropRun;
         private Visibility _errorVisibility = Visibility.Collapsed;
@@ -25,9 +25,9 @@
         private bool _validEntry = true;
 
 
-        public AddYieldViewModel(Guid CropCycleID)
+        public AddYieldViewModel(Guid cropCycleId)
         {
-            _cropCycleID = CropCycleID;
+            _cropCycleId = cropCycleId;
             _updateAction = UpdateData;
             Messenger.Instance.TablesChanged.Subscribe(_updateAction);
             UpdateData(string.Empty);
@@ -98,7 +98,7 @@
                     _userEnteredAmount = 0;
                 }
 
-                //Only take action if something has changed!                
+                //Only take action if something has changed!
                 if (success != ValidEntry && success)
                 {
                     ValidEntry = success;
@@ -132,7 +132,7 @@
         {
             using (var db = new MainDbContext())
             {
-                var cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
+                var cropCycle = await db.CropCycles.FirstAsync(cc => cc.Id == _cropCycleId);
                 ValidEntry = false;
                 IsLoading = true;
                 cropCycle.Yield += _userEnteredAmount;
@@ -153,11 +153,11 @@
             CropCycle cropCycle;
             using (var db = new MainDbContext())
             {
-                cropCycle = await db.CropCycles.FirstAsync(cc => cc.ID == _cropCycleID);
+                cropCycle = await db.CropCycles.FirstAsync(cc => cc.Id == _cropCycleId);
             }
             if (cropCycle.EndDate != null)
             {
-                //TODO Close this frame bacuse the crop cycle is already closed! 
+                //TODO Close this frame bacuse the crop cycle is already closed!
             }
         }
     }

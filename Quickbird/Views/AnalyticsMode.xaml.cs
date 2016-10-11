@@ -9,8 +9,7 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Controls.Primitives;
     using Windows.UI.Xaml.Navigation;
-    using DbStructure;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Syncfusion.UI.Xaml.Charts;
 
     /// <summary>An empty page that can be used on its own or navigated to within a Frame.</summary>

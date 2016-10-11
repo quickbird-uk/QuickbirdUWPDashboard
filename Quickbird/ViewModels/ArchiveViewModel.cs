@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using DbStructure.User;
+    using Qb.Poco.User;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
@@ -75,8 +75,6 @@
             }
         }
 
-        public string Variety { get { return _selectedCropCycle?.CropCycle.CropVariety ?? " --- "; } }
-
         public string Yield
         {
             get
@@ -104,7 +102,7 @@
                     var matchFound = false;
                     for (var m = 0; m < CropCycles.Count; m++)
                     {
-                        if (cropCycles[i].ID == CropCycles[m].CropCycle.ID)
+                        if (cropCycles[i].Id == CropCycles[m].CropCycle.Id)
                         {
                             matchFound = true;
                             CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
@@ -133,14 +131,9 @@
                 if (inCropCycle.CropTypeName.Length > 13)
                     CropType += "...";
 
-                CropVariety = inCropCycle.CropVariety.Substring(0, Math.Min(10, inCropCycle.CropVariety.Length));
-                if (inCropCycle.CropVariety.Length > 10)
-                    CropVariety += "...";
-
                 LocationName = inCropCycle.Location.Name.Substring(0, Math.Min(10, inCropCycle.Location.Name.Length));
                 if (inCropCycle.Location.Name.Length > 10)
                     LocationName += "...";
-
 
                 Duration =
                     Math.Round(((inCropCycle.EndDate ?? DateTimeOffset.Now) - inCropCycle.StartDate).TotalDays, 0) +
