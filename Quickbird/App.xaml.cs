@@ -76,7 +76,7 @@
 
             // Delete the database.
             var localFolder = ApplicationData.Current.LocalFolder;
-            await (await localFolder.GetItemAsync(MainDbContext.FileName)).DeleteAsync();
+            await (await localFolder.GetItemAsync(QbDbContext.FileName)).DeleteAsync();
         }
 
         /// <summary>Starts or kills the local device network if the settings permit it.</summary>
@@ -102,7 +102,7 @@
 
         public async Task StartSession()
         {
-            using (var db = new MainDbContext())
+            using (var db = new QbDbContext())
             {
                 db.Database.Migrate();
             }

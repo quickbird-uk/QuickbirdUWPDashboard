@@ -5,8 +5,8 @@
     using System.Linq;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
-    using DbStructure;
     using MoreLinq;
+    using Qb.Poco.User;
     using Util;
 
     public class LiveCardViewModel : ViewModelBase
@@ -52,11 +52,11 @@
 
         public LiveCardViewModel(Sensor poco)
         {
-            Id = poco.ID;
-            Placement = poco.SensorType.Place.Name;
-            PlacementId = poco.SensorType.PlaceID;
-            ParameterID = poco.SensorType.ParamID;
-            SensorTypeID = poco.SensorTypeID;
+            Id = poco.Id;
+            Placement = poco.SensorType.Placement.Name;
+            PlacementId = poco.SensorType.PlacementId;
+            ParameterID = poco.SensorType.ParameterId;
+            SensorTypeID = poco.SensorTypeId;
 
             _dispatcher = ((App) Application.Current).Dispatcher;
             if (_dispatcher == null)
@@ -64,7 +64,7 @@
 
             _dataUpdater = async readings =>
             {
-                var ofThisSensor = readings.Where(r => r.SensorId == poco.ID).ToList();
+                var ofThisSensor = readings.Where(r => r.SensorId == poco.Id).ToList();
                 if (ofThisSensor.Any())
                 {
                     var mostRecent = ofThisSensor.MaxBy(r => r.Timestamp);
@@ -276,8 +276,8 @@
         /// <param name="poco"></param>
         public void Update(Sensor poco)
         {
-            Units = poco.SensorType.Param.Unit;
-            UnitName = poco.SensorType.Place.Name + Environment.NewLine + poco.SensorType.Param.Name;
+            Units = poco.SensorType.Parameter.Unit;
+            UnitName = poco.SensorType.Placement.Name + Environment.NewLine + poco.SensorType.Parameter.Name;
             //TODO: Status = poco.AlertStatus
         }
 

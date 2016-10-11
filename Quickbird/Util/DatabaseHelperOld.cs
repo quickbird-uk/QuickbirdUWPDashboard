@@ -7,15 +7,16 @@
     using System.Reflection;
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
-    using DbStructure;
     using Qb.Poco.User;
     using Internet;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Newtonsoft.Json;
 
+
     /// <summary>Methods to access and update the database. Methods that modify the database are queued to
     /// make sure they do not interfere with one another. </summary>
+    [Obsolete]
     public class DatabaseHelper
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
@@ -65,7 +66,7 @@
         /// <returns>Null if fails to find, othewise the most recent value and its timestamp.</returns>
         public static Tuple<double, DateTimeOffset> QueryMostRecentSensorValue(Sensor sensor)
         {
-            using (var db = new MainDbContext())
+            using (var db = new QbDbContext())
             {
                 var newestHistoryForSensor =
                     db.SensorsHistory.AsNoTracking()
@@ -90,9 +91,9 @@
         /// threadpool as appropriate.</remarks>
         public async Task SyncWithServerAsync()
         {
-            // Sharing a db context allows the use of caching within the context while still being safer than a leaky 
+            // Sharing a db context allows the use of caching within the context while still being safer than a leaky
             //  global context.
-            using (var db = new MainDbContext())
+            using (var db = new QbDbContext())
             {
                 var updateErrors = await GetRequestUpdateAsyncQueued(db);
                 if (updateErrors?.Any() ?? false)
@@ -153,7 +154,7 @@
                     local = dbSet.OfType<CropType>().AsNoTracking().FirstOrDefault(d => d.Name == x.Name) as TPoco;
                 }
 
-                //Whatever it is, jsut add record to the DB 
+                //Whatever it is, jsut add record to the DB
                 if (local == null)
                 {
                     dbSet.Add(remote);
@@ -224,7 +225,7 @@
         /// <returns>Non-readings tree of data used bvy the UI.</returns>
         private List<CropCycle> GetDataTree()
         {
-            using (var db = new MainDbContext())
+            using (var db = new QbDbContext())
             {
                 return
                     db.CropCycles.AsNoTracking()
@@ -278,7 +279,7 @@
 
         /// <summary>Updates sensor history from server.</summary>
         /// <returns>Errors, null on succes. Some data may have been successfully saved alongside errors.</returns>
-        private static async Task<string> GetRequestSensorHistoryAsync(MainDbContext db)
+        private static async Task<string> GetRequestSensorHistoryAsync(QbDbContext db)
         {
             var devices = db.Devices.AsNoTracking().Include(d => d.Sensors).ToList();
             var table = nameof(db.SensorsHistory);
@@ -442,7 +443,7 @@
         /// operations.</summary>
         /// <param name="db"></param>
         /// <returns>Errors, null on succes.</returns>
-        private async Task<string> GetRequestSensorHistoryAsyncQueued(MainDbContext db)
+        private async Task<string> GetRequestSensorHistoryAsyncQueued(QbDbContext db)
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestSensorHistoryAsync(db)));
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
@@ -467,7 +468,7 @@
             return response;
         }
 
-        private async Task<List<string>> GetRequestUpdateAsync(MainDbContext db)
+        private async Task<List<string>> GetRequestUpdateAsync(QbDbContext db)
         {
             var settings = Settings.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
@@ -520,7 +521,7 @@
 
         /// <summary>Updates the database from the cloud server.</summary>
         /// <returns>A compilation of errors.</returns>
-        private async Task<List<string>> GetRequestUpdateAsyncQueued(MainDbContext db)
+        private async Task<List<string>> GetRequestUpdateAsyncQueued(QbDbContext db)
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestUpdateAsync(db)));
             var updatesFromServerAsync = await await cont.ConfigureAwait(false);
@@ -530,7 +531,7 @@
 
         /// <summary>Posts all new history items since the last time data was posted.</summary>
         /// <returns></returns>
-        private static async Task<string> PostRequestHistoryAsync(MainDbContext db)
+        private static async Task<string> PostRequestHistoryAsync(QbDbContext db)
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
             var tableName = nameof(db.SensorsHistory);
@@ -569,7 +570,7 @@
                 var result = await Request.PostTable(ApiUrl, tableName, json, creds).ConfigureAwait(false);
                 if (result != null)
                 {
-                    //abort, non-null responses are descriptions of errors 
+                    //abort, non-null responses are descriptions of errors
                     return result;
                 }
             }
@@ -632,7 +633,7 @@
             return null;
         }
 
-        private async Task<string> PostRequestHistoryAsyncQueued(MainDbContext db)
+        private async Task<string> PostRequestHistoryAsyncQueued(QbDbContext db)
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestHistoryAsync(db)));
             return await await cont.ConfigureAwait(false);
@@ -658,7 +659,7 @@
 
         /// <summary>Posts changes saved in the local DB (excluding histories) to the server. Only Items with
         /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
-        private static async Task<List<string>> PostRequestUpdateAsync(MainDbContext db)
+        private static async Task<List<string>> PostRequestUpdateAsync(QbDbContext db)
         {
             var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
 
@@ -708,7 +709,7 @@
             return errors;
         }
 
-        private async Task<List<string>> PostRequestUpdatesAsyncQueued(MainDbContext db)
+        private async Task<List<string>> PostRequestUpdatesAsyncQueued(QbDbContext db)
         {
             var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestUpdateAsync(db)));
             return await await cont.ConfigureAwait(false);
