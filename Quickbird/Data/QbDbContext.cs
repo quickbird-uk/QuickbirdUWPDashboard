@@ -40,7 +40,7 @@
             builder.Entity<CropType>().Property(ct => ct.CreatedBy).IsRequired(false);
 
             // Composite key.
-            builder.Entity<SensorHistory>().HasKey(sd => new { sd.SensorId, sd.TimeStamp });
+            builder.Entity<SensorHistory>().HasKey(sd => new { sd.SensorId, sd.UtcDate});
 
             // Set optional foreign key, defaults delete to restrict.
             builder.Entity<Location>().Property(loc => loc.PersonId).IsRequired(false);
