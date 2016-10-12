@@ -122,6 +122,7 @@
     <Compile Include="User\Device.cs" />
     <Compile Include="User\Location.cs" />
     <Compile Include="User\Sensor.cs" />
+    <Compile Include="User\SensorDatapoint.cs" />
     <Compile Include="User\SensorHistory.cs" />
     <Compile Include="User\SyncData.cs" />
     <EmbeddedResource Include="Properties\Qb.Poco.rd.xml" />

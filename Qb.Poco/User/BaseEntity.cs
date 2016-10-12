@@ -5,10 +5,11 @@ namespace Qb.Poco.User
     public class BaseEntity : IHasGuid
     {
         /// <summary>Don't change this after the object's creation</summary>
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-        /// <summary>Should be updated every time a value is locally changed.</summary>
-        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
+        /// <summary>Automatically set by server when added or updated (SaveChanges should be overridden), locally set when
+        ///     changed on the client side.</summary>
+        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         /// <summary>For soft deleteion without breaking old relationships. Usually hidden from users.</summary>
         public bool Deleted { get; set; } = false;
