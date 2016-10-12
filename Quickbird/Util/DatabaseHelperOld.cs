@@ -12,6 +12,8 @@
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Newtonsoft.Json;
+    using Qb.Poco;
+    using Qb.Poco.Global;
 
 
     /// <summary>Methods to access and update the database. Methods that modify the database are queued to
@@ -70,19 +72,18 @@
             {
                 var newestHistoryForSensor =
                     db.SensorsHistory.AsNoTracking()
-                        .Where(sh => sh.SensorID == sensor.ID)
-                        .OrderByDescending(sh => sh.TimeStamp)
+                        .Where(sh => sh.SensorId == sensor.Id)
+                        .OrderByDescending(sh => sh.UtcDate)
                         .FirstOrDefault();
 
                 if (null == newestHistoryForSensor) return null;
 
-                newestHistoryForSensor.DeserialiseData();
-
-                var newestDatapoint = newestHistoryForSensor.Data.OrderByDescending(d => d.TimeStamp).FirstOrDefault();
+                var data = SensorDatapoint.Deserialise(newestHistoryForSensor.RawData);
+                var newestDatapoint = data.OrderByDescending(d => d.Timestamp).FirstOrDefault();
 
                 if (null == newestDatapoint) return null;
 
-                return Tuple.Create(newestDatapoint.Value, newestDatapoint.TimeStamp);
+                return Tuple.Create(newestDatapoint.Value, newestDatapoint.Timestamp);
             }
         }
 
@@ -139,14 +140,14 @@
                 if (pocoType.GetInterfaces().Contains(typeof(IHasId)))
                 {
                     local =
-                        dbSet.AsNoTracking().Select(a => a).FirstOrDefault(d => ((IHasId) d).ID == ((IHasId) remote).ID);
+                        dbSet.AsNoTracking().Select(a => a).FirstOrDefault(d => ((IHasId) d).Id == ((IHasId) remote).Id);
                 }
                 else if (pocoType.GetInterfaces().Contains(typeof(IHasGuid)))
                 {
                     local =
                         dbSet.AsNoTracking()
                             .Select(a => a)
-                            .FirstOrDefault(d => ((IHasGuid) d).ID == ((IHasGuid) remote).ID);
+                            .FirstOrDefault(d => ((IHasGuid) d).Id == ((IHasGuid) remote).Id);
                 }
                 else if (pocoType == typeof(CropType))
                 {
@@ -235,12 +236,12 @@
                         .ThenInclude(l => l.Devices)
                         .ThenInclude(d => d.Sensors)
                         .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Param)
+                        .ThenInclude(st => st.Parameter)
                         .Include(cc => cc.Location)
                         .ThenInclude(l => l.Devices)
                         .ThenInclude(d => d.Sensors)
                         .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Place)
+                        .ThenInclude(st => st.Placement)
                         .ToList();
             }
         }
@@ -281,162 +282,7 @@
         /// <returns>Errors, null on succes. Some data may have been successfully saved alongside errors.</returns>
         private static async Task<string> GetRequestSensorHistoryAsync(QbDbContext db)
         {
-            var devices = db.Devices.AsNoTracking().Include(d => d.Sensors).ToList();
-            var table = nameof(db.SensorsHistory);
-            var errors = "";
-
-            // Download all the data for each device in turn.
-            foreach (var device in devices)
-            {
-                // Find the newest received item so dowloading can resume after it.
-                // There will be items for multiple sensors with the same time, it diesn't matter which one is used.
-                // It will be updated after each item is added, much cheaper than re-querying.
-                var mostRecentDayDownloaded =
-                    db.SensorsHistory.AsNoTracking()
-                        .Include(sh => sh.Sensor)
-                        .Where(sh => sh.Sensor.DeviceID == device.ID)
-                        // Never uploaded days may be much newer than items that have not yet been downloaded.
-                        .Where(sh => sh.UploadedAt != default(DateTimeOffset)) //Ignore never uploaded days.
-                        .OrderByDescending(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
-
-                DateTimeOffset mostRecentDownloadedTimestamp;
-                if (null == mostRecentDayDownloaded)
-                {
-                    // Data has never been downloaded for this device, so start downloading for time 0.
-                    mostRecentDownloadedTimestamp = default(DateTimeOffset);
-                }
-                else
-                {
-                    //The timestamp is always the end of the day so look inside to see what time the data actually ends.
-
-                    // Its pulled out of the database as raw so deserialise to access the data.
-                    mostRecentDayDownloaded.DeserialiseData();
-                    if (mostRecentDayDownloaded.Data.Any())
-                    {
-                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.Data.Max(entry => entry.TimeStamp);
-                    }
-                    else
-                    {
-                        Log.ShouldNeverHappen(
-                            $"Found a history with no entries: {device.Name}, {mostRecentDayDownloaded.TimeStamp}");
-
-                        // This is a broken situation, but it should be  fine if we continue from the start of the day.
-                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.TimeStamp - TimeSpan.FromDays(1);
-                    }
-                }
-
-                // This loop will keep requesting data untill the server gives no more.
-                bool itemsReceived;
-                var added = new List<SensorHistory>();
-                do
-                {
-                    var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-                    // Although any time far in the past should work, using 0 makes intent clear in debugging.
-                    var unixTimeSeconds = mostRecentDownloadedTimestamp == default(DateTimeOffset)
-                        ? 0
-                        : mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
-
-                    List<SensorHistory> histories;
-                    try
-                    {
-                        // Download with get request.
-                        var raw =
-                            await
-                                GetRequestTableThrowOnErrorAsync($"{table}/{device.ID}/{unixTimeSeconds}/{MaxDaysDl}",
-                                    cred).ConfigureAwait(false);
-                        // Deserialise download to POCO object.
-                        histories =
-                            await DeserializeTableThrowOnErrrorAsync<SensorHistory>(table, raw).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Something went wrong, try moving onto next device.
-                        var message = $"GetRequest or deserialise failed for {device.Name}: {ex}";
-                        errors += message + Environment.NewLine;
-                        Debug.WriteLine(message);
-                        break;
-                    }
-
-                    Debug.WriteLine($"{histories.Count} dl for {device.Name}");
-
-                    if (histories.Any())
-                    {
-                        var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
-                        foreach (var hist in histories)
-                        {
-                            Debug.WriteLine(
-                                $"[{mostRecentDownloadedTimestamp}]{hist.TimeStamp}#{hist.UploadedAt}#{device.Name}#{hist.SensorID}");
-
-                            // See if this is a new object.
-                            var existing =
-                                db.SensorsHistory.AsNoTracking()
-                                    .FirstOrDefault(
-                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
-                            // Make sure that its not an object tracked from a previous loop.
-                            // This can happen because the end of the previous day will always get sliced with no data.
-                            // That end slice isn't perfect but is makes sure all the data was taken.
-                            if (existing == null)
-                            {
-                                existing =
-                                    added.FirstOrDefault(
-                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
-                                if (existing != null)
-                                {
-                                    // Detach the existing object because it will be merged and replaced.
-                                    var entityEntry = db.Entry(existing);
-                                    entityEntry.State = EntityState.Detached;
-                                    added.Remove(existing);
-                                }
-                            }
-                            if (existing == null)
-                            {
-                                // The json deserialiser deserialises json to the .Data property.
-                                // The data has to be serialised into raw-data-blobs before saving to the databse.
-                                hist.SerialiseData();
-                                added.Add(db.Add(hist).Entity);
-                            }
-                            else
-                            {
-                                // The data is pulled from the database as serialised raw data blobs.
-                                existing.DeserialiseData();
-                                // The merged object merges using the deserialised Data property.
-                                var merged = SensorHistory.Merge(existing, hist);
-                                // Data has to be serialised again into raw data blobs for the database.
-                                merged.SerialiseData();
-
-                                added.Add(db.Update(merged).Entity);
-                            }
-
-                            // This day was just downloaded so it must be completed
-                            if (hist.TimeStamp > lastDayOfThisDownloadSet)
-                                lastDayOfThisDownloadSet = hist.TimeStamp;
-                        }
-                        // The GET request allways gets days completed to the end (start may be missing but not the end)
-                        mostRecentDownloadedTimestamp = lastDayOfThisDownloadSet;
-                        itemsReceived = true;
-                    }
-                    else
-                    {
-                        itemsReceived = false;
-                    }
-                } while (itemsReceived);
-
-                // Save the data for this device.
-                await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
-
-                foreach (var entity in added)
-                {
-                    var entry = db.Entry(entity);
-                    if (entry.State != EntityState.Detached)
-                    {
-                        entry.State = EntityState.Detached;
-                    }
-                }
-
-                // Move onto next device.
-            }
-
-            return string.IsNullOrWhiteSpace(errors) ? null : errors;
+            throw new NotImplementedException();
         }
 
         /// <summary>Updates sensor history from server. Queued to run after existing database and server
@@ -482,7 +328,6 @@
             res.Add(await GetReqDeserMergeTable(nameof(db.Parameters), db.Parameters).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.Placements), db.Placements).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.Subsystems), db.Subsystems).ConfigureAwait(false));
-            res.Add(await GetReqDeserMergeTable(nameof(db.RelayTypes), db.RelayTypes).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.SensorTypes), db.SensorTypes).ConfigureAwait(false));
 
             if (res.Any(r => r != null))
@@ -499,7 +344,6 @@
             res.Add(await GetReqDeserMergeTable(nameof(db.Locations), db.Locations, creds).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.CropCycles), db.CropCycles, creds).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.Devices), db.Devices, creds).ConfigureAwait(false));
-            res.Add(await GetReqDeserMergeTable(nameof(db.Relays), db.Relays, creds).ConfigureAwait(false));
             res.Add(await GetReqDeserMergeTable(nameof(db.Sensors), db.Sensors, creds).ConfigureAwait(false));
 
             if (res.Any(r => r != null))
@@ -533,104 +377,7 @@
         /// <returns></returns>
         private static async Task<string> PostRequestHistoryAsync(QbDbContext db)
         {
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-            var tableName = nameof(db.SensorsHistory);
-
-            if (!db.SensorsHistory.Any()) return null;
-
-            var uploadedAtWillBe = DateTimeOffset.Now;
-
-            // This is a list of never uploaded histories (half uploaded locally updated histories will be exluded).
-            // It should be noted that it is impossible to have a never-uploaded history older than a half uploaded one.
-            //TRACKING
-            var uploadSet = db.SensorsHistory.AsTracking().Where(s => s.UploadedAt == default(DateTimeOffset)).ToList();
-            var uploadQueue = new Queue<SensorHistory>(uploadSet);
-
-            while (uploadQueue.Count > 0)
-            {
-                // Collect a batch of a sensible size.
-                var batch = new List<SensorHistory>();
-                const int maxUploadBatch = 30;
-                while (batch.Count < maxUploadBatch && uploadQueue.Any())
-                {
-                    var item = uploadQueue.Dequeue();
-                    // Histories come out of the database as raw blobs, serialise to populate the Data property.
-                    // The json converter needs the Data property.
-                    item.DeserialiseData();
-                    batch.Add(item);
-                    // This will only be saved if the whole upload is successful.
-                    item.UploadedAt = uploadedAtWillBe;
-
-                    // This next line combined with AsNoTracking would be efficient, but i dont trust EFCore.
-                    db.Entry(item).Property(nameof(item.UploadedAt)).IsModified = true;
-                }
-
-                // Prepare and upload collection of histories.
-                var json = JsonConvert.SerializeObject(batch);
-                var result = await Request.PostTable(ApiUrl, tableName, json, creds).ConfigureAwait(false);
-                if (result != null)
-                {
-                    //abort, non-null responses are descriptions of errors
-                    return result;
-                }
-            }
-
-            // Upload success, we can save the changes to UploadedAt
-            await Task.Run(() => db.SaveChanges()).ConfigureAwait(true);
-
-            // Untrack the items so they cant clash with the next part.
-            foreach (var tracked in uploadSet)
-            {
-                db.Entry(tracked).State = EntityState.Detached;
-            }
-
-            // Now we need to upload anything that could have been uploaded after having its UploadedAt set.
-            // We can recognise these because the UploadedAt will be newer than the timestamp.
-
-            //TRACKED.
-            var uploadedButMayBeChangedSet =
-                db.SensorsHistory.AsTracking().Where(sh => sh.TimeStamp > sh.UploadedAt).ToList();
-
-            var haveChanged = new List<SensorHistory>();
-
-            foreach (var uploadedButMayBeChanged in uploadedButMayBeChangedSet)
-            {
-                // Detect local modifications by looking for datapoint timestamps newer than UploadedAt.
-                uploadedButMayBeChanged.DeserialiseData();
-                if (uploadedButMayBeChanged.Data.Any(d => d.TimeStamp > uploadedButMayBeChanged.UploadedAt))
-                {
-                    var updatedTime = DateTimeOffset.Now;
-                    // Get the new part by clicing after the UploadAt date.
-                    var hasChanged = uploadedButMayBeChanged.Slice(uploadedButMayBeChanged.UploadedAt);
-
-                    haveChanged.Add(hasChanged);
-
-                    uploadedButMayBeChanged.UploadedAt = updatedTime;
-                }
-            }
-
-
-            var jsonOfLocallyChanged = JsonConvert.SerializeObject(haveChanged);
-            Debug.WriteLine($"Uploading {haveChanged.Count} histories.");
-            var uploadLocallyChangedResult = await Request.PostTable(ApiUrl, tableName, jsonOfLocallyChanged, creds);
-            if (uploadLocallyChangedResult != null)
-            {
-                //abort
-                return uploadLocallyChangedResult;
-            }
-
-            // Upload success, we can save the changes to UploadedAt
-            await Task.Run(() => db.SaveChanges()).ConfigureAwait(true);
-
-            // Untracking the items isn't necessary because this is the last part of Sync, context to be disposed.
-            // However its much safer to do so incase someone updates Sync with new stuff.
-            foreach (var tracked in uploadedButMayBeChangedSet)
-            {
-                db.Entry(tracked).State = EntityState.Detached;
-            }
-            // Return success.
-
-            return null;
+            throw new NotImplementedException();
         }
 
         private async Task<string> PostRequestHistoryAsyncQueued(QbDbContext db)
@@ -697,10 +444,6 @@
             responses.Add(
                 await
                     PostRequestTableWhereUpdatedAsync(db.Sensors, nameof(db.Sensors), lastDatabasePost, creds)
-                        .ConfigureAwait(false));
-            responses.Add(
-                await
-                    PostRequestTableWhereUpdatedAsync(db.Relays, nameof(db.Relays), lastDatabasePost, creds)
                         .ConfigureAwait(false));
 
 

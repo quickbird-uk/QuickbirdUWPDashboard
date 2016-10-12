@@ -105,6 +105,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Data\Local.cs" />
     <Compile Include="Data\Sync.cs" />
     <Compile Include="Internet\Creds.cs" />
     <Compile Include="Internet\Request.cs" />
