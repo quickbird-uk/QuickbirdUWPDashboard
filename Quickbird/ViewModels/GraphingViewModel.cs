@@ -6,10 +6,9 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.UI.Xaml;
-    using Qb.Poco.User;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
+    using Data;
     using MoreLinq;
+    using Qb.Poco.User;
     using Syncfusion.UI.Xaml.Charts;
     using Util;
 
@@ -18,26 +17,25 @@
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly Action<string> _loadCacheAction;
 
-        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<IEnumerable<Messenger.SensorReading>> _recieveDatapointAction;
-
-        /// <summary>Cached Data, of all cropCycles</summary>
-        private List<CroprunTuple> _cache = new List<CroprunTuple>();
-
-        private TimeSpan _chosenGraphPeriod;
-        private readonly MainDbContext _db;
-
         //Other stuff
         //Hour Long Buffer
         //Histrotical Buffer
 
         private readonly Action _pauseChart;
 
-        private bool _realtimeMode;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly Action<IEnumerable<Messenger.SensorReading>> _recieveDatapointAction;
 
         //Probaablyt don't need this
         private readonly DispatcherTimer _refresher = null;
         private readonly Action _resumeChart;
+
+        /// <summary>Cached Data, of all cropCycles</summary>
+        private List<CroprunTuple> _cache = new List<CroprunTuple>();
+
+        private TimeSpan _chosenGraphPeriod;
+
+        private bool _realtimeMode;
 
         /* This data applies to the chosen crop cycle only*/
         private CropCycle _selectedCropCycle;
@@ -45,11 +43,10 @@
         private DateTimeOffset? _selectedEndTime;
         private IEnumerable<IGrouping<string, SensorTuple>> _sensors;
 
-        public GraphingViewModel(Action PauseChart, Action ResumeChart)
+        public GraphingViewModel(Action pauseChart, Action resumeChart)
         {
-            _db = new MainDbContext();
-            _pauseChart = PauseChart;
-            _resumeChart = ResumeChart;
+            _pauseChart = pauseChart;
+            _resumeChart = resumeChart;
 
             _recieveDatapointAction = ReceiveDatapoint;
             _loadCacheAction = LoadCache;
@@ -134,9 +131,7 @@
                 OnPropertyChanged("HistControls");
                 OnPropertyChanged("TimeLabel");
                 foreach (var tuple in SensorsToGraph)
-                {
                     tuple.RealtimeMode = _realtimeMode;
-                }
             }
         }
 
@@ -152,13 +147,9 @@
                     SensorsToGraph.Clear();
 
                     if (_selectedCropCycle.EndDate == null)
-                    {
                         LiveCropRun = true;
-                    }
                     else
-                    {
                         LiveCropRun = false;
-                    }
 
                     var sensors = _cache.First(c => c.cropCycle.Id == value.Id).sensors;
 
@@ -205,13 +196,9 @@
                 if (_realtimeMode)
                     return "hh:mm:ss";
                 if (_chosenGraphPeriod < TimeSpan.FromHours(48))
-                {
                     return "t";
-                }
                 if (_chosenGraphPeriod < TimeSpan.FromDays(15))
-                {
                     return "ddd H:mm";
-                }
                 return "M";
             }
         }
@@ -220,7 +207,6 @@
         {
             Messenger.Instance.NewSensorDataPoint.Unsubscribe(_recieveDatapointAction);
             _refresher?.Stop();
-            _db?.Dispose();
         }
 
         public override void Kill() { Dispose(); }
@@ -239,9 +225,8 @@
                 {
                     var tuple = SensorsToGraph.FirstOrDefault(stup => stup.sensor.Id == reading.SensorId);
                     if (tuple != null)
-                    {
-                        if (tuple.hourlyDatapoints.Count == 0 ||
-                            tuple.hourlyDatapoints.LastOrDefault().timestamp < reading.Timestamp.LocalDateTime)
+                        if ((tuple.hourlyDatapoints.Count == 0) ||
+                            (tuple.hourlyDatapoints.LastOrDefault().Timestamp < reading.Timestamp.LocalDateTime))
                         {
                             Added = true;
                             var datapoint = new BindableDatapoint(reading.Timestamp, reading.Value);
@@ -251,7 +236,6 @@
                             if (tuple.hourlyDatapoints.Count > 3000)
                                 tuple.hourlyDatapoints.RemoveAt(0);
                         }
-                    }
                 }
                 if (Added)
                 {
@@ -259,10 +243,10 @@
                     if (tupleForChartUpdate?.RealtimeMode ?? false)
                     {
                         tupleForChartUpdate.Axis.Minimum =
-                            tupleForChartUpdate.hourlyDatapoints.FirstOrDefault()?.timestamp ??
+                            tupleForChartUpdate.hourlyDatapoints.FirstOrDefault()?.Timestamp ??
                             DateTime.Now.AddHours(-1);
                         tupleForChartUpdate.Axis.Maximum =
-                            tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.timestamp ?? DateTime.Now;
+                            tupleForChartUpdate.hourlyDatapoints.LastOrDefault()?.Timestamp ?? DateTime.Now;
                     }
                 }
 
@@ -275,16 +259,9 @@
         {
             var dbFetchTask = Task.Run(() =>
             {
-                var dbLocationsRet =
-                    _db.Locations.Include(loc => loc.CropCycles).Include(loc => loc.Devices).AsNoTracking().ToList();
+                var dbLocationsRet = Local.GetLocationsWithCropCyclesAndDevices();
 
-                var sensorListRet =
-                    _db.Sensors.Include(sen => sen.SensorType)
-                        .Include(sen => sen.SensorType.Placement)
-                        .Include(sen => sen.SensorType.Parameter)
-                        .Include(sen => sen.SensorType.Subsystem)
-                        .AsNoTracking()
-                        .ToList(); //Need to edit
+                var sensorListRet = Local.GetSensorsWithPlacementsParametersAndSubsystems();
 
                 return new Tuple<List<Location>, List<Sensor>>(dbLocationsRet, sensorListRet);
             });
@@ -303,32 +280,21 @@
 
                 var deviceIDs = crop.Location.Devices.Select(dev => dev.Id).ToList();
                 foreach (var sensor in sensorList)
-                {
                     if (deviceIDs.Contains(sensor.DeviceId))
-                    {
                         cacheItem.sensors.Add(sensor);
-                    }
-                }
 
                 cache.Add(cacheItem);
             }
             if (_selectedCropCycle == null)
-            {
                 _selectedCropCycle = cache.FirstOrDefault().cropCycle;
-            }
             Cache = cache;
         }
 
         private async void LoadHistoricalData()
         {
             var endDate = _selectedCropCycle.EndDate?.AddDays(1) ?? DateTimeOffset.Now.AddDays(1);
-            var sensorsHistories =
-                await
-                    _db.SensorsHistory.Where(
-                        sh =>
-                            sh.LocationId == _selectedCropCycle.LocationId &&
-                            sh.TimeStamp > _selectedCropCycle.StartDate && sh.TimeStamp < endDate).ToListAsync();
-
+            var sensorsHistories = Local.GetSensorHistoriesBetween(_selectedCropCycle.LocationId,
+                _selectedCropCycle.StartDate, endDate);
 
             Parallel.ForEach(SensorsToGraph, tuple =>
             {
@@ -336,18 +302,16 @@
                 var datapointCollection = new List<BindableDatapoint>();
                 foreach (var sh in shCollection)
                 {
-                    sh.DeserialiseData();
-                    foreach (var dp in sh.Data)
-                    {
-                        if (dp.TimeStamp > _selectedCropCycle.StartDate)
+                    var data = SensorDatapoint.Deserialise(sh.RawData);
+                    foreach (var dp in data)
+                        if (dp.Timestamp > _selectedCropCycle.StartDate)
                             // becuase datapoints are packed into days, we must avoid datapoitns that astarted before the cropRun
                         {
                             var bindable = new BindableDatapoint(dp);
                             datapointCollection.Add(bindable);
                         }
-                    }
                 }
-                var ordered = datapointCollection.OrderBy(dp => dp.timestamp);
+                var ordered = datapointCollection.OrderBy(dp => dp.Timestamp);
 
 
                 tuple.historicalDatapoints = new ObservableCollection<BindableDatapoint>(ordered);
@@ -395,8 +359,8 @@
                     {
                         var source = _realtimeMode ? hourlyDatapoints : historicalDatapoints;
                         ChartSeries.ItemsSource = source;
-                        Axis.Minimum = source.FirstOrDefault()?.timestamp ?? DateTime.Now.AddHours(-1);
-                        Axis.Maximum = source.LastOrDefault()?.timestamp ?? DateTime.Now;
+                        Axis.Minimum = source.FirstOrDefault()?.Timestamp ?? DateTime.Now.AddHours(-1);
+                        Axis.Maximum = source.LastOrDefault()?.Timestamp ?? DateTime.Now;
                     }
                 }
             }
@@ -440,18 +404,18 @@
         {
             public BindableDatapoint(SensorDatapoint datapoint)
             {
-                timestamp = datapoint.TimeStamp.LocalDateTime;
-                value = datapoint.Value;
+                Timestamp = datapoint.Timestamp.LocalDateTime;
+                Value = datapoint.Value;
             }
 
             public BindableDatapoint(DateTimeOffset inTimestamp, double inValue)
             {
-                timestamp = inTimestamp.LocalDateTime;
-                value = inValue;
+                Timestamp = inTimestamp.LocalDateTime;
+                Value = inValue;
             }
 
-            public DateTime timestamp { get; set; }
-            public double value { get; set; }
+            public DateTime Timestamp { get; set; }
+            public double Value { get; set; }
         }
     }
 }
