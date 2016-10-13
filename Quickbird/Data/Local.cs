@@ -72,5 +72,17 @@
                 return sensorTypes;
             }
         }
+
+        public static void AddAndUpdateHistories(List<SensorHistory> newHistories, List<SensorHistory> updatedHistories)
+        {
+            // TODO: Queue this to avoid conflicts with other writes.
+
+            using (var db = new QbDbContext())
+            {
+                db.SensorsHistory.AddRange(newHistories);
+                db.SensorsHistory.UpdateRange(updatedHistories);
+                db.SaveChanges();
+            }
+        }
     }
 }
