@@ -8,11 +8,45 @@
     using Qb.Poco.Global;
     using Qb.Poco.User;
 
-    internal class Local
+    internal static class Local
     {
-        public static void AddDeviceWithItsLocationAndSensors(Device device) { throw new NotImplementedException(); }
-        public static List<Device> GetDevicesWithSensors() { throw new NotImplementedException(); }
-        public static List<Location> GetLocationsWithCropCyclesAndDevices() { throw new NotImplementedException(); }
+        public static void AddAndUpdateHistories(List<SensorHistory> newHistories, List<SensorHistory> updatedHistories)
+        {
+            using (var db = new QbDbContext())
+            {
+                db.SensorsHistory.AddRange(newHistories);
+                db.SensorsHistory.UpdateRange(updatedHistories);
+                db.SaveChanges();
+            }
+        }
+
+        public static void AddDeviceWithItsLocationAndSensors(Device device)
+        {
+            using (var db = new QbDbContext())
+            {
+                db.Locations.Add(device.Location);
+                db.Sensors.AddRange(device.Sensors);
+                db.Devices.Add(device); // TODO: Find out if this works using only this line (nav properties exist).
+            }
+        }
+
+        public static List<Device> GetDevicesWithSensors()
+        {
+            using (var db = new QbDbContext())
+            {
+                var devices = db.Devices.Include(d => d.Sensors).AsNoTracking().ToList();
+                return devices;
+            }
+        }
+
+        public static List<Location> GetLocationsWithCropCyclesAndDevices()
+        {
+            using (var db = new QbDbContext())
+            {
+                var locations = db.Locations.Include(l => l.CropCycles).Include(l => l.Devices).AsNoTracking().ToList();
+                return locations;
+            }
+        }
 
         /// <summary>May retrieve more data than asked for, does not splice.</summary>
         /// <param name="locationId"></param>
@@ -49,16 +83,6 @@
             }
         }
 
-        public static IEnumerable<SensorHistory> GetTodaysSensorHistories()
-        {
-            using (var db = new QbDbContext())
-            {
-                var utcNow = DateTime.UtcNow;
-                var histories = db.SensorsHistory.Where(sh => sh.UtcDate < utcNow).AsNoTracking().ToList();
-                return histories;
-            }
-        }
-
         public static List<SensorType> GetSensorTypesWithParametersPlacementsAndSubsystems()
         {
             using (var db = new QbDbContext())
@@ -73,15 +97,13 @@
             }
         }
 
-        public static void AddAndUpdateHistories(List<SensorHistory> newHistories, List<SensorHistory> updatedHistories)
+        public static IEnumerable<SensorHistory> GetTodaysSensorHistories()
         {
-            // TODO: Queue this to avoid conflicts with other writes.
-
             using (var db = new QbDbContext())
             {
-                db.SensorsHistory.AddRange(newHistories);
-                db.SensorsHistory.UpdateRange(updatedHistories);
-                db.SaveChanges();
+                var utcNow = DateTime.UtcNow;
+                var histories = db.SensorsHistory.Where(sh => sh.UtcDate < utcNow).AsNoTracking().ToList();
+                return histories;
             }
         }
     }
