@@ -27,6 +27,7 @@
                 db.Locations.Add(device.Location);
                 db.Sensors.AddRange(device.Sensors);
                 db.Devices.Add(device); // TODO: Find out if this works using only this line (nav properties exist).
+                db.SaveChanges();
             }
         }
 
@@ -104,6 +105,24 @@
                 var utcNow = DateTime.UtcNow;
                 var histories = db.SensorsHistory.Where(sh => sh.UtcDate < utcNow).AsNoTracking().ToList();
                 return histories;
+            }
+        }
+
+        public static void AddCropCycle(CropCycle cropCycle)
+        {
+            using (var db = new QbDbContext())
+            {
+                db.CropCycles.Add(cropCycle);
+                db.SaveChanges();
+            }
+        }
+
+        public static List<CropType> GetCropTypes()
+        {
+            using (var db = new QbDbContext())
+            {
+                var ct = db.CropTypes.AsNoTracking().ToList();
+                return ct;
             }
         }
     }
