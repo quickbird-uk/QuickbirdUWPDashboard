@@ -4,8 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
+    using Data;
     using Qb.Poco.Global;
     using Qb.Poco.User;
     using Util;
@@ -117,15 +116,11 @@
                 UpdatedAt = DateTimeOffset.Now,
                 StartDate = DateTimeOffset.Now,
                 EndDate = null,
-                Deleted = false,
+                Deleted = false
             };
 
-            using (var db = new MainDbContext())
-            {
-                db.CropCycles.Add(cropCycle);
+            Local.AddCropCycle(cropCycle);
 
-                await db.SaveChangesAsync();
-            }
             await Messenger.Instance.TablesChanged.Invoke(string.Empty);
         }
 
@@ -135,46 +130,41 @@
 
         /// <summary>Update Data event, runs every time</summary>
         /// <param name="something"></param>
-        private async void UpdateData(string something)
+        private void UpdateData(string something)
         {
-            using (var db = new MainDbContext())
+            var places = Local.GetLocationsWithCropCyclesAndDevices().Where(loc => loc.Devices.Count > 0);
+
+            var cropTypeCache = Local.GetCropTypes();
+
+            foreach (var cropType in cropTypeCache)
+                if (_cropTypeCache.Any(ct => ct.Key.Equals(cropType.Name.ToLower())) == false)
+                {
+                    var pair = new KeyValuePair<string, CropType>(cropType.Name.ToLower(), cropType);
+                    _cropTypeCache.Add(pair);
+                }
+
+            foreach (var loc in places)
             {
-                var places =
-                    await db.Locations.Where(loc => loc.Devices.Count > 0).Include(loc => loc.CropCycles).ToListAsync();
-
-                var cropTypeCache = await db.CropTypes.ToListAsync();
-                foreach (var cropType in cropTypeCache)
+                var tuple = PlaceList.FirstOrDefault(ct => ct.Location.Equals(loc));
+                if (tuple == null)
                 {
-                    if (_cropTypeCache.Any(ct => ct.Key.Equals(cropType.Name.ToLower())) == false)
-                    {
-                        var pair = new KeyValuePair<string, CropType>(cropType.Name.ToLower(), cropType);
-                        _cropTypeCache.Add(pair);
-                    }
+                    tuple = new PlaceTuple {Location = loc};
+                    PlaceList.Add(tuple);
                 }
 
-                foreach (var loc in places)
+                var runningCropCycle = loc.CropCycles.FirstOrDefault(cc => cc.EndDate == null);
+                if (runningCropCycle != null)
                 {
-                    var tuple = PlaceList.FirstOrDefault(ct => ct.Location.Equals(loc));
-                    if (tuple == null)
-                    {
-                        tuple = new PlaceTuple {Location = loc};
-                        PlaceList.Add(tuple);
-                    }
-
-                    var runningCropCycle = loc.CropCycles.FirstOrDefault(cc => cc.EndDate == null);
-                    if (runningCropCycle != null)
-                    {
-                        tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName;
-                        tuple.IsVacant = false;
-                    }
-                    else
-                    {
-                        tuple.DisplayName = loc.Name + " - Avaliable";
-                        tuple.IsVacant = true;
-                    }
+                    tuple.DisplayName = loc.Name + " - already monitoring " + runningCropCycle.CropTypeName;
+                    tuple.IsVacant = false;
                 }
-                OnPropertyChanged(nameof(PlaceList));
+                else
+                {
+                    tuple.DisplayName = loc.Name + " - Avaliable";
+                    tuple.IsVacant = true;
+                }
             }
+            OnPropertyChanged(nameof(PlaceList));
         }
 
 
