@@ -292,7 +292,7 @@
 
         private async void LoadHistoricalData()
         {
-            var endDate = _selectedCropCycle.EndDate?.AddDays(1) ?? DateTimeOffset.Now.AddDays(1);
+            var endDate = _selectedCropCycle.EndDate ?? DateTimeOffset.Now;
             var sensorsHistories = Local.GetSensorHistoriesBetween(_selectedCropCycle.LocationId,
                 _selectedCropCycle.StartDate, endDate);
 
