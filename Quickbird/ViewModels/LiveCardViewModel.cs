@@ -5,6 +5,7 @@
     using System.Linq;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
+    using Data;
     using MoreLinq;
     using Qb.Poco.User;
     using Util;
@@ -55,8 +56,8 @@
             Id = poco.Id;
             Placement = poco.SensorType.Placement.Name;
             PlacementId = poco.SensorType.PlacementId;
-            ParameterID = poco.SensorType.ParameterId;
-            SensorTypeID = poco.SensorTypeId;
+            ParameterId = poco.SensorType.ParameterId;
+            SensorTypeId = poco.SensorTypeId;
 
             _dispatcher = ((App) Application.Current).Dispatcher;
             if (_dispatcher == null)
@@ -84,7 +85,8 @@
             Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
 
-            var senVals = DatabaseHelper.QueryMostRecentSensorValue(poco);
+            var senVals = Local.QueryMostRecentSensorValue(poco);
+
             if (null != senVals)
             {
                 UpdateValueAndAgeStatusIfNew(senVals.Item1, senVals.Item2);
@@ -137,7 +139,7 @@
             }
         }
 
-        public long ParameterID { get; }
+        public long ParameterId { get; }
 
         public string Placement { get; }
 
@@ -174,7 +176,7 @@
             }
         }
 
-        public long SensorTypeID { get; }
+        public long SensorTypeId { get; }
 
         public string SettingSideVisible
         {

@@ -3,7 +3,6 @@
     using System;
     using Windows.UI.Xaml.Controls;
     using Qb.Poco.User;
-    using Util;
     using Views;
 
     public class CropViewModel : ViewModelBase
@@ -129,7 +128,7 @@
             _syncing = true;
             SyncButtonEnabled = false;
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await Data.Sync.Instance.Update();
 
             _syncing = false;
             if (_isInternetAvailable)

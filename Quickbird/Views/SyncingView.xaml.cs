@@ -5,8 +5,7 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
+    using Data;
     using Util;
 
     /// <summary>Forces the user to wait while a sync is performed, then navigates to the shell.</summary>
@@ -21,12 +20,10 @@
             //Hold this vire open for a minimum time to avoid flicker on fast syncs.
             var x = Task.Run(() => Task.Delay(TimeSpan.FromSeconds(5)));
 
-            using (var db = new MainDbContext())
-            {
-                db.Database.Migrate();
-            }
+            Local.Migrate();
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await Sync.Instance.Update();
+
             await x;
 
             // Now that all the data has been safely synced it is ok to check for a remote sign-out.

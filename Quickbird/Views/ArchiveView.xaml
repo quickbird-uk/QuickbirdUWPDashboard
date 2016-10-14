@@ -156,14 +156,7 @@
                            HorizontalAlignment="Center"
                            Style="{StaticResource SubtitleTextBlockStyle}" />
             </StackPanel>
-            <StackPanel Orientation="Vertical" Grid.Column="1" Grid.Row="1">
-                <TextBlock Text="of Variety:"
-                           HorizontalAlignment="Center" Margin="20, 20, 20, 0"
-                           Style="{StaticResource BodyTextBlockStyle}" />
-                <TextBlock Text="{x:Bind ViewModel.Variety, Mode=OneWay}"
-                           HorizontalAlignment="Center"
-                           Style="{StaticResource SubtitleTextBlockStyle}" />
-            </StackPanel>
+            <StackPanel Orientation="Vertical" Grid.Column="1" Grid.Row="1"/>
             <StackPanel Orientation="Vertical" Grid.Column="2" Grid.Row="1">
                 <TextBlock Text="Total Yield was:"
                            HorizontalAlignment="Center" Margin="20, 20, 20, 0"

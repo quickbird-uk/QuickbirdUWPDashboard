@@ -110,12 +110,12 @@
                     }
                 }
             }
-            //WE chose these two sensors for plantID's. The system we have does not have a good selection right now 
+            //WE chose these two sensors for plantID's. The system we have does not have a good selection right now
             var mainIds = new long[] {8, 13, 19, 4, 16};
             var ambientIds = new long[] {5, 6, 11};
 
-            var mainItems = Cards.Where(c => mainIds.Contains(c.SensorTypeID));
-            var ambientItems = Cards.Where(c => ambientIds.Contains(c.SensorTypeID));
+            var mainItems = Cards.Where(c => mainIds.Contains(c.SensorTypeId));
+            var ambientItems = Cards.Where(c => ambientIds.Contains(c.SensorTypeId));
 
             foreach (var item in mainItems)
             {

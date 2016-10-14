@@ -175,6 +175,38 @@
             }
         }
 
+        public static void Migrate()
+        {
+            using (var db = new QbDbContext())
+            {
+                db.Database.Migrate();
+            }
+        }
+
+        /// <summary>Gets the most recent sensor value and timestamp from the database.</summary>
+        /// <param name="sensor">Sensor POCO object to get value for.</param>
+        /// <returns>Null if fails to find, othewise the most recent value and its timestamp.</returns>
+        public static Tuple<double, DateTimeOffset> QueryMostRecentSensorValue(Sensor sensor)
+        {
+            using (var db = new QbDbContext())
+            {
+                var newestHistoryForSensor =
+                    db.SensorsHistory.AsNoTracking()
+                        .Where(sh => sh.SensorId == sensor.Id)
+                        .OrderByDescending(sh => sh.UtcDate)
+                        .FirstOrDefault();
+
+                if (null == newestHistoryForSensor) return null;
+
+                var data = SensorDatapoint.Deserialise(newestHistoryForSensor.RawData);
+                var newestDatapoint = data.OrderByDescending(d => d.Timestamp).FirstOrDefault();
+
+                if (null == newestDatapoint) return null;
+
+                return Tuple.Create(newestDatapoint.Value, newestDatapoint.Timestamp);
+            }
+        }
+
         public static void UpdateCurrentCropCycle(Guid cropCycleId, double yieldToAdd, bool closeCropRun)
         {
             using (var db = new QbDbContext())

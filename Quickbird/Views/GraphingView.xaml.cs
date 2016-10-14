@@ -50,7 +50,7 @@
         {
             ChartSeries chartSeries;
             //Water level sensor
-            if (tuple.sensor.SensorTypeID == 19)
+            if (tuple.sensor.SensorTypeId == 19)
             {
                 var series = new AreaSeries();
                 series.Interior = new SolidColorBrush {Color = Colors.LightBlue, Opacity = 0.5};
@@ -77,16 +77,16 @@
             chartSeries.IsSeriesVisible = false;
 
             //This is a string shortener! nothing else
-            var placementNameLength = tuple.sensor.SensorType.Place.Name.Length > 6
+            var placementNameLength = tuple.sensor.SensorType.Placement.Name.Length > 6
                 ? 6
-                : tuple.sensor.SensorType.Place.Name.Length;
-            var locationString = tuple.sensor.SensorType.Place.Name.Substring(0, placementNameLength);
-            var spaceLocation = tuple.sensor.SensorType.Place.Name.IndexOf(' ');
-            if (spaceLocation > 0 && tuple.sensor.SensorType.Place.Name.Length > spaceLocation + 1)
-                locationString += tuple.sensor.SensorType.Place.Name.Substring(spaceLocation, 2) + ".";
+                : tuple.sensor.SensorType.Placement.Name.Length;
+            var locationString = tuple.sensor.SensorType.Placement.Name.Substring(0, placementNameLength);
+            var spaceLocation = tuple.sensor.SensorType.Placement.Name.IndexOf(' ');
+            if (spaceLocation > 0 && tuple.sensor.SensorType.Placement.Name.Length > spaceLocation + 1)
+                locationString += tuple.sensor.SensorType.Placement.Name.Substring(spaceLocation, 2) + ".";
 
 
-            chartSeries.Label = tuple.sensor.SensorType.Param.Name + ": " + locationString;
+            chartSeries.Label = tuple.sensor.SensorType.Parameter.Name + ": " + locationString;
 
             ChartView.Series.Add(chartSeries);
         }
