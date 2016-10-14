@@ -20,6 +20,15 @@
             }
         }
 
+        public static void AddCropCycle(CropCycle cropCycle)
+        {
+            using (var db = new QbDbContext())
+            {
+                db.CropCycles.Add(cropCycle);
+                db.SaveChanges();
+            }
+        }
+
         public static void AddDeviceWithItsLocationAndSensors(Device device)
         {
             using (var db = new QbDbContext())
@@ -28,6 +37,24 @@
                 db.Sensors.AddRange(device.Sensors);
                 db.Devices.Add(device); // TODO: Find out if this works using only this line (nav properties exist).
                 db.SaveChanges();
+            }
+        }
+
+        public static CropCycle GetCropCycle(Guid cropCycleId)
+        {
+            using (var db = new QbDbContext())
+            {
+                var cropCycle = db.CropCycles.First(cc => cc.Id == cropCycleId);
+                return cropCycle;
+            }
+        }
+
+        public static List<CropType> GetCropTypes()
+        {
+            using (var db = new QbDbContext())
+            {
+                var ct = db.CropTypes.AsNoTracking().ToList();
+                return ct;
             }
         }
 
@@ -108,21 +135,16 @@
             }
         }
 
-        public static void AddCropCycle(CropCycle cropCycle)
+        public static void UpdateCurrentCropCycle(Guid cropCycleId, double yieldToAdd, bool closeCropRun)
         {
             using (var db = new QbDbContext())
             {
-                db.CropCycles.Add(cropCycle);
+                var currentCropCycle = db.CropCycles.First(cc => cc.Id == cropCycleId);
+                currentCropCycle.Yield += yieldToAdd;
+                var now = DateTimeOffset.Now;
+                if (closeCropRun) currentCropCycle.EndDate = now;
+                currentCropCycle.UpdatedAt = now;
                 db.SaveChanges();
-            }
-        }
-
-        public static List<CropType> GetCropTypes()
-        {
-            using (var db = new QbDbContext())
-            {
-                var ct = db.CropTypes.AsNoTracking().ToList();
-                return ct;
             }
         }
     }

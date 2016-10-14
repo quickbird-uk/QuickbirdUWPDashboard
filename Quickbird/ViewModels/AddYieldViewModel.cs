@@ -5,9 +5,7 @@
     using Windows.UI;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Media;
-    using Qb.Poco.User;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
+    using Data;
     using Util;
 
     public class AddYieldViewModel : ViewModelBase
@@ -99,13 +97,13 @@
                 }
 
                 //Only take action if something has changed!
-                if (success != ValidEntry && success)
+                if ((success != ValidEntry) && success)
                 {
                     ValidEntry = success;
                     ErrorVisibility = Visibility.Collapsed;
                     TextBoxColour = new SolidColorBrush {Color = Colors.LightCyan};
                 }
-                else if (success != ValidEntry && success == false)
+                else if ((success != ValidEntry) && (success == false))
                 {
                     ValidEntry = success;
                     ErrorVisibility = Visibility.Visible;
@@ -130,31 +128,19 @@
         /// <summary>Runs when the user licks the button</summary>
         public async Task SaveCropRun()
         {
-            using (var db = new MainDbContext())
-            {
-                var cropCycle = await db.CropCycles.FirstAsync(cc => cc.Id == _cropCycleId);
-                ValidEntry = false;
-                IsLoading = true;
-                cropCycle.Yield += _userEnteredAmount;
-                if (_closeCropRun)
-                    cropCycle.EndDate = DateTimeOffset.Now;
-                cropCycle.UpdatedAt = DateTimeOffset.Now;
-                await db.SaveChangesAsync();
-                _updateAction = null;
-                await Messenger.Instance.TablesChanged.Invoke(string.Empty);
-                IsLoading = false;
-            }
+            ValidEntry = false;
+            IsLoading = true;
+            Local.UpdateCurrentCropCycle(_cropCycleId, _userEnteredAmount, _closeCropRun);
+            _updateAction = null;
+            await Messenger.Instance.TablesChanged.Invoke(string.Empty);
+            IsLoading = false;
         }
 
         /// <summary>Attached to tables changed event</summary>
         /// <param name="tablesChangedPlaceholderVar">ignored</param>
-        private async void UpdateData(string tablesChangedPlaceholderVar)
+        private void UpdateData(string tablesChangedPlaceholderVar)
         {
-            CropCycle cropCycle;
-            using (var db = new MainDbContext())
-            {
-                cropCycle = await db.CropCycles.FirstAsync(cc => cc.Id == _cropCycleId);
-            }
+            var cropCycle = Local.GetCropCycle(_cropCycleId);
             if (cropCycle.EndDate != null)
             {
                 //TODO Close this frame bacuse the crop cycle is already closed!
