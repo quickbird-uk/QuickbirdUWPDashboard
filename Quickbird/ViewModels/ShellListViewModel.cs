@@ -1,7 +1,6 @@
 ﻿namespace Quickbird.ViewModels
 {
     using System;
-    using System.Linq;
     using Qb.Poco.User;
 
     public class ShellListViewModel : ViewModelBase
@@ -14,13 +13,11 @@
         private CropViewModel _cropViewModel;
         private string _iconLetter;
 
-        private bool _isAlerted;
-
         private bool _isSelected;
 
         public ShellListViewModel(CropCycle cropCycle)
         {
-            CropRunId = cropCycle.ID;
+            CropRunId = cropCycle.Id;
             CropViewModel = new CropViewModel(cropCycle);
             Update(cropCycle);
         }
@@ -74,18 +71,6 @@
                 OnPropertyChanged();
             }
         }
-
-        public bool IsAlerted
-        {
-            get { return _isAlerted; }
-            set
-            {
-                if (value == _isAlerted) return;
-                _isAlerted = value;
-                OnPropertyChanged();
-            }
-        }
-
         public bool IsSelected
         {
             get { return _isSelected; }
@@ -105,8 +90,6 @@
             BoxName = cropCycle.Location.Name;
             IconLetter = CropName.Substring(0, 1);
             CropViewModel.Update(cropCycle);
-
-            IsAlerted = cropCycle.Location.Devices.SelectMany(s => s.Sensors).Any(s => s.Alarmed);
 
             _cropViewModel.Update(cropCycle);
         }
