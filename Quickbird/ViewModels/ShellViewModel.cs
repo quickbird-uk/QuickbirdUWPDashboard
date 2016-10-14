@@ -8,6 +8,7 @@
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
+    using Data;
     using Internet;
     using Util;
     using Views;
@@ -216,7 +217,7 @@
             // Disables the sync button in every CropView (there is one for each crop).
             await SetSyncEnabled(false);
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await Sync.Instance.Update();
 
             await SetSyncEnabled(true);
 
@@ -264,13 +265,13 @@
         {
             Debug.WriteLine("Shell update triggered");
 
-            var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsyncQueued();
+            var cropCycles = await Local.GetDataTree();
 
             // Remove items that no longer exist.
             var now = DateTimeOffset.Now;
             var validIds =
                 cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) > now)
-                    .Select(cc => cc.ID)
+                    .Select(cc => cc.Id)
                     .ToList();
             var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
             foreach (var invalidItem in toRemove)
@@ -281,9 +282,9 @@
             // Add new items, update existing.
             foreach (var cropCycle in cropCycles)
             {
-                if (!validIds.Contains(cropCycle.ID)) continue;
+                if (!validIds.Contains(cropCycle.Id)) continue;
 
-                var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.ID);
+                var item = ShellListViewModels.FirstOrDefault(s => s.CropRunId == cropCycle.Id);
                 if (null == item)
                 {
                     ShellListViewModels.Add(new ShellListViewModel(cropCycle));

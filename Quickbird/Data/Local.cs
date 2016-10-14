@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Qb.Poco.Global;
@@ -49,6 +50,20 @@
             }
         }
 
+        public static List<CropCycle> GetCropCyclesThatEndedWithLocations()
+        {
+            using (var db = new QbDbContext())
+            {
+                var now = DateTimeOffset.Now;
+                var cropCycles =
+                    db.CropCycles.Where(cc => (cc.EndDate != null) && (cc.EndDate > now))
+                        .Include(cc => cc.Location)
+                        .AsNoTracking()
+                        .ToList();
+                return cropCycles;
+            }
+        }
+
         public static List<CropType> GetCropTypes()
         {
             using (var db = new QbDbContext())
@@ -56,6 +71,31 @@
                 var ct = db.CropTypes.AsNoTracking().ToList();
                 return ct;
             }
+        }
+
+        public static async Task<List<CropCycle>> GetDataTree()
+        {
+            return await Task.Run(() =>
+            {
+                using (var db = new QbDbContext())
+                {
+                    return
+                        db.CropCycles.AsNoTracking()
+                            .Include(cc => cc.Location)
+                            .Include(cc => cc.CropType)
+                            .Include(cc => cc.Location)
+                            .ThenInclude(l => l.Devices)
+                            .ThenInclude(d => d.Sensors)
+                            .ThenInclude(s => s.SensorType)
+                            .ThenInclude(st => st.Parameter)
+                            .Include(cc => cc.Location)
+                            .ThenInclude(l => l.Devices)
+                            .ThenInclude(d => d.Sensors)
+                            .ThenInclude(s => s.SensorType)
+                            .ThenInclude(st => st.Placement)
+                            .ToList();
+                }
+            });
         }
 
         public static List<Device> GetDevicesWithSensors()
@@ -145,20 +185,6 @@
                 if (closeCropRun) currentCropCycle.EndDate = now;
                 currentCropCycle.UpdatedAt = now;
                 db.SaveChanges();
-            }
-        }
-
-        public static List<CropCycle> GetCropCyclesThatEndedWithLocations()
-        {
-            using (var db = new QbDbContext())
-            {
-                var now = DateTimeOffset.Now;
-                var cropCycles =
-                    db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate > now)
-                        .Include(cc => cc.Location)
-                        .AsNoTracking()
-                        .ToList();
-                return cropCycles;
             }
         }
     }
