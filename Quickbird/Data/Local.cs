@@ -44,7 +44,7 @@
         {
             using (var db = new QbDbContext())
             {
-                var cropCycle = db.CropCycles.First(cc => cc.Id == cropCycleId);
+                var cropCycle = db.CropCycles.AsNoTracking().First(cc => cc.Id == cropCycleId);
                 return cropCycle;
             }
         }
@@ -145,6 +145,20 @@
                 if (closeCropRun) currentCropCycle.EndDate = now;
                 currentCropCycle.UpdatedAt = now;
                 db.SaveChanges();
+            }
+        }
+
+        public static List<CropCycle> GetCropCyclesThatEndedWithLocations()
+        {
+            using (var db = new QbDbContext())
+            {
+                var now = DateTimeOffset.Now;
+                var cropCycles =
+                    db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate > now)
+                        .Include(cc => cc.Location)
+                        .AsNoTracking()
+                        .ToList();
+                return cropCycles;
             }
         }
     }

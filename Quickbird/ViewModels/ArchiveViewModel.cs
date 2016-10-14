@@ -4,15 +4,14 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using Data;
     using Qb.Poco.User;
-    using Microsoft.EntityFrameworkCore;
-    using Models;
     using Util;
 
     public class ArchiveViewModel : ViewModelBase
     {
-        private CropCyclePresenter _selectedCropCycle;
         private readonly Action<string> _updateAction;
+        private CropCyclePresenter _selectedCropCycle;
 
         public ArchiveViewModel()
         {
@@ -87,36 +86,25 @@
 
         public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateAction); }
 
-        public async void Update(string input)
+        public void Update(string input)
         {
-            using (var db = new MainDbContext())
-            {
-                var cropCycles =
-                    await
-                        db.CropCycles.Where(cc => cc.EndDate != null && cc.EndDate < DateTimeOffset.Now)
-                            .Include(cc => cc.Location)
-                            .ToListAsync();
+            var cropCycles = Local.GetCropCyclesThatEndedWithLocations();
 
-                for (var i = 0; i < cropCycles.Count; i++)
-                {
-                    var matchFound = false;
-                    for (var m = 0; m < CropCycles.Count; m++)
+            for (var i = 0; i < cropCycles.Count; i++)
+            {
+                var matchFound = false;
+                for (var m = 0; m < CropCycles.Count; m++)
+                    if (cropCycles[i].Id == CropCycles[m].CropCycle.Id)
                     {
-                        if (cropCycles[i].Id == CropCycles[m].CropCycle.Id)
-                        {
-                            matchFound = true;
-                            CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
-                        }
+                        matchFound = true;
+                        CropCycles[m] = new CropCyclePresenter(cropCycles[i]);
                     }
-                    if (matchFound == false)
-                    {
-                        CropCycles.Add(new CropCyclePresenter(cropCycles[i]));
-                    }
-                }
-                CropCycles.OrderBy(cc => cc.StartDate);
-                //Group the Crop Cycles
-                OnPropertyChanged(nameof(CropCycles));
+                if (matchFound == false)
+                    CropCycles.Add(new CropCyclePresenter(cropCycles[i]));
             }
+            CropCycles.OrderBy(cc => cc.StartDate);
+            //Group the Crop Cycles
+            OnPropertyChanged(nameof(CropCycles));
         }
 
         public class CropCyclePresenter
