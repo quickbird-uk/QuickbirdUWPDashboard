@@ -23,10 +23,8 @@
         private readonly ApplicationDataContainer _localSettings;
         private readonly ApplicationDataContainer _roamingSettings;
         private ApplicationDataCompositeValue _combinedCreds;
-        private Guid _credStableSid;
-        private string _credToken;
-        private string _credUserId;
-        private bool _isLoggedIn;
+        private string _token;
+        private string _username;
 
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
@@ -47,59 +45,8 @@
             _localSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
-        /// <summary>The StableSid extracted from within the token.</summary>
-        public Guid CredStableSid
-        {
-            get { return _credStableSid; }
-            private set
-            {
-                if (value == CredStableSid) return;
-                _credStableSid = value;
-                _combinedCreds[nameof(CredStableSid)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>The credentials token setting.</summary>
-        public string CredToken
-        {
-            get { return _credToken; }
-            private set
-            {
-                if (value == CredToken) return;
-                _credToken = value;
-                _combinedCreds[nameof(CredToken)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>The credentials userID setting.</summary>
-        public string CredUserId
-        {
-            get { return _credUserId; }
-            private set
-            {
-                if (value == CredUserId) return;
-                _credUserId = value;
-                _combinedCreds[nameof(CredUserId)] = value;
-                OnPropertyChanged();
-            }
-        }
-
         /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
-
-        public bool IsLoggedIn
-        {
-            get { return _isLoggedIn; }
-            private set
-            {
-                if (value == IsLoggedIn) return;
-                _isLoggedIn = value;
-                _combinedCreds[nameof(IsLoggedIn)] = value;
-                OnPropertyChanged();
-            }
-        }
 
         /// <summary>The last time the db (excluding histories) was successfully updated from the internet.</summary>
         public DateTimeOffset LastSuccessfulGeneralDbGet
@@ -136,6 +83,32 @@
             {
                 if (value == LocalDeviceManagementEnabled) return;
                 Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>The credentials token.</summary>
+        public string Token
+        {
+            get { return _token; }
+            private set
+            {
+                if (value == Token) return;
+                _token = value;
+                _combinedCreds[nameof(Token)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>The user's login username.</summary>
+        public string Username
+        {
+            get { return _username; }
+            private set
+            {
+                if (value == Username) return;
+                _username = value;
+                _combinedCreds[nameof(Username)] = value;
                 OnPropertyChanged();
             }
         }
@@ -187,40 +160,6 @@
                 container.Values.Remove(settingsName);
         }
 
-        /// <summary>Checks that the tokens of local and roaming creds are the same.</summary>
-        /// <returns>True if the cred tokens are the same.</returns>
-        public bool IsLocalCredsSameAsRoamingCreds()
-        {
-            var localToken = CredToken;
-            var roamingToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-
-            return localToken == roamingToken;
-        }
-
-        /// <summary>Replaces the lcoal creds with the roaming creds.</summary>
-        /// <returns>True if replace with valid creds, false if all nulled.</returns>
-        public bool ReplaceLocalWithRoamingCreds()
-        {
-            CredToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-
-            CredUserId = RoamingCombinedCredentials?.ContainsKey(nameof(CredUserId)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredUserId)]
-                : null;
-
-            CredStableSid = RoamingCombinedCredentials?.ContainsKey(nameof(CredStableSid)) ?? false
-                ? (Guid) RoamingCombinedCredentials[nameof(CredStableSid)]
-                : default(Guid);
-
-            IsLoggedIn = null == CredToken;
-
-            CombinedCredentials = _combinedCreds;
-
-            return IsLoggedIn;
-        }
 
         public void ResetDatabaseAndPostSettings()
         {
@@ -228,12 +167,10 @@
             LastSuccessfulGeneralDbPost = default(DateTimeOffset);
         }
 
-        public void SetNewCreds(string token, string userId, Guid stableSid)
+        public void SetNewCreds(string username, string token)
         {
-            CredToken = token;
-            CredUserId = userId;
-            CredStableSid = stableSid;
-            IsLoggedIn = true;
+            Token = token;
+            Username = username;
 
             CombinedCredentials = _combinedCreds;
             RoamingCombinedCredentials = _combinedCreds;
@@ -241,10 +178,8 @@
 
         public void UnsetCreds()
         {
-            IsLoggedIn = false;
-            CredToken = null;
-            CredUserId = null;
-            CredStableSid = default(Guid);
+            Username = null;
+            Token = null;
             Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
         }
 
@@ -264,13 +199,9 @@
             [CallerMemberName] string settingsName = null)
         {
             if (settingsName == null)
-            {
                 throw new ArgumentException("Tried to get with a null settings value.");
-            }
             if (settingsContainer.Values.ContainsKey(settingsName))
-            {
                 return (T) settingsContainer.Values[settingsName];
-            }
             return defaultValue;
         }
 
@@ -291,10 +222,8 @@
 
             //This would trigger an infinite loop if the simple variable didn't check to see if the value is the same on setting.
 
-            if (cc.ContainsKey(nameof(IsLoggedIn))) _isLoggedIn = (bool) cc[nameof(IsLoggedIn)];
-            if (cc.ContainsKey(nameof(CredToken))) _credToken = (string) cc[nameof(CredToken)];
-            if (cc.ContainsKey(nameof(CredUserId))) _credUserId = (string) cc[nameof(CredUserId)];
-            if (cc.ContainsKey(nameof(CredStableSid))) _credStableSid = (Guid) cc[nameof(CredStableSid)];
+            if (cc.ContainsKey(nameof(Token))) _token = (string) cc[nameof(Token)];
+            if (cc.ContainsKey(nameof(Username))) _username = (string) cc[nameof(Username)];
         }
 
         private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
