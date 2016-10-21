@@ -23,7 +23,6 @@
         public async Task Update()
         {
             // Will do what SyncWithServerAsync does.
-            throw new NotImplementedException();
         }
 
         /// <summary>The method should be executed on the UI thread, which means it should be called before any
