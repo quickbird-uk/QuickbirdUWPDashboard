@@ -8,18 +8,11 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using JetBrains.Annotations;
-    using Util;
 
     /// <summary>Signs out then navigates to Landing OR re-signs in and goes back to shell (requires
     /// parameter).</summary>
     public sealed partial class SignOutView : Page, INotifyPropertyChanged
     {
-        public enum ShouldItSignBackIn
-        {
-            YesSignBackInAgain,
-            DontSignBackInAgain
-        }
-
         private string _currentOperation = "Signing Out";
 
         public SignOutView() { InitializeComponent(); }
@@ -40,29 +33,13 @@
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            // Default to don't sign back in again.
-            var signInAgain = e.Parameter as ShouldItSignBackIn? ?? ShouldItSignBackIn.DontSignBackInAgain;
-
             var antiFlickerDelay = Task.Delay(TimeSpan.FromSeconds(4)); //The other delays do not add to this.
 
             await ((App) Application.Current).SignOut();
 
             await Task.Delay(TimeSpan.FromSeconds(2)); // Show sign out for minimum 2 secs
 
-            Type navPage;
-
-            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain && Settings.Instance.ReplaceLocalWithRoamingCreds())
-            {
-                CurrentOperation = "Signing in with new credentials";
-
-                await Task.Delay(TimeSpan.FromSeconds(2)); // Show sign in for minimum 2 secs
-
-                navPage = typeof(SyncingView);
-            }
-            else
-            {
-                navPage = typeof(LandingPage);
-            }
+            var navPage = typeof(LandingPage);
 
             await antiFlickerDelay;
 
