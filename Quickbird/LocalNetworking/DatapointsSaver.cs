@@ -161,7 +161,7 @@
                             Id = Guid.NewGuid(),
                             Deleted = false,
                             Name = string.Format("Box Number {0}", _dbDevices.Count),
-                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings!
+                            PersonId = Settings.Instance.PersonGuid,
                             CropCycles = new List<CropCycle>(),
                             Devices = new List<Device>(),
                             CreatedAt = DateTimeOffset.Now,

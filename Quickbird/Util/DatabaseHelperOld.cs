@@ -317,7 +317,7 @@
         private async Task<List<string>> GetRequestUpdateAsync(QbDbContext db)
         {
             var settings = Settings.Instance;
-            var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
+            Creds creds = null;
             var now = DateTimeOffset.Now;
 
             var res = new List<string>();
@@ -408,7 +408,7 @@
         /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
         private static async Task<List<string>> PostRequestUpdateAsync(QbDbContext db)
         {
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            Creds creds = null;
 
             var lastDatabasePost = Settings.Instance.LastSuccessfulGeneralDbPost;
             var postTime = DateTimeOffset.Now;
