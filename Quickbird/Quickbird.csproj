@@ -108,6 +108,7 @@
     </Compile>
     <Compile Include="Data\Local.cs" />
     <Compile Include="Data\Sync.cs" />
+    <Compile Include="Internet\Authoriser.cs" />
     <Compile Include="Internet\Creds.cs" />
     <Compile Include="Internet\Request.cs" />
     <Compile Include="Internet\SensorReadingsJsConverter.cs" />
