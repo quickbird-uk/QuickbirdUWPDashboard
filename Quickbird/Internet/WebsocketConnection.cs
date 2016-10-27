@@ -297,12 +297,9 @@
             _webSocket.Closed += SocketClosed;
             _webSocket.MessageReceived += MessageRecieved;
 
-
-            var tokenHeader = "X-ZUMO-AUTH";
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
-            _webSocket.SetRequestHeader(tokenHeader, creds.Token);
-
-
+            var tokenHeader = "Authorization";
+            var token = Settings.Instance.Token;
+            _webSocket.SetRequestHeader(tokenHeader, "Bearer " + token);
             try
             {
                 var uri = new Uri(WebSocketStartUrl);
