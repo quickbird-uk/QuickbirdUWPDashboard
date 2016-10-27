@@ -7,7 +7,11 @@
     internal class Sync
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
+#if LOCALSERVER
+        public const string ApiUrl = "http://localhost:53953/api";
+#else
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
+#endif
 
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
