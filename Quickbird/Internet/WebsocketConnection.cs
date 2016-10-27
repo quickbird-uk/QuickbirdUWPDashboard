@@ -38,12 +38,17 @@
         }
 
         private const string SocketCloseMessage = "AppIsSuspending";
+#if LOCALSERVER
+        private const string WebSocketStartUrl = "http://localhost:53953/api/LiveData/Start";
+#else
+        private const string WebSocketStartUrl = "wss://ghapi46azure.azurewebsites.net/api/LiveData/Start";
+#endif
         private static MessageWebSocket _webSocket; //it is laso the subject of lock
         private static DataWriter _messageWriter;
         private static Timer _ReconnectTimer;
         private readonly object StoppingLock = new object();
         private long _connectionState;
-        private int _reconnectionAttempt; //Used for exponenetial backoff timer         
+        private int _reconnectionAttempt; //Used for exponenetial backoff timer
 
 
         public WebSocketConnection()
@@ -66,7 +71,7 @@
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        #region StatefullMethod
+#region StatefullMethod
 
         /// <summary>Returns true if the method is successfully started. Returns false if it's already started
         /// or it's not</summary>
@@ -79,7 +84,7 @@
                 Interlocked.CompareExchange(ref _connectionState, (long) ConnectionState.WillTryConnect,
                     (long) ConnectionState.Stopped) == ConnectionState.Stopped)
             {
-                //Use is no signed in, return 
+                //Use is no signed in, return
                 if (Settings.Instance.IsLoggedIn == false)
                     return false;
 
@@ -278,9 +283,9 @@
             }
         }
 
-        #endregion
+#endregion
 
-        #region State-Ignoring methods
+#region State-Ignoring methods
 
         private async Task<bool> TryConnect()
         {
@@ -300,7 +305,7 @@
 
             try
             {
-                var uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket");
+                var uri = new Uri(WebSocketStartUrl);
                 await _webSocket.ConnectAsync(uri);
                 _messageWriter = new DataWriter(_webSocket.OutputStream);
                 _reconnectionAttempt = 0;
@@ -323,7 +328,7 @@
         {
             if (args.Reason == SocketCloseMessage)
             {
-                //means the app closed it, but so what? 
+                //means the app closed it, but so what?
             }
 
             //SocketClosed();
@@ -370,6 +375,6 @@
             _webSocket = null;
         }
 
-        #endregion
+#endregion
     }
 }

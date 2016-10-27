@@ -40,8 +40,8 @@
             else
             {
                 _combinedCreds = CombinedCredentials;
-                UpdateCredPropsFromCombined();
             }
+                UpdateCredPropsFromCombined();
             _localSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
@@ -133,6 +133,8 @@
                 OnPropertyChanged();
             }
         }
+
+        public bool IsLoggedIn => Token != null;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -5,13 +5,25 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Internet;
-    using Util;
     using Views;
 
     public class LandingPageViewModel : ViewModelBase
     {
+        private string _email;
         private string _friendlyText = "Your Twitter Account is used to authenticate you.";
         private bool _loginEnabled;
+        private string _password;
+
+        public string Email
+        {
+            get { return _email; }
+            set
+            {
+                if (Email == value) return;
+                _email = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string FriendlyText
         {
@@ -35,28 +47,41 @@
             }
         }
 
+        public string Password
+        {
+            get { return _password; }
+            set
+            {
+                if (Password == value) return;
+                _password = value;
+                OnPropertyChanged();
+            }
+        }
+
         public override void Kill()
         {
             // No special resources use here.
         }
 
+        public void Register()
+        {
+            ((Frame) Window.Current.Content).Navigate(typeof(RegisterView), Tuple.Create(Email, Password));
+        }
+
         public async void Login()
         {
             LoginEnabled = false;
-            const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
-            const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
 
             if (!Request.IsInternetAvailable())
             {
                 LoginEnabled = true;
-                FriendlyText = "Internet seems unavailable, please check your connection and try again.";
+                FriendlyText = "Internet appears to be unavailable, please check your connection and try again.";
                 return;
             }
 
-            Creds creds;
             try
             {
-                creds = await Creds.FromBroker(entryUrl, resultUrl);
+                throw new NotImplementedException("lel");
             }
             catch (Exception)
             {
@@ -66,18 +91,7 @@
                 return;
             }
 
-            var settings = Settings.Instance;
-            settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0, 4)));
-
-            UpdateCredsAndTokens();
-
             ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
-        }
-
-        private void UpdateCredsAndTokens()
-        {
-            var settings = Settings.Instance;
-            Debug.WriteLine(settings.CredToken ?? "No saved auth.");
         }
     }
 }
