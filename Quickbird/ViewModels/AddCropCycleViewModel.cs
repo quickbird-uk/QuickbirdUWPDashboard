@@ -102,7 +102,7 @@
                            {
                                Name = UserCropType,
                                CreatedAt = DateTimeOffset.Now,
-                               CreatedBy = settings.CredStableSid
+                               CreatedBy = settings.PersonGuid
                            };
             var cropCycle = new CropCycle
             {

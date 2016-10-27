@@ -24,6 +24,7 @@
         private readonly ApplicationDataContainer _roamingSettings;
         private ApplicationDataCompositeValue _combinedCreds;
         private string _token;
+        private Guid _personGuid;
         private string _username;
 
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
@@ -41,12 +42,14 @@
             {
                 _combinedCreds = CombinedCredentials;
             }
-                UpdateCredPropsFromCombined();
+            UpdateCredPropsFromCombined();
             _localSettings.Values.MapChanged += ValuesOnMapChanged;
         }
 
         /// <summary>Singleton instance accessor.</summary>
         public static Settings Instance { get; } = new Settings();
+
+        public bool IsLoggedIn => Token != null;
 
         /// <summary>The last time the db (excluding histories) was successfully updated from the internet.</summary>
         public DateTimeOffset LastSuccessfulGeneralDbGet
@@ -88,6 +91,7 @@
         }
 
         /// <summary>The credentials token.</summary>
+        /// <remarks>The setter does not update the setting, that must be done via SetNewCreds.</remarks>
         public string Token
         {
             get { return _token; }
@@ -95,12 +99,25 @@
             {
                 if (value == Token) return;
                 _token = value;
-                _combinedCreds[nameof(Token)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>The unique identifier for the user from the database.</summary>
+        /// <remarks>The setter does not update the setting, that must be done via SetNewCreds.</remarks>
+        public Guid PersonGuid
+        {
+            get { return _personGuid; }
+            private set
+            {
+                if (value == PersonGuid) return;
+                _personGuid = value;
                 OnPropertyChanged();
             }
         }
 
         /// <summary>The user's login username.</summary>
+        /// <remarks>The setter does not update the setting, that must be done via SetNewCreds.</remarks>
         public string Username
         {
             get { return _username; }
@@ -108,11 +125,12 @@
             {
                 if (value == Username) return;
                 _username = value;
-                _combinedCreds[nameof(Username)] = value;
                 OnPropertyChanged();
             }
         }
 
+        /// <summary>All the credentials packed into a single object so that their values update and sync at
+        /// the same time.</summary>
         private ApplicationDataCompositeValue CombinedCredentials
         {
             get { return Get(_localSettings, default(ApplicationDataCompositeValue)); }
@@ -133,8 +151,6 @@
                 OnPropertyChanged();
             }
         }
-
-        public bool IsLoggedIn => Token != null;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -169,19 +185,29 @@
             LastSuccessfulGeneralDbPost = default(DateTimeOffset);
         }
 
-        public void SetNewCreds(string username, string token)
+        /// <summary>
+        /// Updates all settings related to credentials simultaneously.
+        /// </summary>
+        /// <param name="username">The user-friendly login name.</param>
+        /// <param name="token">The auth token.</param>
+        /// <param name="personGuid">The user's linked person Guid.</param>
+        public void SetNewCreds(string username, string token, Guid personGuid)
         {
-            Token = token;
-            Username = username;
+            _combinedCreds[nameof(Token)] = token;
+            _combinedCreds[nameof(Username)] = username;
+            _combinedCreds[nameof(PersonGuid)] = personGuid;
 
             CombinedCredentials = _combinedCreds;
             RoamingCombinedCredentials = _combinedCreds;
+
+            UpdateCredPropsFromCombined();
         }
 
         public void UnsetCreds()
         {
             Username = null;
             Token = null;
+            PersonGuid = Guid.Empty;
             Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
         }
 
@@ -222,10 +248,9 @@
         {
             var cc = CombinedCredentials;
 
-            //This would trigger an infinite loop if the simple variable didn't check to see if the value is the same on setting.
-
             if (cc.ContainsKey(nameof(Token))) _token = (string) cc[nameof(Token)];
             if (cc.ContainsKey(nameof(Username))) _username = (string) cc[nameof(Username)];
+            if (cc.ContainsKey(nameof(PersonGuid))) _personGuid = (Guid) cc[nameof(PersonGuid)];
         }
 
         private void ValuesOnMapChanged(IObservableMap<string, object> sender, IMapChangedEventArgs<string> @event)
