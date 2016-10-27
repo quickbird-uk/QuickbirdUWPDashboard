@@ -46,7 +46,7 @@
                 VerticalAlignment="Center"
                 Text="Email:" />
             <TextBox Grid.Row="1" Grid.Column="2"
-                Width="128"
+                Width="256"
                 VerticalAlignment="Center"
                 IsEnabled="{x:Bind ViewModel.LoginEnabled}"
                 Text="{x:Bind ViewModel.Email, Mode=TwoWay}" />
@@ -55,7 +55,7 @@
                 VerticalAlignment="Center"
                 Text="Password:" />
             <PasswordBox Grid.Row="3" Grid.Column="2"
-                Width="128"
+                Width="256"
                 VerticalAlignment="Center"
                 IsEnabled="{x:Bind ViewModel.LoginEnabled}"
                 Password="{x:Bind ViewModel.Password, Mode=TwoWay}" />

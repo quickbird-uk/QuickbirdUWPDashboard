@@ -10,8 +10,8 @@
     public class LandingPageViewModel : ViewModelBase
     {
         private string _email;
-        private string _friendlyText = "Your Twitter Account is used to authenticate you.";
-        private bool _loginEnabled;
+        private string _friendlyText = "Please enter your username and password to login or click register to create a new account.";
+        private bool _loginEnabled = true;
         private string _password;
 
         public string Email
@@ -81,7 +81,7 @@
 
             try
             {
-                throw new NotImplementedException("lel");
+
             }
             catch (Exception)
             {
