@@ -118,6 +118,11 @@
     <Compile Include="LocalNetworking\Manager.cs" />
     <Compile Include="LocalNetworking\UDPMessaging.cs" />
     <Compile Include="Data\QbDbContext.cs" />
+    <Compile Include="Migrations\20161103141839_initial.cs" />
+    <Compile Include="Migrations\20161103141839_initial.designer.cs">
+      <DependentUpon>20161103141839_initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\QbDbContextModelSnapshot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BlockingDispatcher.cs" />
     <Compile Include="Util\BroadcastMessage.cs" />
@@ -334,9 +339,7 @@
       <Name>Qb.Poco</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
