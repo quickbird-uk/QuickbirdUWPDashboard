@@ -11,7 +11,8 @@
     using Newtonsoft.Json.Linq;
     using Util;
 
-    public static class Authoriser
+    /// <summary>Wraps up requests to the server.</summary>
+    public static class ServerRequest
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
 #if LOCALSERVER

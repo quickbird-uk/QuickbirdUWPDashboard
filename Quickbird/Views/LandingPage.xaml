@@ -48,7 +48,7 @@
             <TextBox Grid.Row="1" Grid.Column="2"
                 Width="256"
                 VerticalAlignment="Center"
-                IsEnabled="{x:Bind ViewModel.LoginEnabled}"
+                IsEnabled="{x:Bind ViewModel.LoginEnabled, Mode=OneWay}"
                 Text="{x:Bind ViewModel.Email, Mode=TwoWay}" />
             <TextBlock Grid.Row="3" Grid.Column="1"
                 Margin="0,0,5,0"
@@ -57,18 +57,18 @@
             <PasswordBox Grid.Row="3" Grid.Column="2"
                 Width="256"
                 VerticalAlignment="Center"
-                IsEnabled="{x:Bind ViewModel.LoginEnabled}"
+                IsEnabled="{x:Bind ViewModel.LoginEnabled, Mode=OneWay}"
                 Password="{x:Bind ViewModel.Password, Mode=TwoWay}" />
             <Button Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"
                 HorizontalAlignment="Stretch"
                 Click="{x:Bind ViewModel.Login}"
                 Content="Sign In"
-                IsEnabled="{x:Bind ViewModel.LoginEnabled}" />
+                IsEnabled="{x:Bind ViewModel.LoginEnabled, Mode=OneWay}" />
             <Button Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2"
                 HorizontalAlignment="Stretch"
                 Click="{x:Bind ViewModel.Register}"
                 Content="Register"
-                IsEnabled="{x:Bind ViewModel.LoginEnabled}" />
+                IsEnabled="{x:Bind ViewModel.LoginEnabled, Mode=OneWay}" />
         </Grid>
 
         <!--  Second Row  -->
@@ -78,7 +78,7 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
             FontFamily="Segoe UI"
-            FontSize="12"
+            FontSize="14"
             FontWeight="Normal"
             Foreground="DimGray"
             Text="{x:Bind ViewModel.FriendlyText, Mode=OneWay}"

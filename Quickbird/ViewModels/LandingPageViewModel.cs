@@ -10,7 +10,10 @@
     public class LandingPageViewModel : ViewModelBase
     {
         private string _email;
-        private string _friendlyText = "Please enter your username and password to login or click register to create a new account.";
+
+        private string _friendlyText =
+            "Please enter your username and password to login or click register to create a new account.";
+
         private bool _loginEnabled = true;
         private string _password;
 
@@ -63,14 +66,10 @@
             // No special resources use here.
         }
 
-        public void Register()
-        {
-            ((Frame) Window.Current.Content).Navigate(typeof(RegisterView), Tuple.Create(Email, Password));
-        }
-
         public async void Login()
         {
             LoginEnabled = false;
+            FriendlyText = "Signing in, please wait...";
 
             if (!Request.IsInternetAvailable())
             {
@@ -81,17 +80,29 @@
 
             try
             {
-
+                var error = await ServerRequest.Login(Email, Password);
+                if (error == null)
+                {
+                    FriendlyText = "Login Success.";
+                    ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
+                }
+                else
+                {
+                    FriendlyText = error + " \n Please try again.";
+                    LoginEnabled = true;
+                }
             }
             catch (Exception)
             {
                 Debug.WriteLine("Login failed or cancelled.");
                 FriendlyText = "Login failed or cancelled.";
                 LoginEnabled = true;
-                return;
             }
+        }
 
-            ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
+        public void Register()
+        {
+            ((Frame) Window.Current.Content).Navigate(typeof(RegisterView), Tuple.Create(Email, Password));
         }
     }
 }
