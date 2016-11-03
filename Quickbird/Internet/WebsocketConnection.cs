@@ -39,9 +39,9 @@
 
         private const string SocketCloseMessage = "AppIsSuspending";
 #if LOCALSERVER
-        private const string WebSocketStartUrl = "http://localhost:53953/api/LiveData/Start";
+        private const string WebSocketStartUrl = "ws://localhost:53953/api/LiveData/Start";
 #else
-        private const string WebSocketStartUrl = "wss://ghapi46azure.azurewebsites.net/api/LiveData/Start";
+        private const string WebSocketStartUrl = "wss://.azurewebsites.net/api/LiveData/Start";
 #endif
         private static MessageWebSocket _webSocket; //it is laso the subject of lock
         private static DataWriter _messageWriter;
