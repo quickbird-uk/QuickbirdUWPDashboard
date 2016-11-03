@@ -22,61 +22,115 @@
         public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
 #endif
 
-        public static async Task<bool> Login(string email, string password, Guid personGuid)
+        /// <summary>Sends login request, returning error message or null when credentials sucessfully set.</summary>
+        /// <param name="email">The username (which should be an email address).</param>
+        /// <param name="password">The password.</param>
+        /// <returns>Null when credentials set otherwise an error message.</returns>
+        public static async Task<string> Login(string email, string password)
         {
-            using (var client = CreateConfguredHttpClient(null))
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{ApiUrl}/auth/token")))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"{ApiUrl}/auth/token")))
-                {
-                    // See https://tools.ietf.org/html/rfc6749#section-4.3
-                    // The "Roles" scope is a part of Asp.Net Identity,
-                    // it causes the roles attached to this IdentityUser to be attached to this token.
-                    request.Content =
-                        new HttpFormUrlEncodedContent(new[]
-                        {
-                            new KeyValuePair<string, string>("grant_type", "password"),
-                            new KeyValuePair<string, string>("username", email),
-                            new KeyValuePair<string, string>("password", password),
-                            new KeyValuePair<string, string>("scope", "Roles")
-                        });
+                // See https://tools.ietf.org/html/rfc6749#section-4.3
+                // The "Roles" scope is a part of Asp.Net Identity,
+                // it causes the roles attached to this IdentityUser to be attached to this token.
+                requestMessage.Content =
+                    new HttpFormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("grant_type", "password"),
+                        new KeyValuePair<string, string>("username", email),
+                        new KeyValuePair<string, string>("password", password),
+                        new KeyValuePair<string, string>("scope", "Roles")
+                    });
 
+                using (var response = await Request(requestMessage, null, "Login Request"))
+                {
+                    if (response == null)
+                        return "Network error.";
+
+                    if (!response.IsSuccessStatusCode)
+                        return "Login failed.";
+
+                    string token;
                     try
                     {
-                        var cts = new CancellationTokenSource(TimeoutMs);
-                        var response = await client.SendRequestAsync(request).AsTask(cts.Token);
-                        if (!response.IsSuccessStatusCode || !response.IsSuccessStatusCode)
-                        {
-                            Debug.WriteLine("Loging request invalid or denied.");
-                            return false;
-                        }
-
-                        try
-                        {
-                            var text = await response.Content.ReadAsStringAsync();
-                            var json = JObject.Parse(text);
-                            var token = (string) json["access_token"];
-                            //var expiriy = (string)json["expires_in"];
-                            //var type = (string)json["token_type"];
-                            Settings.Instance.SetNewCreds(email, token, personGuid);
-                            return true;
-                        }
-                        catch
-                        {
-                            Debug.WriteLine("Login request reply Json invalid");
-                            return false;
-                        }
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        Debug.WriteLine("Login request timed-out.");
-                        return false;
+                        var text = await response.Content.ReadAsStringAsync();
+                        var json = JObject.Parse(text);
+                        token = (string) json["access_token"];
+                        //var expiriy = (string)json["expires_in"];
+                        //var type = (string)json["token_type"];
                     }
                     catch
                     {
-                        // Any kind of network error.
-                        Debug.WriteLine("Login request network failure.");
-                        return false;
+                        LogError("Login Request Response", "Login request reply Json invalid");
+                        return "Login response error, contact support if this error persists.";
                     }
+
+                    var whoami = new HttpRequestMessage(HttpMethod.Get, new Uri($"{ApiUrl}/AuthManage/WhoAmI"));
+
+                    using (var whoAmIResponse = await Request(whoami, token, "WhoAmI Request"))
+                    {
+                        if (!whoAmIResponse.IsSuccessStatusCode)
+                        {
+                            LogError("WhoAmI Request Response", "Auth seems to have failed.");
+                            return "Login ID error, contact support if this error persists.";
+                        }
+
+                        Guid personGuid;
+                        try
+                        {
+                            var guidText = await whoAmIResponse.Content.ReadAsStringAsync();
+                            personGuid = new Guid(guidText);
+                        }
+                        catch (Exception e)
+                        {
+                            LogError("WhoAmI Request Response", "Guid decode failed.", e);
+                            return "Login ID decode error, contact support if this error persists.";
+                        }
+
+                        Settings.Instance.SetNewCreds(email, token, personGuid);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>A debug error logger, should be replaced with a proper logger eventually.</summary>
+        /// <param name="category">Method name or action.</param>
+        /// <param name="error">Error description.</param>
+        /// <param name="e">Related exeption if it exists.</param>
+        private static void LogError(string category, string error, Exception e = null)
+        {
+            if (e == null)
+                Debug.WriteLine($"{category}: {error}");
+            else
+                Debug.WriteLine($"{category}: {error} ({e.Message})");
+        }
+
+        /// <summary>Sends request returning null on all network or timeout errors.</summary>
+        /// <param name="message">The request.</param>
+        /// <param name="token">Optional auth token, null if not used.</param>
+        /// <param name="errorCategory">Name for the request to make error log messages more specific.</param>
+        /// <returns>Response or null on error.</returns>
+        private static async Task<HttpResponseMessage> Request(HttpRequestMessage message, string token,
+            string errorCategory = "Request")
+        {
+            using (var client = CreateConfguredHttpClient(token))
+            {
+                try
+                {
+                    var cts = new CancellationTokenSource(TimeoutMs);
+                    return await client.SendRequestAsync(message).AsTask(cts.Token);
+                }
+                catch (TaskCanceledException e)
+                {
+                    LogError(errorCategory, "Timeout.", e);
+                    return null;
+                }
+                catch (Exception e)
+                {
+                    // Any kind of network error.
+                    LogError(errorCategory, "Network error.", e);
+                    return null;
                 }
             }
         }
