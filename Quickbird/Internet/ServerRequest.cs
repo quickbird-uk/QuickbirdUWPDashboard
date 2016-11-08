@@ -49,7 +49,21 @@
                         return "Network error.";
 
                     if (!response.IsSuccessStatusCode)
-                        return "Login failed.";
+                    {
+                        var needsconfirm = false;
+                        var text = await response.Content.ReadAsStringAsync();
+                        try
+                        {
+                            needsconfirm = (string) (JObject.Parse(text)["error"]) == "needs_confirm";
+                        }
+                        catch
+                        {
+                            // ignore if there is no json.
+                        }
+
+                        // needs_confirm is a magic phrase should trigger navigation to the confirm screen.
+                        return needsconfirm ? "needs_confirm" : "Login failed.";
+                    }
 
                     string token;
                     try

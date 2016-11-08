@@ -86,6 +86,10 @@
                     FriendlyText = "Login Success.";
                     ((Frame) Window.Current.Content).Navigate(typeof(SyncingView));
                 }
+                else if (error == "needs_confirm")
+                {
+                    throw new NotImplementedException("Needs to nav to confirm page");
+                }
                 else
                 {
                     FriendlyText = error + " \n Please try again.";
