@@ -7,6 +7,7 @@
     mc:Ignorable="d">
 
     <Grid
+        MaxWidth="600"
         Margin="0"
         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
         Padding="15">
@@ -16,23 +17,28 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <TextBlock
+            Margin="0,0,0,10"
             HorizontalAlignment="Center"
             Style="{StaticResource HeaderTextBlockStyle}"
             Text="Register New Account" />
-        <TextBlock Grid.Row="1" TextWrapping="WrapWholeWords">
-            The email address will be used to log into the account.
-            A text will be sent to the phone number to confirm the account.
-        </TextBlock>
+        <TextBlock Grid.Row="1"
+            Margin="0,0,0,10"
+            Text="The email address will be used to log into the account. A text will be sent to the phone number to confirm the account. The password must be at-least 8 characters long."
+            TextWrapping="WrapWholeWords" />
         <Grid Grid.Row="2"
-            HorizontalAlignment="Center"
+            MaxWidth="600"
+            HorizontalAlignment="Stretch"
             VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="15" />
-                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="0" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="15" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="0" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="15" />
@@ -49,42 +55,48 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="5" />
                 <RowDefinition Height="auto" />
-                <RowDefinition Height="5" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="5" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="5" />
-                <RowDefinition Height="auto" />
                 <RowDefinition Height="15" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="1" Grid.Column="1"
-                VerticalAlignment="Center"
-                Text="Email:" />
-            <TextBox Grid.Row="1" Grid.Column="3"
+                Margin="0,6,-0.5,6"
+                Text="Email:"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+            <TextBox Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2"
+                Margin="0.5,0,-1,0"
                 IsEnabled="{x:Bind ViewModel.RegisterEnable, Mode=OneWay}"
-                Text="{x:Bind ViewModel.Email, Mode=TwoWay}" />
+                Text="{x:Bind ViewModel.Email, Mode=TwoWay}"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
             <TextBlock Grid.Row="3" Grid.Column="1"
-                VerticalAlignment="Center"
-                Text="Password:" />
-            <PasswordBox Grid.Row="3" Grid.Column="3"
+                Margin="0,6,-0.5,6"
+                Text="Password:"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+            <PasswordBox Grid.Row="3" Grid.Column="3" Grid.ColumnSpan="2"
+                Margin="0.5,0,-1,0"
                 IsEnabled="{x:Bind ViewModel.RegisterEnable, Mode=OneWay}"
-                Password="{x:Bind ViewModel.Password, Mode=TwoWay}" />
+                Password="{x:Bind ViewModel.Password, Mode=TwoWay}"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
             <TextBlock Grid.Row="5" Grid.Column="1"
-                VerticalAlignment="Center"
-                Text="Mobile Phone:" />
-            <TextBox Grid.Row="5" Grid.Column="3"
+                Margin="0,6,-0.5,6"
+                Text="Mobile Phone:"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+            <TextBox Grid.Row="5" Grid.Column="3" Grid.ColumnSpan="2"
+                Margin="0.5,0,-1,0"
                 IsEnabled="{x:Bind ViewModel.RegisterEnable, Mode=OneWay}"
-                Text="{x:Bind ViewModel.Phone, Mode=TwoWay}" />
+                Text="{x:Bind ViewModel.Phone, Mode=TwoWay}"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
             <TextBlock Grid.Row="7" Grid.Column="1"
-                VerticalAlignment="Center"
-                Text="Repeat Password:" />
-            <PasswordBox Grid.Row="7" Grid.Column="3"
-                Width="200"
+                Margin="0,6,-0.5,6"
+                Text="Repeat Password:"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+            <PasswordBox Grid.Row="7" Grid.Column="3" Grid.ColumnSpan="2"
+                Margin="0.5,0,-1,0"
                 IsEnabled="{x:Bind ViewModel.RegisterEnable, Mode=OneWay}"
-                Password="{x:Bind ViewModel.RepeatPassword, Mode=TwoWay}" />
-            <Grid Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="3">
+                Password="{x:Bind ViewModel.RepeatPassword, Mode=TwoWay}"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+            <Grid Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="3"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="5" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -102,7 +114,8 @@
             <TextBlock Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="3"
                 Foreground="#FFDD2C2C"
                 Text="{x:Bind ViewModel.Problems, Mode=OneWay}"
-                TextWrapping="WrapWholeWords" />
+                TextWrapping="WrapWholeWords"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
         </Grid>
     </Grid>
 </Page>

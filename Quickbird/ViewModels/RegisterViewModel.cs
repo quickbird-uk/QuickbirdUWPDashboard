@@ -1,30 +1,28 @@
 ﻿namespace Quickbird.ViewModels
 {
+    using System;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Views;
+
     public class RegisterViewModel : ViewModelBase
     {
+        private string _email;
+        private string _infoText;
         private string _password;
-
         private string _phone;
-
-        private bool _registerEnable;
-
+        private string _problems;
+        private bool _registerEnable = true;
         private string _repeatPassword;
-
         private string _username;
 
-        private string _email;
-
-        private string _infoText;
-
-        private string _problems;
-
-        public string Problems
+        public string Email
         {
-            get { return _problems; }
+            get { return _email; }
             set
             {
-                if (value == Problems) return;
-                _problems = value;
+                if (value == Email) return;
+                _email = value;
                 OnPropertyChanged();
             }
         }
@@ -36,17 +34,6 @@
             {
                 if (value == InfoText) return;
                 _infoText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string Email
-        {
-            get { return _email; }
-            set
-            {
-                if (value == Email) return;
-                _email = value;
                 OnPropertyChanged();
             }
         }
@@ -69,6 +56,17 @@
             {
                 if (value == Phone) return;
                 _phone = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Problems
+        {
+            get { return _problems; }
+            set
+            {
+                if (value == Problems) return;
+                _problems = value;
                 OnPropertyChanged();
             }
         }
@@ -106,20 +104,36 @@
             }
         }
 
-        public void Register()
-        {
 
-        }
-
-
-        public void Cancel()
-        {
-
-        }
+        public void Cancel() { ((Frame) Window.Current.Content).Navigate(typeof(LandingPage)); }
 
         public override void Kill()
         {
             // Nothing special used here.
+        }
+
+        public void Register()
+        {
+            RegisterEnable = false;
+            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password) ||
+                string.IsNullOrWhiteSpace(Phone))
+            {
+                Problems = "Please complete all the fields above.";
+            }
+            else if (Password != RepeatPassword)
+            {
+                Problems = "Passwords do no match, please type them in again.";
+            }
+            else if (Password.Length < 8)
+            {
+                Problems = "Password must be at-least 8 characters long.";
+            }
+            else
+            {
+                Problems = "Please wait...";
+                throw new NotImplementedException("Need to fire register request.");
+            }
+            RegisterEnable = true;
         }
     }
 }
