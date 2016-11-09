@@ -205,9 +205,7 @@
 
         public void UnsetCreds()
         {
-            Username = null;
-            Token = null;
-            PersonGuid = Guid.Empty;
+            SetNewCreds(null, null, Guid.Empty);
             Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
         }
 
