@@ -8,6 +8,8 @@ __DASHBOARD__: https://waffle.io/quickbird-uk/QuickbirdUWP
 
 __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 
+__API Docs__: https://ghapi46azure.azurewebsites.net/swagger/ui/index
+
 ## Milestones
 
 ### 2.0.0
