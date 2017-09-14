@@ -1,4 +1,5 @@
 # QuickbirdUWP
+![ScreenCap](Images/MainScreenshot.PNG)
 
 Quickbird UWP App and corresponding server.
 
