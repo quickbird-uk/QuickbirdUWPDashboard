@@ -59,33 +59,15 @@
         }
 
         /// <summary>The date with hours, minutes and seconds set to zero</summary>
-        public static DateTimeOffset Today
-        {
-            get
-            {
-                var today = DateTimeOffset.Now;
-                return today.Subtract(today.TimeOfDay);
-            }
-        }
+        public static DateTimeOffset Today => DateTimeOffset.Now.Subtract(DateTimeOffset.Now.TimeOfDay);
+    
 
-        public static DateTimeOffset Tomorrow
-        {
-            get
-            {
-                var tomorrow = DateTimeOffset.Now.AddDays(1);
-                return tomorrow.Subtract(tomorrow.TimeOfDay);
-            }
-        }
+        public static DateTimeOffset Tomorrow =>  DateTimeOffset.Now.AddDays(1).Subtract(DateTimeOffset.Now.TimeOfDay);
+    
 
         /// <summary>The date of yesturday with hours, minutes and seconds set to zero</summary>
-        public static DateTimeOffset Yesturday
-        {
-            get
-            {
-                var yesturday = DateTimeOffset.Now.AddDays(-1);
-                return yesturday.Subtract(yesturday.TimeOfDay);
-            }
-        }
+        public static DateTimeOffset Yesturday => DateTimeOffset.Now.AddDays(-1).Subtract(DateTimeOffset.Now.TimeOfDay);
+        
 
         public void Dispose()
         {

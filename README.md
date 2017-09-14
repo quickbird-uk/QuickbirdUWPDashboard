@@ -12,6 +12,20 @@ __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 
 __API Docs__: https://greenhouseapi.azurewebsites.net/swagger/ui/index
 
+__Arduino Code__: https://github.com/quickbird-uk/QuickbirdSensorBox 
+
+## Networking 
+The application runs an embedded MQTT server, GnatMQ, on local port 1883 
+It is meant to be used in conjunction with an arduino or simular device that's sending MQTT messages over the network. 
+It expects to recieve readings on the topic "readings". 
+
+It will also signal presence of the broken on the local network by broadcasting UDP packets on port 44000
+The packets contain the work 'sekret" in unicode (yes, I know it's stupid). The idea is for any network device
+that requires a display to detect this mesage and connect to the app.
+If the app detects that there is another broker on the network, broadcasting UDP messages, it will notify the user of the conflict.
+![ScreenCap](Images/LocalBroker.PNG)
+If the "Local Device Management" functionalityh is disabled, UDP broadcasting and MQTT server are shut down.
+
 ## Milestones
 
 ### 2.0.0
