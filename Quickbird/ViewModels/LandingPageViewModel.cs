@@ -43,8 +43,8 @@
         public async void Login()
         {
             LoginEnabled = false;
-            const string entryUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/twitter";
-            const string resultUrl = "https://ghapi46azure.azurewebsites.net/.auth/login/done";
+            const string entryUrl = "https://greenhouseapi.azurewebsites.net/.auth/login/twitter";
+            const string resultUrl = "https://greenhouseapi.azurewebsites.net/.auth/login/done";
 
             if (!Request.IsInternetAvailable())
             {

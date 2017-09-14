@@ -300,7 +300,7 @@
 
             try
             {
-                var uri = new Uri("wss://ghapi46azure.azurewebsites.net/api/Websocket");
+                var uri = new Uri("wss://greenhouseapi.azurewebsites.net/api/Websocket");
                 await _webSocket.ConnectAsync(uri);
                 _messageWriter = new DataWriter(_webSocket.OutputStream);
                 _reconnectionAttempt = 0;

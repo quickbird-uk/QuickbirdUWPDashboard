@@ -19,7 +19,7 @@
     public class DatabaseHelper
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
-        public const string ApiUrl = "https://ghapi46azure.azurewebsites.net/api";
+        public const string ApiUrl = "https://greenhouseapi.azurewebsites.net/api";
 
         /// <summary>The maximum number of days to download at a time.</summary>
         private const int MaxDaysDl = 5;

@@ -10,7 +10,7 @@ __Websocket Endpoint__: {serveruri}/Websocket
 
 __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 
-__API Docs__: https://ghapi46azure.azurewebsites.net/swagger/ui/index
+__API Docs__: https://greenhouseapi.azurewebsites.net/swagger/ui/index
 
 ## Milestones
 
