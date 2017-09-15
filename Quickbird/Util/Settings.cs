@@ -140,6 +140,20 @@
             }
         }
 
+
+        /// <summary>Local setting that allows the app to run local network for device management. Defaults to
+        /// false.</summary>
+        public bool VirtualDeviceEnabled
+        {
+            get { return Get(_localSettings, false); }
+            set
+            {
+                if (value == VirtualDeviceEnabled) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         private ApplicationDataCompositeValue CombinedCredentials
         {
             get { return Get(_localSettings, default(ApplicationDataCompositeValue)); }

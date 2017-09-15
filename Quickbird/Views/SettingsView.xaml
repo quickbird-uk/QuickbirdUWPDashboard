@@ -61,6 +61,13 @@
                     OnContent="Enabled" />
             </StackPanel>
             <StackPanel Padding="0, 15, 0, 0">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Virtual Device" />
+                <TextBlock Text="If you have no hardware devices, the app will create a virtual one for testing purposes. The device will have a few sensors and will produce random data. This data will get synced to the cloud. You will be able to see this data from other computers / clients." TextWrapping="WrapWholeWords" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+            </StackPanel>
+            <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Sign Out" />
                 <TextBlock TextWrapping="WrapWholeWords">If you have signed into Windows using a Microsoft account this will sign out any other computer signd in on the same Microsoft account.</TextBlock>
                 <Button Margin="0,5,0,0"

@@ -48,6 +48,22 @@
             }
         }
 
+        /// <summary>Enable the local network to communicate with devices. tied directly to settings.</summary>
+        public bool VirtualDeviceEnabled
+        {
+            get { return Settings.Instance.VirtualDeviceEnabled; }
+            set
+            {
+                if (value == Settings.Instance.VirtualDeviceEnabled) return;
+                Settings.Instance.VirtualDeviceEnabled = value;
+
+                // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
+                Task.Run(() => ((App)Application.Current).StartOrKillNetworkManagerBasedOnSettings());
+
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsNetworkConflict
         {
             get { return _isNetworkConflict; }
