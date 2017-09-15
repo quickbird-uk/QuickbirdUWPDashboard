@@ -141,7 +141,20 @@
         }
 
 
-        /// <summary>Local setting that allows the app to run local network for device management. Defaults to
+        /// <summary>Enbales / disables toasts. Defaults to 
+        /// True.</summary>
+        public bool ToastsEnabled
+        {
+            get { return Get(_localSettings, true); }
+            set
+            {
+                if (value == ToastsEnabled) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Local setting that enables or disables a vitual sensor device, for demo / testing purposes
         /// false.</summary>
         public bool VirtualDeviceEnabled
         {

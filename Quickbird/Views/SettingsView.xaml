@@ -54,6 +54,13 @@
                     Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource TrueVisible}, Mode=OneWay}" />
             </StackPanel>
             <StackPanel Padding="0, 15, 0, 0">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Toast Notifications" />
+                <TextBlock Text="Disable / Enable toast Notification. This app produces a lot of them, and they are good for diagnostics, but can be annoying" TextWrapping="WrapWholeWords" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.ToastsEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+            </StackPanel>
+            <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
                 <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
                 <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
@@ -63,7 +70,7 @@
             <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Virtual Device" />
                 <TextBlock Text="If you have no hardware devices, the app will create a virtual one for testing purposes. The device will have a few sensors and will produce random data. This data will get synced to the cloud. You will be able to see this data from other computers / clients." TextWrapping="WrapWholeWords" />
-                <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
+                <ToggleSwitch IsOn="{x:Bind ViewModel.VirtualDeviceEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
             </StackPanel>

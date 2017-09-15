@@ -10,6 +10,8 @@
         public static void Debug(string title, string text)
         {
 #if DEBUG
+            if (Settings.Instance.ToastsEnabled == false)
+                return;
             System.Diagnostics.Debug.WriteLine($"{title} - {text}");
             FireToast(title, text);
 #endif
@@ -22,6 +24,10 @@
 
         private static void FireToast(string title, string text)
         {
+            //No toasts if the setting is toggled off
+            if (Settings.Instance.ToastsEnabled == false)
+                return; 
+
             // Get a toast XML template
             var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastImageAndText04);
 
