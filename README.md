@@ -1,6 +1,6 @@
 # QuickbirdUWP
 ![ScreenCap](Images/MainScreenshot.PNG)
-Quickbird UWP App and corresponding server act as display / control interface for various Arduino or MCU based devices. 
+Quickbird UWP App and corresponding generic server act as display / control interface for various Arduino or MCU based devices. 
 Unlike most IoT clouds, which are numerous, this application brings IoT cloud into your local network. That means low latency, 
 instance responce, and reliability regardless of your internet connection. 
 
