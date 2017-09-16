@@ -63,7 +63,20 @@ The application aims to collect data form Arduino / MCU devices connected throug
 This repository includes a [PDF that describes HID descriptors](/docs/USB_HID2.pdf) 
 used for common sensors and other stuffs. 
 Work on this functionality has not yet begun. We will aim to provide examples with Arduino Due and Leonardo
-  
+
+## Supported Deployments
+* Windows 10 Pro on a generic computer 
+* Windows 10 IoT Core on a Raspberri Pi (graphs will be slow) 
+
+## MCU Guide
+This section will be completed with reccomended hardware and approach to making arduino-based hardware that talks to the app. 
+
+## Virtual Device
+To test the app and server components, use the virtual device
+
+# Server
+The server is currently written on ASP.net 4.6 and is due for replacement with ASP.net core. 
+The REST API is due to be replaced with a Websocket-based system. 
 
 # Development 
 
@@ -76,6 +89,13 @@ __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 __API Docs__: https://greenhouseapi.azurewebsites.net/swagger/ui/index
 
 __Arduino Code__: https://github.com/quickbird-uk/QuickbirdSensorBox 
+
+## Libraries and Dependecies
+* Syncfusion.SfChart
+* Newtonsoft Json.net
+* SQLLite (to be replaced by Dbreeze) 
+* GnatMQ (modified)
+* EntityFrameworkCore
 
 ## Milestones
 
