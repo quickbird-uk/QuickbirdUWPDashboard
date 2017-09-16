@@ -1,12 +1,11 @@
-# QuickbirdUWP
-![ScreenCap](Images/MainScreenshot.PNG)
-Quickbird UWP App and corresponding server act as display / control interface for various Arduino or MCU based devices. 
-Unlike most IoT clouds, which are numerous, this application brings IoT cloud into your local network. That means low latency, 
-instance responce, and reliability regardless of your internet connection. 
-
-It is meant for small scale industrial projects, such as greenhouses, not for domestic automation. 
-it is also meant to be run on a computer of some kind, in Assigned access mode.
-It is not meant to run in a headless manner on a linux box of some kind.
+# Quickbird IoT Dashboard
+Control Dashboard for industrial prototypes and custom-built systems that's offline-first, multi-protocol, fault-tolerant and ~~Idiot-proof~~ err, I mean user-friendly. 
+It is meant for small and medium scale industrial projects, such as greenhouses, not for domestic automation. It works well when you have a custom-build system based on MCU/Arduino or PLC, to give them a touch-screen interface like this:
+![ScreenCap](Images/Tablet_Front_1.png)
+It's a windows 10 app you can get form the store and install on a computer that will act as display / control interface for your industrial equipment. "Your equipment" means various Arduino or MCU based devices that are controlling something, such as greenhosue equipment, relays, some stuff in a factory. 
+### System Diagram
+![ScreenCap](Images/SystemDiagram.png)
+The app also syncs with the cloud, so you can monitor what's happening remotely. There are plenty of IoT cloud application, however the whole point of the system is that this application "brings IoT cloud to you". That means low latency, instance responce, and reliability regardless of your internet connection. 
 
 ## Assigned Access
 ![Assigned Access](Images/AssignedAccess.PNG)
@@ -16,6 +15,16 @@ If the application crashes, it will be restarted. To make sure the applicaiton i
 (and collecting data), set the computer to LogOn automatically, and to restart after poewr failure.
 We did this on a touch-screen device and as a result you get a really nice control-panel type device.
 ![Assigned Access](Images/TouchscreenApp.jpg)
+
+## This app will not
+#### Run as a server in the background
+We do not accept dealing with problems that will arise from running this app in the background while the user is 
+torrenting porn or installing yet another virus. If you want to use it in a serious setting, be prepared to dedicate a computer for it. If you are not prepared to dedicate at least an old laptop, then this isn't for you. 
+
+####  Support headless mode
+Sure, headless computers are cheaper, but there is always something wrong with them - they run out of disk space, your forgot the IP address, someone stepped on them, etc. Whatever the case - you can't fix them by clicking buttons 
+
+
 
 ## Data Harvesting
 The app is meant to harvest data from different sources, the more the marrier. Currently they are: 
