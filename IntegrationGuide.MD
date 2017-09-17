@@ -1,4 +1,12 @@
-# integration
+# Integration
+![TypicalMess](/Images/TypicalMess.JPG)
+At the moment the app only supports local network communication over MQTT. 
+It may not sound like much, but that actually covers a huge amount of custom industrial hardware
+* Arduinos 
+* Other microcontrollers with build in Ethernet
+* ESP8266 - Community Favourite
+* MCU-based PLCs
+
 
 
 To Integrate your arduino device with the 
@@ -20,13 +28,15 @@ boolean data type in this struct. Mbed framework does that.
 
 
 # Sensor Types
+Sensor Types are defined by the database - if your device sends invalid sensor type, the 
+data will not be accepted. The table below sumamrises sensor types. You only need the ID 
 
 | ID |  Parameter  | Range   	| Unit | Placement          	| Subsystem     |
 |----|:-----------:|:----------:|:----:|:----------------------:|:-------------:|
 | 1  | Water level | 0 - 100  	| %    | Acid Tank          	| Acidity / PH  |
 | 2  | Water level | 0 - 100  	| %    | Base Tank	      		| Acidity / PH  |
-| 3  | Ph Sensor   | 0 - 14   	| N/A  | Returning Solution 	| Acidity / PH  |
-| 4  | Ph Sensor   | 0 - 14   	| N/A  | Solution Tank  	  	| Acidity / PH  |
+| 3  | Ph Sensor   | 0 - 14   	|      | Returning Solution 	| Acidity / PH  |
+| 4  | Ph Sensor   | 0 - 14   	|      | Solution Tank  	  	| Acidity / PH  |
 | 5  | Humidity	   | 0 - 100  	| %    | Ambient Indoors		| Climate		|
 | 6  | Temperature |  N/A	  	| ℃   | Ambient Indoors			| Climate	    |
 | 7  | Temperature |  N/A 	  	| ℃   | Returning Solution		| Climate	    |
@@ -42,3 +52,10 @@ boolean data type in this struct. Mbed framework does that.
 | 17 | Humidity    | 0 - 100  	| %    | Substrate				| Water         |
 | 18 | Light	   |  0 - 150	| Klx  | Solution Tank			| Water         |
 | 19 | Water level | 0 - 100  	| %    | Solution Tank			| Water         |
+
+## Raw data, in JSON for convenience
+* [SensorTypesTable](/docs/SensorTypesTable.json)
+* [SubsystemsTable](/docs/SubsystemsTable.json)
+* [PlacementTable](/docs/PlacementTable.json)
+* [ParametersTable](/docs/ParametersTable.json)
+* 
