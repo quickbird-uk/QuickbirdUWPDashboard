@@ -1,5 +1,5 @@
 # Integration
-![TypicalMess](/Images/TypicalMess.JPG)
+![TypicalMess](/Images/EquipmentOverview.JPG)
 At the moment the app only supports local network communication over MQTT. 
 It may not sound like much, but that actually covers a huge amount of custom industrial hardware
 * Arduinos 
@@ -27,7 +27,7 @@ Be carefull, on a 32bit MCU this code might not work out of the box, 32 bit MCU 
 boolean data type in this struct. Mbed framework does that. 
 
 
-# Sensor Types
+## Sensor Types
 Sensor Types are defined by the database - if your device sends invalid sensor type, the 
 data will not be accepted. The table below sumamrises sensor types. You only need the ID 
 
@@ -53,9 +53,8 @@ data will not be accepted. The table below sumamrises sensor types. You only nee
 | 18 | Light	   |  0 - 150	| Klx  | Solution Tank			| Water         |
 | 19 | Water level | 0 - 100  	| %    | Solution Tank			| Water         |
 
-## Raw data, in JSON for convenience
+### Raw data, in JSON for convenience
 * [SensorTypesTable](/docs/SensorTypesTable.json)
 * [SubsystemsTable](/docs/SubsystemsTable.json)
 * [PlacementTable](/docs/PlacementTable.json)
 * [ParametersTable](/docs/ParametersTable.json)
-* 
