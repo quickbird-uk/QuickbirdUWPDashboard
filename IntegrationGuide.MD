@@ -21,28 +21,24 @@ boolean data type in this struct. Mbed framework does that.
 
 # Sensor Types
 
-| ID |  Parameter  | Range    | Unit | Placement    | Subsystem     |
-|----|:-----------:|:--------:|:----:|:------------:|:-------------:|
-| 1  | Water level | 0 - 100  | %    | Acid Tank    | Acidity / PH  |
-| 2  | Water level | 0 - 100  | %    | Base Tank	| Acidity / PH  |
-
-
-## Id 1
-Water level sensor, 0 - 100%, Acid Tank,	Acidity Subsystem
-    "ID": 1,    "SubsystemID": 1,    "PlaceID": 1,    "ParamID": 5
-	
-## Id 2
-Water level sensor, 0 - 100%, Base Tank, Acidity Subsystem
-    "ID": 2,    "SubsystemID": 1,    "PlaceID": 2,    "ParamID": 5
-	
-## Id 3 
-Ph Sensor, 1 - 14 (no units), Returning Solution, Acidity Subsystem 
-    "ID": 3,     "SubsystemID": 1,    "PlaceID": 6,    "ParamID": 7
-	
-## Id 4 
-Ph Sensor, 1 -14 (no units), Solution Tank, Acidity Subsystem 
-    "ID": 4,    "SubsystemID": 1,    "PlaceID": 5,    "ParamID": 7
-
-## Id 5
-humidity, 0 - 100%,  Ambient Indoors, Climate
-    "ID": 5,    "SubsystemID": 2,    "PlaceID": 10,    "ParamID": 4
+| ID |  Parameter  | Range   	| Unit | Placement          	| Subsystem     |
+|----|:-----------:|:----------:|:----:|:----------------------:|:-------------:|
+| 1  | Water level | 0 - 100  	| %    | Acid Tank          	| Acidity / PH  |
+| 2  | Water level | 0 - 100  	| %    | Base Tank	      		| Acidity / PH  |
+| 3  | Ph Sensor   | 0 - 14   	| N/A  | Returning Solution 	| Acidity / PH  |
+| 4  | Ph Sensor   | 0 - 14   	| N/A  | Solution Tank  	  	| Acidity / PH  |
+| 5  | Humidity	   | 0 - 100  	| %    | Ambient Indoors		| Climate		|
+| 6  | Temperature |  N/A	  	| ℃   | Ambient Indoors			| Climate	    |
+| 7  | Temperature |  N/A 	  	| ℃   | Returning Solution		| Climate	    |
+| 8  | Temperature |  N/A 	  	| ℃   | Solution Tank			| Cliamte	    |
+| 9  | Temperature |  N/A 	  	| ℃   | Substrate				| Climate       |
+| 10 | CO₂ 		   | 0 - 10,000	| ‰    | Ambient Indoors		| CO₂		    |
+| 11 | Light	   | 0 - 150	| Klx  | Ambient Indoors		| Light 	    |
+| 12 | Conductivity| 0 - 10  	| mS/m | Returning Solution		| Nutrient	    |
+| 13 | Conductivity| 0 - 10  	| mS/m | Solution Tank			| Nutrient      |
+| 14 | Water level | 0 - 100  	| %    | Nutrient Tank			| Nutrient      |
+| 15 | O₂		   | ?       	| ‰    | Solution Tank			| Oxygen        |
+| 16 | Water Flow  | 0 - 100  	| L/m  | Water Inlet			| Water         |
+| 17 | Humidity    | 0 - 100  	| %    | Substrate				| Water         |
+| 18 | Light	   |  0 - 150	| Klx  | Solution Tank			| Water         |
+| 19 | Water level | 0 - 100  	| %    | Solution Tank			| Water         |
