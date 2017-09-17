@@ -50,4 +50,4 @@ Now for the big part
 7.	
 8.	ControlHistory
 9.	SensorData
-![DatabaseModel](/docs/PullOrder.png)
+![DatabaseModel](/docs/SyncStrategy.png)

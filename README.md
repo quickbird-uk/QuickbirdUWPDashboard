@@ -7,7 +7,7 @@ The result is that "Normal people" can interact with your system, which means ma
 * **Multi-protocol** IoT gateway will capture data from MQTT, BLE, serial and sync it to the cloud
 * **Dashboard** will show the data and controls on a touch-schreen device
 * **Offline-first** brings "IoT cloud" to you and runs on your local network, which means low latency and reliability regardless of your internet connection. It will record the data while offline and sync later. 
-*  **Idiot-proof** It's one package that you download from the store, so you can't screw it up. You don't need to know linux commands or SSH,  It requires no special skills beyong setting up a normal windows computer and running an app. 
+* **Idiot-proof** It's one package that you download from the store, so you can't screw it up. You don't need to know linux commands or SSH,  It requires no special skills beyong setting up a normal windows computer and running an app. 
 
 ## How do I use it? 
 Grab an Arduino, and write your sensor / control software like you usually would, make it collect readings and control motors / pumps / whaver. Take a look at our guide for [making Arduino's work realiably](https://blog.quickbird.uk/making-iot-contraptions-reliable-b1b8c6f2ff04).
@@ -27,8 +27,8 @@ We did this on a touch-screen device and as a result you get a really nice contr
 
 
 ## Security model
-* The server API is secure
-* The LAN is somewhat secure
+* The server API is secured with TLS and JWT (pertty standard stuff)
+* The LAN is somewhat secure (AES keys Individually provisioned for each device) 
 * Some areas of the app can be protected with a pin to stop accidental and foolish stuff
 * Whoever has admin access to the PC is god
 * Whoever can reprogram your hardware / arduino is god
@@ -56,9 +56,9 @@ The packets contain the work 'sekret" in unicode (yes, I know it's stupid). The 
 that requires a display to detect this mesage and connect to the app.
 If the app detects that there is another broker on the network, broadcasting UDP messages, it will notify the user of the conflict.
 ![ScreenCap](Images/LocalBroker.PNG)
-If the "Local Device Management" functionalityh is disabled, UDP broadcasting and MQTT server are shut down.
+If the "Local Device Management" functionality is disabled, UDP broadcasting and MQTT server are shut down.
 
-Future plans: 
+### Future plans: 
 * We are considering AllJoin and other LAN networking standards.
 * We are considering Implementing network Fail-over 
 * We are planning to implement AES encryption
@@ -114,12 +114,6 @@ The app will never contain the actual control loop, i.e. it will never respond t
 # Server
 The server is currently written on ASP.net 4.6 and is due for replacement with ASP.net core. 
 The REST API is due to be replaced with a Websocket-based system
-
-# Our Commitment 
-* Keep the app open source 
-*  We may or may not keep the server component open source 
-
-
 
 # Development 
 
@@ -178,3 +172,7 @@ _Maintenance:_ Bug fixes and local db perf (will run profiler make graph loading
 
 * API breaking update to sync code
 * Sensor histories now use `UploadedAt` instead of `UpdatedAt`
+
+# Our Commitment 
+* Keep the app open source 
+* We may or may not keep the server component open source 
