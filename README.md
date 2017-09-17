@@ -1,37 +1,47 @@
 # Quickbird IoT Dashboard
-Control Dashboard for industrial prototypes and custom-built systems that's offline-first, multi-protocol, fault-tolerant and ~~Idiot-proof~~ err, I mean user-friendly. 
-It is meant for small and medium scale industrial projects, such as greenhouses, not for domestic automation. It works well when you have a custom-build system based on MCU/Arduino or PLC, to give them a touch-screen interface like this:
+A Windows 10 app that will act as display / control interface for industrial control systems. The app syncs with the cloud, so you can monitor what's happening remotely. It is meant for developers/makers who are building or prototyping control systems based on MCU/Arduino or PLCs and want to give them a touch-screen interface like this: 
 ![ScreenCap](Images/Tablet_Front_1.png)
-It's a windows 10 app you can get form the store and install on a computer that will act as display / control interface for your industrial equipment. "Your equipment" means various Arduino or MCU based devices that are controlling something, such as greenhosue equipment, relays, some stuff in a factory. 
-### System Diagram
-![ScreenCap](Images/SystemDiagram.png)
-The app also syncs with the cloud, so you can monitor what's happening remotely. There are plenty of IoT cloud application, however the whole point of the system is that this application "brings IoT cloud to you". That means low latency, instance responce, and reliability regardless of your internet connection. 
+The result is that ordinary computer users can interact with your system, which means makers and hackers can get their industrial prototypes and custom-built systems into sellable state 3 times faster.  
 
-## Assigned Access
-![Assigned Access](Images/AssignedAccess.PNG)
+#### Functionality
+* **Multi-protocol** IoT gateway will capture data from MQTT, BLE, serial and sync it to the cloud
+* **Dashboard** will show the data and controls on a touch-schreen device
+* **Offline-first** brings "IoT cloud" to you and runs on your local network, which means low latency and reliability regardless of your internet connection. It will record the data while offline and sync later. 
+*  **Idiot-proof** It's one package that you download from the store, so you can't screw it up. You don't need to know linux commands or SSH,  It requires no special skills beyong setting up a normal windows computer and running an app. 
+
+## How do I use it? 
+Grab an Arduino, and write your sensor / control software like you usually would, make it collect readings and control motors / pumps / whaver. Take a look at our guide for [making Arduino's work realiably](https://blog.quickbird.uk/making-iot-contraptions-reliable-b1b8c6f2ff04).
+
+Next, [head over to our examples repo](https://github.com/quickbird-uk/QuickbirdSensorBox) and choose the mode of communication that suits you. Take your time to read the considerations we give to the way you should design the system for best results. 
+It should take you no more than a day to make your device talk to the app. The app will detect your device and display all the readings immediately. 
+![ScreenCap](Images/SystemDiagram.png)
+
+## Industrial Setting 
+![Assigned Access](Images/TouchscreenApp.jpg)
 For Industrial and semi-industrial settings, the app is meant to be run in Assigned Access mode.
 When the applciaiton is run in this manner, user cannot quit the applicaiton unless they have administrator password. 
+![Assigned Access](Images/AssignedAccess.PNG)
 If the application crashes, it will be restarted. To make sure the applicaiton is running at all times
-(and collecting data), set the computer to LogOn automatically, and to restart after poewr failure.
+(and collecting data), set the computer to LogOn automatically, and to restart after power failure.
 We did this on a touch-screen device and as a result you get a really nice control-panel type device.
-![Assigned Access](Images/TouchscreenApp.jpg)
-
-## This app will not
-#### Run as a server in the background
-We do not accept dealing with problems that will arise from running this app in the background while the user is 
-torrenting porn or installing yet another virus. If you want to use it in a serious setting, be prepared to dedicate a computer for it. If you are not prepared to dedicate at least an old laptop, then this isn't for you. 
-
-####  Support headless mode
-Sure, headless computers are cheaper, but there is always something wrong with them - they run out of disk space, your forgot the IP address, someone stepped on them, etc. Whatever the case - you can't fix them by clicking buttons 
 
 
+## Security model
+* The server API is secure
+* The LAN is somewhat secure
+* Some areas of the app can be protected with a pin
+* Whoever has admin access to the PC is god
+* Whoever can reprogram your hardware / arduino is god
 
-## Data Harvesting
-The app is meant to harvest data from different sources, the more the marrier. Currently they are: 
-* LAN Networking	✓
-* USB HID			⧗
-* BLE 				⧗
-* Serial-JSON		⧗
+## Connectivity P
+The app is meant to harvest data from different sources, the more the marrier. Currently only LAN is implemented, but we are working on more of them: 
+* LAN Networking				✓
+* USB HID							⧗
+* BLE 									⧗
+* Serial-JSON						⧗
+* Ethernet-enabled PLCs		⧗
+* [Yoctopuse Kit](http://www.yoctopuce.com/) ⧗
+* KNX protocol		⧗
 
 ### Networking 
 The application runs an embedded MQTT server, GnatMQ, on local port 1883 
@@ -74,18 +84,42 @@ used for common sensors and other stuffs.
 Work on this functionality has not yet begun. We will aim to provide examples with Arduino Due and Leonardo
 
 ## Supported Deployments
-* Windows 10 Pro on a generic computer 
-* Windows 10 IoT Core on a Raspberri Pi (graphs will be slow) 
+We suppport use of the app on the following 
 
-## MCU Guide
-This section will be completed with reccomended hardware and approach to making arduino-based hardware that talks to the app. 
+* Windows 10 Pro on a generic computer 
+* **[Latte Panda](http://www.lattepanda.com/)** a board with embedded Arduino Leonardo Controller. An RTC must be added for any serious work
+* **[UP Mini PC](http://www.up-board.org/up/)** which can make sense if you add an [Arduino Hat](https://www.dfrobot.com/product-1211.html)
+* Windows 10 IoT Core on a Raspberri Pi (Testing only) 
+* Windows 10 IoT Core on Dragonboard 410c (has no RTC, so is only of limited use). 
+* One day we will have a .Net core deployment with [Avalonia as UI](https://github.com/AvaloniaUI/Avalonia), so you'll be bale ot deploy this on any linux machine. But that is faaar down the road. 
+
 
 ## Virtual Device
-To test the app and server components, use the virtual device
+To test the app and server components, use the virtual device option in setting. However, activating this option  in more than one instance of the applicaiton at the same time will result in weired sync issues, as they will be producing data for the same device, and the server won;t know which data to choose. . 
+
+## This app is not meant to
+#### Run in the background
+We do not accept dealing with problems that will arise from running this app in the background while the user is 
+torrenting porn or installing yet another virus. If you are not prepared to dedicate at least one of those cheap set-top boxes, then this isn't for you. 
+
+####  Support headless mode
+Headless linux-boxes are cheaper, but there is always something wrong with them - they run out of disk space, your forgot the IP address, someone stepped on them, etc. Whatever the case - average dude at the factory can't see what's happening, and can't fix a problem by clicking buttons.
+
+#### Run the actual control loop
+The app will never contain the actual control loop, i.e. it will never respond to readings from a sensor to change setting on one of the actuators. The reason for this is simple - first the app should not be a safety-critical component of hte system, it's crash and restart should have no effect. second is that your system has failure modes known only to you. For isntance, we've seen systems where a disconnected PH probe will report a reading of 14, and activating pumps based on this information would cause disaster. Only you as developer of the hardware can know of these details and should manage them. 
 
 # Server
 The server is currently written on ASP.net 4.6 and is due for replacement with ASP.net core. 
-The REST API is due to be replaced with a Websocket-based system. 
+The REST API is due to be replaced with a Websocket-based system
+
+# Fiancial Matters 
+We are currently seeing if the 
+
+# Our Commitment 
+* Keep the app open source 
+*  We may or may not keep the server component open source 
+
+
 
 # Development 
 
