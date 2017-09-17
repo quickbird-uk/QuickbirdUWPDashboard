@@ -12,6 +12,7 @@ It may not sound like much, but that actually covers a huge amount of custom ind
 To Integrate your arduino device with the 
 
 Over the network they must send the following **binary** datatype (Json support coming soon): 
+```C
 	struct Reading
 	{
 		float value;
@@ -20,6 +21,7 @@ Over the network they must send the following **binary** datatype (Json support 
 		//Defined in the database
 		byte SensorTypeID;
 	};
+```
 
 What do I mean by binary? Well, this is a 9 byte, in size, struct. Shove it into an array: 
 
