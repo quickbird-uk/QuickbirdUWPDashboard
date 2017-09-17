@@ -1,7 +1,7 @@
 # Quickbird IoT Dashboard
-A Windows 10 app that will act as display / control interface for industrial control systems. The app syncs with the cloud, so you can monitor what's happening remotely. It is meant for developers/makers who are building or prototyping control systems based on MCU/Arduino or PLCs and want to give them a touch-screen interface like this: 
+A Windows 10 app that will act as display / control interface for industrial control systems. The app syncs with the cloud, so you can monitor what's happening remotely. It is meant for developers/makers who are building or prototyping industrial control systems based on MCU/Arduino or PLCs and want to give them a touch-screen interface like this: 
 ![ScreenCap](Images/Tablet_Front_1.png)
-The result is that ordinary computer users can interact with your system, which means makers and hackers can get their industrial prototypes and custom-built systems into sellable state 3 times faster.  
+The result is that "Normal people" can interact with your system, which means makers and hackers can get their industrial prototypes and custom-built systems into sellable state 3 times faster.  
 
 #### Functionality
 * **Multi-protocol** IoT gateway will capture data from MQTT, BLE, serial and sync it to the cloud
@@ -16,24 +16,24 @@ Next, [head over to our examples repo](https://github.com/quickbird-uk/Quickbird
 It should take you no more than a day to make your device talk to the app. The app will detect your device and display all the readings immediately. 
 ![ScreenCap](Images/SystemDiagram.png)
 
-## Industrial Setting 
-![Assigned Access](Images/TouchscreenApp.jpg)
+# Use in Industrial Setting 
 For Industrial and semi-industrial settings, the app is meant to be run in Assigned Access mode.
 When the applciaiton is run in this manner, user cannot quit the applicaiton unless they have administrator password. 
-![Assigned Access](Images/AssignedAccess.PNG)
+![Assigned Access](Images/TouchscreenApp.jpg)
 If the application crashes, it will be restarted. To make sure the applicaiton is running at all times
 (and collecting data), set the computer to LogOn automatically, and to restart after power failure.
 We did this on a touch-screen device and as a result you get a really nice control-panel type device.
+![Assigned Access](Images/AssignedAccess.PNG)
 
 
 ## Security model
 * The server API is secure
 * The LAN is somewhat secure
-* Some areas of the app can be protected with a pin
+* Some areas of the app can be protected with a pin to stop accidental and foolish stuff
 * Whoever has admin access to the PC is god
 * Whoever can reprogram your hardware / arduino is god
 
-## Connectivity P
+## Connectivity
 The app is meant to harvest data from different sources, the more the marrier. Currently only LAN is implemented, but we are working on more of them: 
 * LAN Networking				✓
 * USB HID							⧗
@@ -111,9 +111,6 @@ The app will never contain the actual control loop, i.e. it will never respond t
 # Server
 The server is currently written on ASP.net 4.6 and is due for replacement with ASP.net core. 
 The REST API is due to be replaced with a Websocket-based system
-
-# Fiancial Matters 
-We are currently seeing if the 
 
 # Our Commitment 
 * Keep the app open source 
