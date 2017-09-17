@@ -1,0 +1,47 @@
+[
+  {
+    "ID": 1,
+    "Name": "O₂",
+    "Unit": "‰"
+  },
+  {
+    "ID": 2,
+    "Name": "CO₂",
+    "Unit": "‰"
+  },
+  {
+    "ID": 3,
+    "Name": "Conductivity",
+    "Unit": "mS/m"
+  },
+  {
+    "ID": 4,
+    "Name": "Humidity",
+    "Unit": "%"
+  },
+  {
+    "ID": 5,
+    "Name": "Level",
+    "Unit": "%"
+  },
+  {
+    "ID": 6,
+    "Name": "Light",
+    "Unit": "klx"
+  },
+  {
+    "ID": 7,
+    "Name": "Ph",
+    "Unit": ""
+  },
+  {
+    "ID": 8,
+    "Name": "Temp",
+    "Unit": "℃"
+  },
+  {
+    "ID": 9,
+    "Name": "Water Flow",
+    "Unit": "L/m"
+  }
+]

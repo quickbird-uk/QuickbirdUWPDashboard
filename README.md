@@ -11,10 +11,10 @@ The result is that "Normal people" can interact with your system, which means ma
 
 ## How do I use it? 
 Grab an Arduino, and write your sensor / control software like you usually would, make it collect readings and control motors / pumps / whaver. Take a look at our guide for [making Arduino's work realiably](https://blog.quickbird.uk/making-iot-contraptions-reliable-b1b8c6f2ff04).
-
-Next, [head over to our examples repo](https://github.com/quickbird-uk/QuickbirdSensorBox) and choose the mode of communication that suits you. Take your time to read the considerations we give to the way you should design the system for best results. 
-It should take you no more than a day to make your device talk to the app. The app will detect your device and display all the readings immediately. 
+Your goal is to connect your Arduinos to the local application and the applciation will take care of syncing to the cloud, You will have somethign like this:
 ![ScreenCap](Images/SystemDiagram.png)
+Next, [head over to our integrationGuide](IntegrationGuide.MD) and choose the mode of communication that suits you. Take your time to read the considerations we give to the way you should design the system for best results. 
+It should take you no more than a day to make your device talk to the app. The app will detect your device and display all the readings immediately. 
 
 # Use in Industrial Setting 
 For Industrial and semi-industrial settings, the app is meant to be run in Assigned Access mode.
@@ -42,6 +42,9 @@ The app is meant to harvest data from different sources, the more the marrier. C
 * Ethernet-enabled PLCs		⧗
 * [Yoctopuse Kit](http://www.yoctopuce.com/) ⧗
 * KNX protocol		⧗
+
+## Data Model
+[Check our data model here](DataModel.MD)
 
 ### Networking 
 The application runs an embedded MQTT server, GnatMQ, on local port 1883 

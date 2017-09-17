@@ -1,0 +1,116 @@
+[
+  {
+    "ID": 1,
+    "SubsystemID": 1,
+    "PlaceID": 1,
+    "ParamID": 5
+  },
+  {
+    "ID": 2,
+    "SubsystemID": 1,
+    "PlaceID": 2,
+    "ParamID": 5
+  },
+  {
+    "ID": 3,
+    "SubsystemID": 1,
+    "PlaceID": 6,
+    "ParamID": 7
+  },
+  {
+    "ID": 4,
+    "SubsystemID": 1,
+    "PlaceID": 5,
+    "ParamID": 7
+  },
+  {
+    "ID": 5,
+    "SubsystemID": 2,
+    "PlaceID": 10,
+    "ParamID": 4
+  },
+  {
+    "ID": 6,
+    "SubsystemID": 2,
+    "PlaceID": 10,
+    "ParamID": 8
+  },
+  {
+    "ID": 7,
+    "SubsystemID": 2,
+    "PlaceID": 6,
+    "ParamID": 8
+  },
+  {
+    "ID": 8,
+    "SubsystemID": 2,
+    "PlaceID": 5,
+    "ParamID": 8
+  },
+  {
+    "ID": 9,
+    "SubsystemID": 2,
+    "PlaceID": 8,
+    "ParamID": 8
+  },
+  {
+    "ID": 10,
+    "SubsystemID": 3,
+    "PlaceID": 10,
+    "ParamID": 2
+  },
+  {
+    "ID": 11,
+    "SubsystemID": 4,
+    "PlaceID": 10,
+    "ParamID": 6
+  },
+  {
+    "ID": 12,
+    "SubsystemID": 5,
+    "PlaceID": 6,
+    "ParamID": 3
+  },
+  {
+    "ID": 13,
+    "SubsystemID": 5,
+    "PlaceID": 5,
+    "ParamID": 3
+  },
+  {
+    "ID": 14,
+    "SubsystemID": 5,
+    "PlaceID": 3,
+    "ParamID": 5
+  },
+  {
+    "ID": 15,
+    "SubsystemID": 6,
+    "PlaceID": 5,
+    "ParamID": 1
+  },
+  {
+    "ID": 16,
+    "SubsystemID": 7,
+    "PlaceID": 11,
+    "ParamID": 9
+  },
+  {
+    "ID": 17,
+    "SubsystemID": 7,
+    "PlaceID": 8,
+    "ParamID": 4
+  },
+  {
+    "ID": 18,
+    "SubsystemID": 7,
+    "PlaceID": 5,
+    "ParamID": 6
+  },
+  {
+    "ID": 19,
+    "SubsystemID": 7,
+    "PlaceID": 5,
+    "ParamID": 5
+  }
+]

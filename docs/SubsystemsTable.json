@@ -1,0 +1,30 @@
+[
+  {
+    "ID": 1,
+    "Name": "Acidity"
+  },
+  {
+    "ID": 2,
+    "Name": "Climate"
+  },
+  {
+    "ID": 3,
+    "Name": "CO₂"
+  },
+  {
+    "ID": 4,
+    "Name": "Light"
+  },
+  {
+    "ID": 5,
+    "Name": "Nutrient"
+  },
+  {
+    "ID": 6,
+    "Name": "Oxygen"
+  },
+  {
+    "ID": 7,
+    "Name": "Water"
+  }
+]

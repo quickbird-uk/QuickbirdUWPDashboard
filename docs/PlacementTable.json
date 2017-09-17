@@ -1,0 +1,46 @@
+[
+  {
+    "ID": 1,
+    "Name": "Acid Tank"
+  },
+  {
+    "ID": 2,
+    "Name": "Base Tank"
+  },
+  {
+    "ID": 3,
+    "Name": "Nutrient Tank"
+  },
+  {
+    "ID": 4,
+    "Name": "Solution Pump"
+  },
+  {
+    "ID": 5,
+    "Name": "Solution Tank"
+  },
+  {
+    "ID": 6,
+    "Name": "Returning Solution"
+  },
+  {
+    "ID": 7,
+    "Name": "Solution at Plants"
+  },
+  {
+    "ID": 8,
+    "Name": "Substrate"
+  },
+  {
+    "ID": 9,
+    "Name": "Ambient Outdoors"
+  },
+  {
+    "ID": 10,
+    "Name": "Ambient Indoors"
+  },
+  {
+    "ID": 11,
+    "Name": "Water Inlet"
+  }
+]
