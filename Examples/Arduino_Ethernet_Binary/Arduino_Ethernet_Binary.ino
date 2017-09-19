@@ -6,6 +6,7 @@
  */
 
 #include <SPI.h>
+/// If you have just normal Ethernet shield, replace this crap with the normal ethernet library
 #include <DhcpV2_0.h>
 #include <DnsV2_0.h>
 #include <EthernetClientV2_0.h>

@@ -100,7 +100,7 @@
             var rawClientID = publishEvent.Key.Replace(":", string.Empty);
             if (Guid.TryParse(rawClientID, out clientID) == false)
             {
-                Debug.WriteLine("recieved message with invalid ClientID");
+                Util.Toast.NotifyUserOfError($"recieved message with invalid ClientID, {clientID} is not a valid ID");
             }
             else
             {
@@ -112,7 +112,7 @@
                     var rawData = message.Message;
                     if (rawData.Length%SensorMessage.incomingLength != 0)
                     {
-                        Debug.WriteLine("message recieved over MQTT has incorrect length!");
+                        Util.Toast.NotifyUserOfError($"message recieved over MQTT is invalid. it must consist of sensor readings, {SensorMessage.incomingLength} bytes long each. It's length is {rawData.Length}, not divisble by {SensorMessage.incomingLength}");
                     }
                     else
                     {
