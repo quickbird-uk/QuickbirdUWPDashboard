@@ -175,6 +175,8 @@
             public float value;
             public int duration;
             public byte SensorTypeID;
+
+            ///Binarry Message Length. 
             public const int incomingLength = 9;
         }
     }

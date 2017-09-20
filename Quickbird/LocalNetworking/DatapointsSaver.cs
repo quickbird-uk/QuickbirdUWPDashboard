@@ -105,6 +105,7 @@
                         catch (ArgumentNullException)
                         {
                             //TODO add a new sensor to the device! 
+                            Util.Toast.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
                         }
                     }
 
@@ -135,76 +136,89 @@
         /// <param name="values"></param>
         private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
         {
-            //Make sure that if fired several times, the constraints are maintained
+            var db = new MainDbContext();
 
-            if (Settings.Instance.IsLoggedIn && Settings.Instance.LastSuccessfulGeneralDbGet != default(DateTimeOffset) &&
-                _dbDevices.Any(dev => dev.SerialNumber == values.Key) == false)
+            //Make sure that it is good and proper to create this device
+            if (Settings.Instance.IsLoggedIn == false
+                || Settings.Instance.LastSuccessfulGeneralDbGet == default(DateTimeOffset) 
+                || _dbDevices.Any(dev => dev.SerialNumber == values.Key))
             {
-                Debug.WriteLine("addingDevice");
-                var db = new MainDbContext();
+                return false;
+            }
 
-                var device = new Device
+            //Make sure this device is reporting valid sensor Id's
+            var sensorTypes = db.SensorTypes.ToList();
+            foreach (var sensor in values.Value)
+            {
+                if (sensorTypes.FirstOrDefault(st => st.ID == sensor.SensorTypeID) == null)
                 {
-                    ID = Guid.NewGuid(),
-                    SerialNumber = values.Key,
-                    Deleted = false,
+                    Util.Toast.NotifyUserOfError($"Receieved message with sensor ID {sensor.SensorTypeID}, but it is invalid - there is no such ID");
+                    return false; //If any of the sensors are invalid, then return;
+                }
+            }
+            
+            Debug.WriteLine("addingDevice");
+            
+            var device = new Device
+            {
+                ID = Guid.NewGuid(),
+                SerialNumber = values.Key,
+                Deleted = false,
+                CreatedAt = DateTimeOffset.Now,
+                UpdatedAt = DateTimeOffset.Now,
+                Name = string.Format("Box Number {0}", _dbDevices.Count),
+                Relays = new List<Relay>(),
+                Sensors = new List<Sensor>(),
+                Version = new byte[32],
+                Location =
+                    new Location
+                    {
+                        ID = Guid.NewGuid(),
+                        Deleted = false,
+                        Name = string.Format("Box Number {0}", _dbDevices.Count),
+                        PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
+                        Version = new byte[32],
+                        CropCycles = new List<CropCycle>(),
+                        Devices = new List<Device>(),
+                        RelayHistory = new List<RelayHistory>(),
+                        SensorHistory = new List<SensorHistory>(),
+                        CreatedAt = DateTimeOffset.Now,
+                        UpdatedAt = DateTimeOffset.Now
+                    }
+            };
+
+            db.Devices.Add(device);
+            db.Locations.Add(device.Location);
+            //Add sensors
+            foreach (var inSensors in values.Value)
+            {
+                //Todo check correctness of hte sensorType
+                var newSensor = new Sensor
+                {
                     CreatedAt = DateTimeOffset.Now,
                     UpdatedAt = DateTimeOffset.Now,
-                    Name = string.Format("Box Number {0}", _dbDevices.Count),
-                    Relays = new List<Relay>(),
-                    Sensors = new List<Sensor>(),
-                    Version = new byte[32],
-                    Location =
-                        new Location
-                        {
-                            ID = Guid.NewGuid(),
-                            Deleted = false,
-                            Name = string.Format("Box Number {0}", _dbDevices.Count),
-                            PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
-                            Version = new byte[32],
-                            CropCycles = new List<CropCycle>(),
-                            Devices = new List<Device>(),
-                            RelayHistory = new List<RelayHistory>(),
-                            SensorHistory = new List<SensorHistory>(),
-                            CreatedAt = DateTimeOffset.Now,
-                            UpdatedAt = DateTimeOffset.Now
-                        }
+                    ID = Guid.NewGuid(),
+                    DeviceID = device.ID,
+                    Deleted = false,
+                    SensorTypeID = inSensors.SensorTypeID,
+                    Enabled = true,
+                    Multiplier = 1,
+                    Offset = 0,
+                    Version = new byte[32]
                 };
-
-                db.Devices.Add(device);
-                db.Locations.Add(device.Location);
-                //Add sensors
-                foreach (var inSensors in values.Value)
-                {
-                    //Todo check correctness of hte sensorType
-                    var newSensor = new Sensor
-                    {
-                        CreatedAt = DateTimeOffset.Now,
-                        UpdatedAt = DateTimeOffset.Now,
-                        ID = Guid.NewGuid(),
-                        DeviceID = device.ID,
-                        Deleted = false,
-                        SensorTypeID = inSensors.SensorTypeID,
-                        Enabled = true,
-                        Multiplier = 1,
-                        Offset = 0,
-                        Version = new byte[32]
-                    };
-                    device.Sensors.Add(newSensor);
-                }
-                db.SaveChanges();
-
-                //Add the device to the cached data? 
-                _dbDevices.Add(device);
-                foreach (var sensor in device.Sensors)
-                {
-                    _sensorBuffer.Add(new SensorBuffer(sensor));
-                }
-                db.Dispose();
-
-                return true;
+                device.Sensors.Add(newSensor);
             }
-            return false;
+            db.SaveChanges();
+
+            //Add the device to the cached data? 
+            _dbDevices.Add(device);
+            foreach (var sensor in device.Sensors)
+            {
+                _sensorBuffer.Add(new SensorBuffer(sensor));
+            }
+            db.Dispose();
+
+            return true;
         }
 
         private void HardwareChanged(string value)
