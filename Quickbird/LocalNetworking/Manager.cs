@@ -108,8 +108,9 @@
 
             SensorMessage[] readings = null;
             var message = publishEvent.Value;
+            string prefix = message.Topic.Substring(0, 8); 
 
-            if (message.Topic.Substring(0, 7).CompareTo("readings") != 0)
+            if (prefix.CompareTo("readings") != 0)
                 return;
 
             else if (message.Topic.CompareTo("readings/v1/binary") == 0)

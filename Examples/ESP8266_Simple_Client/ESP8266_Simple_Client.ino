@@ -1,18 +1,17 @@
 /*
- *  This sketch sends data via HTTP GET requests to data.sparkfun.com service.
- *
- *  You need to get streamId and privateKey at data.sparkfun.com and paste them
- *  below. Or just customize this script to talk to other HTTP servers.
- *
+ *  This sketch Connects to Wifi
+ *  Detects Quickbird APP Broker ON the network
+ *  Sends it Data
  */
-
+ 
+#include <PubSubClient.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
 
 /*WIFI STUFF */
-const char* ssid     = "Enter_Wifi_name";
-const char* password = "Enter_wifi_Password";
+const char* ssid     = "QBnet2.4";
+const char* password = "asteroidsareamyth";
 
 /* UDP STUFF */
 WiFiUDP Udp;
@@ -24,9 +23,18 @@ char incomingPacket[255];
 /* MQTT STUF */
 bool serverFound = false; 
 IPAddress serverIP;
-const uint16_t port = 1883;
+const uint16_t MqttPort = 1883;
+WiFiClient WifiClient;
+PubSubClient _pubSubClient; 
+bool mqttConnected; 
+/*Globally unique identifier is how the app knowns who is connecting. 
+ * It needs to be different for every device. 
+ * You can get yourself one at https://guidgenerator.com/online-guid-generator.aspx
+ */
+char deviceID[48] = "1221e8e7aab2443eb570ffecedd28820"; 
 
-
+/*Sensor Loop Stuff*/
+uint32_t lastSensorTick = 0;
 
 
 void setup() {
@@ -54,20 +62,58 @@ void setup() {
 
   //StartUDP
   Udp.begin(localUdpPort);
+  _pubSubClient.setServer(serverIP, MqttPort).setClient(WifiClient);
 }
 
 int value = 0;
 
 void loop() {
-    serverFound = UDPLoop();
+  if(WiFi.status() != WL_CONNECTED) {
+    Serial.println("Wifi COnnection Lost! Recconecting! ");
+    WiFi.begin(ssid, password);
 
-    if(serverFound)
-    {
-      
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
     }
+  }
+
+  bool serverChange = UDPLoop();
+  if(serverChange)
+  {
+    serverFound = true; 
+    _pubSubClient.setServer(serverIP, MqttPort); 
+    Serial.printf("Set New MQTT server at %d.%d.%d.%d \n", serverIP[0], serverIP[1], serverIP[2], serverIP[3]);
+  }
+
+  if(serverFound && micros() - lastSensorTick > 1000000)
+  {
+    Serial.println("TimeToSend");
+    ConnectAndSend();
+    lastSensorTick = micros();
+  }
 }
 
-bool UDPLoop(){
+void ConnectAndSend()
+{
+  mqttConnected = _pubSubClient.connected();
+  if(mqttConnected == false)
+  {
+    mqttConnected = _pubSubClient.connect(deviceID);
+  }
+  if(mqttConnected == false)
+  {
+    Serial.println("Can't Connect");
+    return; //if we still failed to connect, return
+  }
+    
+  _pubSubClient.publish("readings/v1/binary", "Bullshit",8); 
+  Serial.println("Sent a message");
+}
+
+/*This function reads UDP messages and sets the IP Address
+ * for Quickbird App Host that it finds on the network
+ */bool UDPLoop(){
   int packetSize = Udp.parsePacket();
 
   if(serverIP == Udp.remoteIP())  
@@ -100,5 +146,6 @@ bool UDPLoop(){
 
    serverIP = Udp.remoteIP(); //Set Correct remote IP
    Serial.printf("Recieved UDP beacon, Remote IP set to: %d.%d.%d.%d\n", serverIP[0],serverIP[1], serverIP[2], serverIP[3]); 
+   return true; 
 }
 
