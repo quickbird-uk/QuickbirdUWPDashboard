@@ -93,7 +93,12 @@
                     {
                         try
                         {
-                            var sensorBuffer = _sensorBuffer.First(sb => sb.Sensor.SensorTypeID == message.SensorTypeID);
+                            var sensorBuffer = _sensorBuffer.FirstOrDefault(sb => sb.Sensor.SensorTypeID == message.SensorTypeID);
+                            if(sensorBuffer == null)
+                            {
+                                Util.Toast.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
+                                break; 
+                            }
                             var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
@@ -105,7 +110,7 @@
                         catch (ArgumentNullException)
                         {
                             //TODO add a new sensor to the device! 
-                            Util.Toast.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
+                            
                         }
                     }
 

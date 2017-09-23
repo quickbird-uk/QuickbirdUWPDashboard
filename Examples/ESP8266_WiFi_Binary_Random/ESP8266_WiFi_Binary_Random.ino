@@ -9,6 +9,15 @@
 #include <WiFiUdp.h>
 
 
+struct Reading
+{
+  float value;
+  //in microseconds
+  int32_t duration;
+  //Defined in the database
+  byte SensorTypeID;
+};
+
 /*WIFI STUFF */
 const char* ssid     = "QBnet2.4";
 const char* password = "asteroidsareamyth";
@@ -31,10 +40,13 @@ bool mqttConnected;
  * It needs to be different for every device. 
  * You can get yourself one at https://guidgenerator.com/online-guid-generator.aspx
  */
-char deviceID[48] = "1221e8e7aab2443eb570ffecedd28820"; 
+char deviceID[48] = "1221e8e7aab2443eb570ffecedd28827"; 
 
 /*Sensor Loop Stuff*/
 uint32_t lastSensorTick = 0;
+const byte NumberOfReadings =2; 
+Reading readings[NumberOfReadings]; 
+int DataSize = 18;
 
 
 void setup() {
@@ -59,6 +71,12 @@ void setup() {
   Serial.println("WiFi connected");  
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  //Setup Sensors
+  readings[0].SensorTypeID = 5;
+  readings[0].duration = 500000; 
+  readings[1].SensorTypeID = 6;
+  readings[1].duration = 500000; 
 
   //StartUDP
   Udp.begin(localUdpPort);
@@ -86,14 +104,19 @@ void loop() {
     Serial.printf("Set New MQTT server at %d.%d.%d.%d \n", serverIP[0], serverIP[1], serverIP[2], serverIP[3]);
   }
 
-  if(serverFound && micros() - lastSensorTick > 1000000)
+  if(serverFound && micros() - lastSensorTick > 500000)
   {
     Serial.println("TimeToSend");
+    GetSensorReadings();
     ConnectAndSend();
     lastSensorTick = micros();
   }
 }
 
+void GetSensorReadings(){
+  readings[0].value = random(-10, 30);
+  readings[1].value = random(0, 100);
+}
 void ConnectAndSend()
 {
   mqttConnected = _pubSubClient.connected();
@@ -106,8 +129,19 @@ void ConnectAndSend()
     Serial.println("Can't Connect");
     return; //if we still failed to connect, return
   }
-    
-  _pubSubClient.publish("readings/v1/binary", "Bullshit",8); 
+
+  byte dataBuffer[DataSize];
+  for (int i = 0; i < NumberOfReadings; i++)
+  {
+    int b = i * 9; 
+    byte* dataPointer = (byte*)&(readings[i]); 
+    for(int m = 0; m < 9; m++)
+    {
+      dataBuffer[b + m] = *(dataPointer + m); 
+    }
+  }
+  
+  _pubSubClient.publish("readings/v1/binary", dataBuffer, DataSize); 
   Serial.println("Sent a message");
 }
 
@@ -148,4 +182,3 @@ void ConnectAndSend()
    Serial.printf("Recieved UDP beacon, Remote IP set to: %d.%d.%d.%d\n", serverIP[0],serverIP[1], serverIP[2], serverIP[3]); 
    return true; 
 }
-
