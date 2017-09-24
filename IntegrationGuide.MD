@@ -36,6 +36,31 @@ Watch out - the mappings on those boards are not the standard ones.
 Furthermore, 3 pins cannot be used because the chip itself uses them for SPI
 http://linksprite.com/wiki/index.php5?title=LinkNode_D1
 
+### Pin Map: 
+| Arduino-Pins | ESP8266 Pins |
+|--------------|--------------|
+| D0		   |  GPIO3       |
+| D1           |  GPIO1       |
+| D2           |  GPIO16      |
+| D3		   |  GPIO5       |
+| D4           |  GPIO4       |
+| D5           |  GPIO14      |
+| D6		   |  GPIO12      |
+| D7           |  GPIO13      |
+| D8           |  GPIO0       |
+| D9		   |  GPIO2       |
+| D10          |  GPIO15      |
+| D11		   |  GPIO13      |
+| D13          |  GPIO12      |
+| D13		   |  GPIO14      |
+| D14          |  GPIO4       |
+| D15          |  GPIO5       |
+
+
+API Docs
+http://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/generic-examples.html
+
+
 
 ## Sensor Types
 Sensor Types are defined by the database - if your device sends invalid sensor type, the 
