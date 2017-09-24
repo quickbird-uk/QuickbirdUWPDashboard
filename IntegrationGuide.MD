@@ -28,6 +28,14 @@ What do I mean by binary? Well, this is a 9 byte, in size, struct. Shove it into
 Be carefull, on a 32bit MCU this code might not work out of the box, 32 bit MCU migh actually use 4 bytes for the 
 boolean data type in this struct. Mbed framework does that. 
 
+## Arduino-Ethernet
+
+## ESP8266-Arduino Core
+
+Watch out - the mappings on those boards are not the standard ones.
+Furthermore, 3 pins cannot be used because the chip itself uses them for SPI
+http://linksprite.com/wiki/index.php5?title=LinkNode_D1
+
 
 ## Sensor Types
 Sensor Types are defined by the database - if your device sends invalid sensor type, the 
