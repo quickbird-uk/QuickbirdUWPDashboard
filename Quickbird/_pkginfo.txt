@@ -1,1 +1,1 @@
-C:\Users\bongo\dev\packages\Quickbird_1.6.0.0\Quickbird_1.6.0.0_x86_x64.appxbundle
+C:\Dev\Quickbird\QuickbirdUWP\Quickbird\bin\x64\Release\Upload\Quickbird_1.6.9.0\Quickbird_1.6.9.0_x86_x64.appxbundle
