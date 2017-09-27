@@ -2,7 +2,7 @@
 A Windows 10 app that will act as display / control interface for industrial control systems. The app syncs with the cloud, so you can monitor what's happening remotely. It is meant for developers/makers who are building or prototyping industrial control systems based on MCU/Arduino or PLCs and want to give them a touch-screen interface like this: 
 ![ScreenCap](Images/Tablet_Front_1.png)
 The result is that "Normal people" can interact with your system, which means makers and hackers can get their industrial prototypes and custom-built systems into sellable state 3 times faster.  
-[Get it from the store](https://www.microsoft.com/en-gb/store/p/quickbird/9nblggh6cclt)
+<a href="https://www.microsoft.com/store/apps/9nblggh6cclt?ocid=badge"><img src="https://assets.windowsphone.com/f2f77ec7-9ba9-4850-9ebe-77e366d08adc/English_Get_it_Win_10_InvariantCulture_Default.png" alt="Get it on Windows 10" /></a>
 
 #### Functionality
 * **Multi-protocol** IoT gateway will capture data from MQTT, BLE, serial and sync it to the cloud
