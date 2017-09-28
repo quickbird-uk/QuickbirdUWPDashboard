@@ -98,20 +98,24 @@
             var settings = Settings.Instance;
 
             //TODO: BUG here! Does not check if the CropType already exists correctly, tries to create new one regardless
-            var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value ??
-                           new CropType
-                           {
-                               Name = UserCropType,
-                               Approved = false,
-                               CreatedAt = DateTimeOffset.Now,
-                               CreatedBy = settings.CredStableSid
-                           };
+            var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value;
+
+            if(cropType ==  null)
+            {
+                cropType =  new CropType
+                {
+                    Name = UserCropType,
+                    Approved = false,
+                    CreatedAt = DateTimeOffset.Now,
+                    CreatedBy = settings.CredStableSid
+                };
+            }
+                          
             var cropCycle = new CropCycle
             {
                 ID = Guid.NewGuid(),
                 Name = "Unnamed",
                 Yield = 0,
-                CropType = cropType,
                 CropTypeName = cropType.Name,
                 CropVariety = CropVariety,
                 LocationID = _chosenPlace.Location.ID,

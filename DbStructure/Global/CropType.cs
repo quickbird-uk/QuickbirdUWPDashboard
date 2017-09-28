@@ -8,6 +8,9 @@
 
     public class CropType
     {
+        /// <summary>
+        /// CropType Name is the ID and the Unique Key
+        /// </summary>
         [MaxLength(245)]
         public string Name { get; set; }
 
