@@ -165,7 +165,7 @@
 
                 foreach (var loc in places)
                 {
-                    var tuple = PlaceList.FirstOrDefault(ct => ct.Location.Equals(loc));
+                    var tuple = PlaceList.FirstOrDefault(ct => ct.Location.ID == loc.ID);
                     if (tuple == null)
                     {
                         tuple = new PlaceTuple {Location = loc};
