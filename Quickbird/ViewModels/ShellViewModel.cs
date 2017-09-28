@@ -272,7 +272,7 @@
                 cropCycles.Where(cc => !cc.Deleted && (cc.EndDate ?? DateTimeOffset.MaxValue) > now)
                     .Select(cc => cc.ID)
                     .ToList();
-            var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId));
+            var toRemove = ShellListViewModels.Where(s => !validIds.Contains(s.CropRunId)).ToList();
             foreach (var invalidItem in toRemove)
             {
                 ShellListViewModels.Remove(invalidItem);

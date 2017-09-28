@@ -96,41 +96,45 @@
         {
             ChosenIsVacant = false;
             var settings = Settings.Instance;
-
-            //TODO: BUG here! Does not check if the CropType already exists correctly, tries to create new one regardless
-            var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value;
-
-            if(cropType ==  null)
-            {
-                cropType =  new CropType
-                {
-                    Name = UserCropType,
-                    Approved = false,
-                    CreatedAt = DateTimeOffset.Now,
-                    CreatedBy = settings.CredStableSid
-                };
-            }
-                          
-            var cropCycle = new CropCycle
-            {
-                ID = Guid.NewGuid(),
-                Name = "Unnamed",
-                Yield = 0,
-                CropTypeName = cropType.Name,
-                CropVariety = CropVariety,
-                LocationID = _chosenPlace.Location.ID,
-                CreatedAt = DateTimeOffset.Now,
-                UpdatedAt = DateTimeOffset.Now,
-                StartDate = DateTimeOffset.Now,
-                EndDate = null,
-                Deleted = false,
-                Version = new byte[32]
-            };
-
             using (var db = new MainDbContext())
             {
-                db.CropCycles.Add(cropCycle);
+                //TODO: BUG here! Does not check if the CropType already exists correctly, tries to create new one regardless
+                var cropType = _cropTypeCache.FirstOrDefault(ct => ct.Key.Equals(UserCropType.ToLower())).Value;
 
+                if(cropType ==  null)
+                {
+                    cropType =  new CropType
+                    {
+                        Name = UserCropType,
+                        Approved = false,
+                        CreatedAt = DateTimeOffset.Now,
+                        CreatedBy = settings.CredStableSid
+                    };
+
+                    db.Add(cropType); 
+                }
+                else
+                    db.Attach(cropType);
+
+
+                var cropCycle = new CropCycle
+                {
+                    ID = Guid.NewGuid(),
+                    Name = "Unnamed",
+                    Yield = 0,
+                    CropType = cropType,
+                    CropTypeName = cropType.Name,
+                    CropVariety = CropVariety,
+                    LocationID = _chosenPlace.Location.ID,
+                    CreatedAt = DateTimeOffset.Now,
+                    UpdatedAt = DateTimeOffset.Now,
+                    StartDate = DateTimeOffset.Now,
+                    EndDate = null,
+                    Deleted = false,
+                    Version = new byte[32]
+                };
+  
+                db.CropCycles.Add(cropCycle);
                 await db.SaveChangesAsync();
             }
             await Messenger.Instance.TablesChanged.Invoke(string.Empty);
