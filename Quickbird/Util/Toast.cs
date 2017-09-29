@@ -9,12 +9,10 @@
         /// <param name="text"></param>
         public static void Debug(string title, string text)
         {
-#if DEBUG
-            if (Settings.Instance.ToastsEnabled == false)
+            if (Settings.Instance.DebugToastsEnabled == false)
                 return;
             System.Diagnostics.Debug.WriteLine($"{title} - {text}");
             FireToast(title, text);
-#endif
         }
 
         public static void NotifyUserOfError(string text) { FireToast("Error", text); }

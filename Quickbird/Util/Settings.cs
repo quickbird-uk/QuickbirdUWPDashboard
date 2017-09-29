@@ -145,6 +145,19 @@
             }
         }
 
+        /// <summary>Enbales / disables toasts. Defaults to 
+        /// True.</summary>
+        public bool DebugToastsEnabled
+        {
+            get { return Get(_localSettings, false); }
+            set
+            {
+                if (value == DebugToastsEnabled) return;
+                Set(_localSettings, value);
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>Local setting that enables or disables a vitual sensor device, for demo / testing purposes
         /// false.</summary>
         public bool VirtualDeviceEnabled

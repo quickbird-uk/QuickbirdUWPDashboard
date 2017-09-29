@@ -60,6 +60,19 @@
             }
         }
 
+
+        public bool DebugToastsEnabled
+        {
+            get { return Settings.Instance.DebugToastsEnabled; }
+            set
+            {
+                if (value == Settings.Instance.DebugToastsEnabled) return;
+                Settings.Instance.DebugToastsEnabled = value;
+
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>Enable the local network to communicate with devices. tied directly to settings.</summary>
         public bool VirtualDeviceEnabled
         {

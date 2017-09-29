@@ -55,8 +55,15 @@
             </StackPanel>
             <StackPanel Padding="0, 15, 0, 0">
                 <TextBlock Style="{StaticResource Subtitle}" Text="Toast Notifications" />
-                <TextBlock Text="Disable / Enable toast Notification. This app produces a lot of them, and they are good for diagnostics, but can be annoying" TextWrapping="WrapWholeWords" />
+                <TextBlock Text="Disable / Enable toast Notification. They are used for alerts, etc." TextWrapping="WrapWholeWords" />
                 <ToggleSwitch IsOn="{x:Bind ViewModel.ToastsEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+            </StackPanel>
+            <StackPanel Padding="0, 15, 0, 0">
+                <TextBlock Style="{StaticResource Subtitle}" Text="Debug Toast Notifications" />
+                <TextBlock Text="Disable / Enable toast Notification used spesifically for debugging. This app produces a lot of them, and they are good for diagnostics, but can be annoying" TextWrapping="WrapWholeWords" />
+                <ToggleSwitch IsOn="{x:Bind ViewModel.DebugToastsEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
             </StackPanel>
