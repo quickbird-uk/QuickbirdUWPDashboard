@@ -13,15 +13,7 @@
     {
         public delegate void ChangeHandler();
 
-        /// <summary>Enum for choosing where a property that you want to delete exists.</summary>
-        public enum SettingsType
-        {
-            Local,
-            Roaming
-        }
-
         private readonly ApplicationDataContainer _localSettings;
-        private readonly ApplicationDataContainer _roamingSettings;
         private ApplicationDataCompositeValue _combinedCreds;
         private Guid _credStableSid;
         private string _credToken;
@@ -31,7 +23,6 @@
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
         private Settings()
         {
-            _roamingSettings = ApplicationData.Current.RoamingSettings;
             _localSettings = ApplicationData.Current.LocalSettings;
 
             if (!_localSettings.Values.ContainsKey(nameof(CombinedCredentials)))
@@ -178,16 +169,6 @@
             }
         }
 
-        private ApplicationDataCompositeValue RoamingCombinedCredentials
-        {
-            get { return Get(_roamingSettings, default(ApplicationDataCompositeValue)); }
-            set
-            {
-                Set(_roamingSettings, value);
-                OnPropertyChanged();
-            }
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public event ChangeHandler CredsChanged;
@@ -195,58 +176,10 @@
         /// <summary>Method to unset a method value if it exists, otherwise it does nothing.</summary>
         /// <param name="settingsName">Name of the setting to unset.</param>
         /// <param name="settingsType">Roaming or local.</param>
-        public void Delete([NotNull] string settingsName, SettingsType settingsType)
+        public void Delete([NotNull] string settingsName)
         {
-            ApplicationDataContainer container;
-            switch (settingsType)
-            {
-                case SettingsType.Local:
-                    container = _localSettings;
-                    break;
-                case SettingsType.Roaming:
-                    container = _localSettings;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(settingsType), settingsType, null);
-            }
-
-            if (container.Values.ContainsKey(settingsName))
-                container.Values.Remove(settingsName);
-        }
-
-        /// <summary>Checks that the tokens of local and roaming creds are the same.</summary>
-        /// <returns>True if the cred tokens are the same.</returns>
-        public bool IsLocalCredsSameAsRoamingCreds()
-        {
-            var localToken = CredToken;
-            var roamingToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-
-            return localToken == roamingToken;
-        }
-
-        /// <summary>Replaces the lcoal creds with the roaming creds.</summary>
-        /// <returns>True if replace with valid creds, false if all nulled.</returns>
-        public bool ReplaceLocalWithRoamingCreds()
-        {
-            CredToken = RoamingCombinedCredentials?.ContainsKey(nameof(CredToken)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredToken)]
-                : null;
-
-            CredUserId = RoamingCombinedCredentials?.ContainsKey(nameof(CredUserId)) ?? false
-                ? (string) RoamingCombinedCredentials[nameof(CredUserId)]
-                : null;
-
-            CredStableSid = RoamingCombinedCredentials?.ContainsKey(nameof(CredStableSid)) ?? false
-                ? (Guid) RoamingCombinedCredentials[nameof(CredStableSid)]
-                : default(Guid);
-
-            IsLoggedIn = null == CredToken;
-
-            CombinedCredentials = _combinedCreds;
-
-            return IsLoggedIn;
+            if (_localSettings.Values.ContainsKey(settingsName))
+                _localSettings.Values.Remove(settingsName);
         }
 
         public void ResetDatabaseAndPostSettings()
@@ -263,7 +196,6 @@
             IsLoggedIn = true;
 
             CombinedCredentials = _combinedCreds;
-            RoamingCombinedCredentials = _combinedCreds;
         }
 
         public void UnsetCreds()
@@ -272,7 +204,6 @@
             CredToken = null;
             CredUserId = null;
             CredStableSid = default(Guid);
-            Delete(nameof(RoamingCombinedCredentials), SettingsType.Roaming);
         }
 
         [NotifyPropertyChangedInvocator]

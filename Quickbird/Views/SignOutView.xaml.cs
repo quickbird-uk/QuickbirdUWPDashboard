@@ -51,7 +51,7 @@
 
             Type navPage;
 
-            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain && Settings.Instance.ReplaceLocalWithRoamingCreds())
+            if (signInAgain == ShouldItSignBackIn.YesSignBackInAgain)
             {
                 CurrentOperation = "Signing in with new credentials";
 
