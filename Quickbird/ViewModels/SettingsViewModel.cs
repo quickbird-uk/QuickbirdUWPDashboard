@@ -6,6 +6,7 @@
     using LocalNetworking;
     using Util;
     using Views;
+    using Windows.ApplicationModel;
 
     public class SettingsViewModel : ViewModelBase
     {
@@ -19,7 +20,7 @@
         {
             _localNetworkConflictAction = LocalNetworkConflictDetected;
             Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
-            var timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(1)};
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             EventHandler<object> timerOnTick = (sender, o) =>
             {
                 var now = DateTimeOffset.Now;
@@ -42,7 +43,7 @@
                 Settings.Instance.LocalDeviceManagementEnabled = value;
 
                 // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
-                Task.Run(() => ((App) Application.Current).StartOrKillNetworkManagerBasedOnSettings());
+                Task.Run(() => ((App)Application.Current).StartOrKillNetworkManagerBasedOnSettings());
 
                 OnPropertyChanged();
             }
@@ -83,7 +84,7 @@
                 Settings.Instance.VirtualDeviceEnabled = value;
 
                 // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
-              
+
 
                 OnPropertyChanged();
             }
@@ -100,17 +101,20 @@
             }
         }
 
-        public override void Kill()
-        {
-            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+        public string AppVersion { get {
+                Package package = Package.Current;
+                PackageId packageId = package.Id;
+                PackageVersion version = packageId.Version;
+
+                return string.Format($"App Version: {version.Major}.{version.Minor}.{version.Build}.{version.Revision}");
+           }
         }
+
+        public override void Kill() => Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
 
         /// <summary>Signs out the twitter account by deleteing the creds, deleteing the database, stopping the
         /// live data and navigating back to the landing page.</summary>
-        public void SignOut()
-        {
-            ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView));
-        }
+        public void SignOut() => ((App) Application.Current).RootFrame.Navigate(typeof(SignOutView));
 
         private void LocalNetworkConflictDetected(string ip)
         {
