@@ -28,6 +28,24 @@ What do I mean by binary? Well, this is a 9 byte, in size, struct. Shove it into
 Be carefull, on a 32bit MCU this code might not work out of the box, 32 bit MCU migh actually use 4 bytes for the 
 boolean data type in this struct. Mbed framework does that. 
 
+## MQTT API - planned
+Note that at this point permissions are not yet implemented. 
+The server operates as a normal MQTT server, with the following topics being reserved:
+* `services` - services provided by the server, the clients are only allowed to talk to the server through this topic. Any messages published to `services/` topic will not be propagated to other clients. There is no point subscribing to this topic.
+* `devices` - this potic is reserved for mesages that are spesifically reserved for your device. Your device is identified by `devices/{your_device_id}`. Nobody else can subscribe to this topic. It has two sub-topics:
+	* `/fromserver` - messages that come from here can be trusted
+	* `/fromnetwork` - anyone can publish messages here, and you may or may not want to subscribe to them. 
+* `readings` - This area is used to submit readings that are then displayed on the dashboard. Note that it is up to you how you wish to structure subtopics - you could have `readings/livingroom/couch` if you wanted. The server only cares about two things:
+	* Proper data format is used, otherwise the readings will be rejected as invalid and won't be propagated furhter, to other clients. 
+	* The data readings must have correct `DeviceID` so that other devices can know where the data came from. Otherwise it's impossible to trust any readings that come in. 
+	
+### Details
+* **Registration** - The server will allow a client to connect without a password only if it has an ID - Guid that is all zeroes. Otherwise you need a password to connect. The password is a set of random 32 human-readable characters. At that point your client should disconnect, and re-connect using that ID and Password. `devices/{your_device_id}/fromserver/registration`
+* **Commands** - `devices/{your_device_id}/fromserver/commands` To recieve commands, your device must be subscribed to the topic . You will not be allowed to subscribe to a topic that does not belong to your device. Only the server will be allowed to publish commands to you, so you can consider them trusted. 
+* **Time Service** - `services/time` - subscribe to recive time in UTC, as a binary in Uint32 format. These are broadcast every second. Unsubscribe as needed. 
+* **Guid** - `services/guid` - publishing to this channel will cause the app to generate a GUID and send it to your device at `devices/{your_device_id}/fromserver/guid`. You should send an empty publish message, any contents of this message will be ignored. 
+* **Presence** - `services/presence` - publishing to this channel will cause the server to send a list of currently connected clients to `devices/{your_device_id}/fromserver/presence`. Your message doesn't need to have any content. 
+
 ## Arduino-Ethernet
 
 ## ESP8266-Arduino Core
