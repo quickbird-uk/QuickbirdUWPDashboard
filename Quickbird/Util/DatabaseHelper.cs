@@ -290,7 +290,7 @@
                 // Find the newest received item so dowloading can resume after it.
                 // There will be items for multiple sensors with the same time, it diesn't matter which one is used.
                 // It will be updated after each item is added, much cheaper than re-querying.
-                var mostRecentDayDownloaded =
+                SensorHistory latestDownloadedBlock =
                     db.SensorsHistory.AsNoTracking()
                         .Include(sh => sh.Sensor)
                         .Where(sh => sh.Sensor.DeviceID == device.ID)
@@ -299,7 +299,7 @@
                         .OrderByDescending(sh => sh.TimeStamp).FirstOrDefault(); //Don't use MaxBy, it wont EF query.
 
                 DateTimeOffset mostRecentDownloadedTimestamp;
-                if (null == mostRecentDayDownloaded)
+                if (null == latestDownloadedBlock)
                 {
                     // Data has never been downloaded for this device, so start downloading for time 0.
                     mostRecentDownloadedTimestamp = default(DateTimeOffset);
@@ -309,24 +309,26 @@
                     //The timestamp is always the end of the day so look inside to see what time the data actually ends.
 
                     // Its pulled out of the database as raw so deserialise to access the data.
-                    mostRecentDayDownloaded.DeserialiseData();
-                    if (mostRecentDayDownloaded.Data.Any())
+                    latestDownloadedBlock.DeserialiseData();
+                    if (latestDownloadedBlock.Data.Any())
                     {
-                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.Data.Max(entry => entry.TimeStamp);
+                        mostRecentDownloadedTimestamp = latestDownloadedBlock.Data.Max(entry => entry.TimeStamp);
                     }
                     else
                     {
                         Log.ShouldNeverHappen(
-                            $"Found a history with no entries: {device.Name}, {mostRecentDayDownloaded.TimeStamp}");
+                            $"Found a history with no entries: {device.Name}, {latestDownloadedBlock.TimeStamp}");
 
                         // This is a broken situation, but it should be  fine if we continue from the start of the day.
-                        mostRecentDownloadedTimestamp = mostRecentDayDownloaded.TimeStamp - TimeSpan.FromDays(1);
+                        mostRecentDownloadedTimestamp = latestDownloadedBlock.TimeStamp - TimeSpan.FromDays(1);
                     }
                 }
 
+               
+                  
                 // This loop will keep requesting data untill the server gives no more.
-                bool itemsReceived;
-                var added = new List<SensorHistory>();
+                bool itemsReceived = false; 
+                var blocksToUpdate = new List<SensorHistory>();  
                 do
                 {
                     var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
@@ -335,7 +337,7 @@
                         ? 0
                         : mostRecentDownloadedTimestamp.ToUnixTimeSeconds();
 
-                    List<SensorHistory> histories;
+                    List<SensorHistory> remoteBlocks;
                     try
                     {
                         // Download with get request.
@@ -344,7 +346,7 @@
                                 GetRequestTableThrowOnErrorAsync($"{table}/{device.ID}/{unixTimeSeconds}/{MaxDaysDl}",
                                     cred).ConfigureAwait(false);
                         // Deserialise download to POCO object.
-                        histories =
+                        remoteBlocks =
                             await DeserializeTableThrowOnErrrorAsync<SensorHistory>(table, raw).ConfigureAwait(false);
                     }
                     catch (Exception ex)
@@ -356,59 +358,62 @@
                         break;
                     }
 
-                    Debug.WriteLine($"{histories.Count} dl for {device.Name}");
+                    Debug.WriteLine($"{remoteBlocks.Count} dl for {device.Name}");
 
-                    if (histories.Any())
+                    if (remoteBlocks.Any())
                     {
                         var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
-                        foreach (var hist in histories)
+                        foreach (var remoteBlock in remoteBlocks)
                         {
                             Debug.WriteLine(
-                                $"[{mostRecentDownloadedTimestamp}]{hist.TimeStamp}#{hist.UploadedAt}#{device.Name}#{hist.SensorID}");
+                                $"[{mostRecentDownloadedTimestamp}]{remoteBlock.TimeStamp}#{remoteBlock.UploadedAt}#{device.Name}#{remoteBlock.SensorID}");
 
                             // See if this is a new object.
-                            var existing =
-                                db.SensorsHistory.AsNoTracking()
+                            var localBlock =
+                                db.SensorsHistory
                                     .FirstOrDefault(
-                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
+                                        sh => sh.SensorID == remoteBlock.SensorID &&
+                                        sh.TimeStamp.Date == remoteBlock.TimeStamp.Date 
+                                        && sh.LocationID == remoteBlock.LocationID);
                             // Make sure that its not an object tracked from a previous loop.
                             // This can happen because the end of the previous day will always get sliced with no data.
                             // That end slice isn't perfect but is makes sure all the data was taken.
-                            if (existing == null)
+                            if (localBlock == null)
                             {
-                                existing =
-                                    added.FirstOrDefault(
-                                        sh => sh.SensorID == hist.SensorID && sh.TimeStamp.Date == hist.TimeStamp.Date);
-                                if (existing != null)
+                                localBlock =
+                                    blocksToUpdate.FirstOrDefault(
+                                        sh => sh.SensorID == remoteBlock.SensorID && sh.TimeStamp.Date == remoteBlock.TimeStamp.Date);
+                                if (localBlock != null)
                                 {
                                     // Detach the existing object because it will be merged and replaced.
-                                    var entityEntry = db.Entry(existing);
+                                    var entityEntry = db.Entry(localBlock);
                                     entityEntry.State = EntityState.Detached;
-                                    added.Remove(existing);
+                                    blocksToUpdate.Remove(localBlock);
                                 }
                             }
-                            if (existing == null)
+                            if (localBlock == null)
                             {
                                 // The json deserialiser deserialises json to the .Data property.
                                 // The data has to be serialised into raw-data-blobs before saving to the databse.
-                                hist.SerialiseData();
-                                added.Add(db.Add(hist).Entity);
+                                remoteBlock.SerialiseData();
+                                blocksToUpdate.Add(db.Add(remoteBlock).Entity);
                             }
                             else
                             {
                                 // The data is pulled from the database as serialised raw data blobs.
-                                existing.DeserialiseData();
+                                localBlock.DeserialiseData();
                                 // The merged object merges using the deserialised Data property.
-                                var merged = SensorHistory.Merge(existing, hist);
+                                var merged = SensorHistory.Merge(localBlock, remoteBlock);
                                 // Data has to be serialised again into raw data blobs for the database.
                                 merged.SerialiseData();
 
-                                added.Add(db.Update(merged).Entity);
+                                localBlock.RawData = merged.RawData; 
+                                blocksToUpdate.Add(localBlock);
                             }
 
                             // This day was just downloaded so it must be completed
-                            if (hist.TimeStamp > lastDayOfThisDownloadSet)
-                                lastDayOfThisDownloadSet = hist.TimeStamp;
+                            if (remoteBlock.TimeStamp > lastDayOfThisDownloadSet)
+                                lastDayOfThisDownloadSet = remoteBlock.TimeStamp;
                         }
                         // The GET request allways gets days completed to the end (start may be missing but not the end)
                         mostRecentDownloadedTimestamp = lastDayOfThisDownloadSet;
@@ -420,10 +425,11 @@
                     }
                 } while (itemsReceived);
 
+               // */
                 // Save the data for this device.
-                await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
+               // await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
 
-                foreach (var entity in added)
+                foreach (var entity in blocksToUpdate)
                 {
                     var entry = db.Entry(entity);
                     if (entry.State != EntityState.Detached)

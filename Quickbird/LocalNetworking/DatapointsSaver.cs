@@ -89,6 +89,7 @@
                 else
                 {
                     var sensorReadings = new List<Messenger.SensorReading>();
+
                     foreach (var message in values.Value)
                     {
                         try
@@ -323,6 +324,7 @@
 
                             sbuffer.FreshBuffer.RemoveRange(0, sbuffer.FreshBuffer.Count);
                         }
+
                         //only if new data is present
                         if (sensorDatapoint != null)
                         {
