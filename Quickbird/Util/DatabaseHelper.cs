@@ -427,7 +427,7 @@
 
                // */
                 // Save the data for this device.
-               // await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
+                await Task.Run(() => db.SaveChanges()).ConfigureAwait(false);
 
                 foreach (var entity in blocksToUpdate)
                 {
