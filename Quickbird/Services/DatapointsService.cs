@@ -97,12 +97,13 @@
                         try
                         {
                             var SensorObject = device.Sensors.FirstOrDefault(sen => sen.SensorTypeID == message.SensorTypeID);
-                            if(SensorObject == null)
+                            SensorBuffer sensorBuffer = _sensorBuffer.FirstOrDefault(sb => sb.Sensor.ID == SensorObject.ID);
+                            if (SensorObject == null || sensorBuffer == null)
                             {
                                 Util.ToastService.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
                                 break; 
                             }
-                            SensorBuffer sensorBuffer = _sensorBuffer.FirstOrDefault(sb => sb.Sensor.ID == SensorObject.ID);
+                            
                             var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
@@ -184,7 +185,7 @@
                     {
                         ID = Guid.NewGuid(),
                         Deleted = false,
-                        Name = string.Format("Box Number {0}", _dbDevices.Count),
+                        Name = $"{devicename} {_dbDevices.Count}",,
                         PersonId = SettingsService.Instance.CredStableSid, //TODO use the thing from settings! 
                         Version = new byte[32],
                         CropCycles = new List<CropCycle>(),
