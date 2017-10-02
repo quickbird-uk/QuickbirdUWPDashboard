@@ -185,7 +185,7 @@
                     {
                         ID = Guid.NewGuid(),
                         Deleted = false,
-                        Name = $"{devicename} {_dbDevices.Count}",,
+                        Name = $"{devicename} {_dbDevices.Count}",
                         PersonId = SettingsService.Instance.CredStableSid, //TODO use the thing from settings! 
                         Version = new byte[32],
                         CropCycles = new List<CropCycle>(),
