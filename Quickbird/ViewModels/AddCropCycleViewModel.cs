@@ -28,7 +28,7 @@
         public AddCropCycleViewModel()
         {
             _updateEvent = UpdateData;
-            Messenger.Instance.TablesChanged.Subscribe(_updateEvent);
+            BroadcasterService.Instance.TablesChanged.Subscribe(_updateEvent);
             UpdateData(string.Empty);
         }
 
@@ -95,7 +95,7 @@
         public async void CreateNewCropRun()
         {
             ChosenIsVacant = false;
-            var settings = Settings.Instance;
+            var settings = SettingsService.Instance;
             using (var db = new MainDbContext())
             {
                 //TODO: BUG here! Does not check if the CropType already exists correctly, tries to create new one regardless
@@ -137,11 +137,11 @@
                 db.CropCycles.Add(cropCycle);
                 await db.SaveChangesAsync();
             }
-            await Messenger.Instance.TablesChanged.Invoke(string.Empty);
+            await BroadcasterService.Instance.TablesChanged.Invoke(string.Empty);
         }
 
 
-        public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateEvent); }
+        public override void Kill() { BroadcasterService.Instance.TablesChanged.Unsubscribe(_updateEvent); }
 
 
         /// <summary>Update Data event, runs every time</summary>

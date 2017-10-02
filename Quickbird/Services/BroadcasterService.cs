@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
 
     /// <summary>A middleman class for passing information between parts of the program.</summary>
-    public class Messenger
+    public class BroadcasterService
     {
         public BroadcastMessage<string> LocalNetworkConflict { get; } = new BroadcastMessage<string>();
         public BroadcastMessage<string> NewDeviceDetected { get; } = new BroadcastMessage<string>();
@@ -66,9 +66,9 @@
 
         #region SingletonInit
 
-        private Messenger() { }
+        private BroadcasterService() { }
 
-        public static Messenger Instance { get; } = new Messenger();
+        public static BroadcasterService Instance { get; } = new BroadcasterService();
 
         #endregion
     }

@@ -11,6 +11,7 @@
     using Internet;
     using Util;
     using Views;
+    using Services; 
 
     public class ShellViewModel : ViewModelBase
     {
@@ -56,10 +57,10 @@
 
             _updateAction = async s => await Update();
 
-            Messenger.Instance.NewDeviceDetected.Subscribe(_updateAction);
-            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            BroadcasterService.Instance.NewDeviceDetected.Subscribe(_updateAction);
+            BroadcasterService.Instance.TablesChanged.Subscribe(_updateAction);
             _localNetworkConflictAction = s => NavToSettingsView();
-            Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
+            BroadcasterService.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
         }
 
         public string Error
@@ -120,7 +121,7 @@
             catch (Exception e)
             {
                 Error = e.ToString();
-                Log.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
+                LoggingService.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
             }
 
 
@@ -139,9 +140,9 @@
 
         public override void Kill()
         {
-            Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
-            Messenger.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
-            Messenger.Instance.TablesChanged.Unsubscribe(_updateAction);
+            BroadcasterService.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+            BroadcasterService.Instance.NewDeviceDetected.Unsubscribe(_updateAction);
+            BroadcasterService.Instance.TablesChanged.Unsubscribe(_updateAction);
             _internetCheckTimer.Stop();
             _internetCheckTimer.Tick -= OnInternetCheckTimerTick;
             _syncTimer.Stop();
@@ -216,7 +217,7 @@
             // Disables the sync button in every CropView (there is one for each crop).
             await SetSyncEnabled(false);
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await DataService.Instance.SyncWithServerAsync();
 
             await SetSyncEnabled(true);
 
@@ -233,7 +234,7 @@
             var dispatcher = ((App) Application.Current).Dispatcher;
             if (dispatcher == null)
             {
-                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
+                LoggingService.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
                 throw new Exception("The app dispatcher is missing: ShellViewModel.SetSyncEnabled()");
             }
 
@@ -256,7 +257,7 @@
         {
             Debug.WriteLine("Shell update triggered");
 
-            var cropCycles = await DatabaseHelper.Instance.GetDataTreeAsyncQueued();
+            var cropCycles = await DataService.Instance.GetDataTreeAsyncQueued();
 
             // Remove items that no longer exist.
             var now = DateTimeOffset.Now;

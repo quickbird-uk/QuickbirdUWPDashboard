@@ -23,8 +23,8 @@
         {
             _resumeAction = BaseResume;
             _suspendAction = BaseSuspend;
-            Messenger.Instance.Suspending.Subscribe(_suspendAction);
-            Messenger.Instance.Resuming.Subscribe(_resumeAction);
+            BroadcasterService.Instance.Suspending.Subscribe(_suspendAction);
+            BroadcasterService.Instance.Resuming.Subscribe(_resumeAction);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

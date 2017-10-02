@@ -7,6 +7,7 @@
     using Util;
     using Views;
     using Windows.ApplicationModel;
+    using Windows.ApplicationModel.DataTransfer;
 
     public class SettingsViewModel : ViewModelBase
     {
@@ -19,7 +20,7 @@
         public SettingsViewModel()
         {
             _localNetworkConflictAction = LocalNetworkConflictDetected;
-            Messenger.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
+            BroadcasterService.Instance.LocalNetworkConflict.Subscribe(_localNetworkConflictAction);
             var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             EventHandler<object> timerOnTick = (sender, o) =>
             {
@@ -36,11 +37,11 @@
         /// <summary>Enable the local network to communicate with devices. tied directly to settings.</summary>
         public bool DeviceManagementEnabled
         {
-            get { return Settings.Instance.LocalDeviceManagementEnabled; }
+            get { return SettingsService.Instance.LocalDeviceManagementEnabled; }
             set
             {
-                if (value == Settings.Instance.LocalDeviceManagementEnabled) return;
-                Settings.Instance.LocalDeviceManagementEnabled = value;
+                if (value == SettingsService.Instance.LocalDeviceManagementEnabled) return;
+                SettingsService.Instance.LocalDeviceManagementEnabled = value;
 
                 // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
                 Task.Run(() => ((App)Application.Current).StartOrKillNetworkManagerBasedOnSettings());
@@ -51,11 +52,11 @@
 
         public bool ToastsEnabled
         {
-            get { return Settings.Instance.ToastsEnabled; }
+            get { return SettingsService.Instance.ToastsEnabled; }
             set
             {
-                if (value == Settings.Instance.ToastsEnabled) return;
-                Settings.Instance.ToastsEnabled = value;
+                if (value == SettingsService.Instance.ToastsEnabled) return;
+                SettingsService.Instance.ToastsEnabled = value;
 
                 OnPropertyChanged();
             }
@@ -64,11 +65,11 @@
 
         public bool DebugToastsEnabled
         {
-            get { return Settings.Instance.DebugToastsEnabled; }
+            get { return SettingsService.Instance.DebugToastsEnabled; }
             set
             {
-                if (value == Settings.Instance.DebugToastsEnabled) return;
-                Settings.Instance.DebugToastsEnabled = value;
+                if (value == SettingsService.Instance.DebugToastsEnabled) return;
+                SettingsService.Instance.DebugToastsEnabled = value;
 
                 OnPropertyChanged();
             }
@@ -77,14 +78,13 @@
         /// <summary>Enable the local network to communicate with devices. tied directly to settings.</summary>
         public bool VirtualDeviceEnabled
         {
-            get { return Settings.Instance.VirtualDeviceEnabled; }
+            get { return SettingsService.Instance.VirtualDeviceEnabled; }
             set
             {
-                if (value == Settings.Instance.VirtualDeviceEnabled) return;
-                Settings.Instance.VirtualDeviceEnabled = value;
+                if (value == SettingsService.Instance.VirtualDeviceEnabled) return;
+                SettingsService.Instance.VirtualDeviceEnabled = value;
 
-                // StartOrKillNetworkManagerBasedOnSettings uses locking to make itself pool-safe.
-
+                Services.VirtualDeviceService.UpdateBasedONSettings(); 
 
                 OnPropertyChanged();
             }
@@ -109,8 +109,28 @@
                 return string.Format($"App Version: {version.Major}.{version.Minor}.{version.Build}.{version.Revision}");
            }
         }
+ 
+        public string MachineID => $"Machine ID: {SettingsService.Instance.MachineID}";
 
-        public override void Kill() => Messenger.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
+        /// <summary>
+        /// Copies Twitter token to clipboard
+        /// </summary>
+        public void CopyTwitterToken() {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetText(SettingsService.Instance.CredToken);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        public void CopyTwitterUserID()
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetText(SettingsService.Instance.CredUserId);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        public override void Kill() => BroadcasterService.Instance.LocalNetworkConflict.Unsubscribe(_localNetworkConflictAction);
 
         /// <summary>Signs out the twitter account by deleteing the creds, deleteing the database, stopping the
         /// live data and navigating back to the landing page.</summary>

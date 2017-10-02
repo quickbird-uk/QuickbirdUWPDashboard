@@ -5,6 +5,7 @@
     using DbStructure.User;
     using Util;
     using Views;
+    using Quickbird.Services; 
 
     public class CropViewModel : ViewModelBase
     {
@@ -129,7 +130,7 @@
             _syncing = true;
             SyncButtonEnabled = false;
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await DataService.Instance.SyncWithServerAsync();
 
             _syncing = false;
             if (_isInternetAvailable)

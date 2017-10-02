@@ -20,7 +20,7 @@
         private readonly Action<string> _loadCacheAction;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<IEnumerable<Messenger.SensorReading>> _recieveDatapointAction;
+        private readonly Action<IEnumerable<BroadcasterService.SensorReading>> _recieveDatapointAction;
 
         /// <summary>Cached Data, of all cropCycles</summary>
         private List<CroprunTuple> _cache = new List<CroprunTuple>();
@@ -54,7 +54,7 @@
 
             _recieveDatapointAction = ReceiveDatapoint;
             _loadCacheAction = LoadCache;
-            Messenger.Instance.NewSensorDataPoint.Subscribe(_recieveDatapointAction);
+            BroadcasterService.Instance.NewSensorDataPoint.Subscribe(_recieveDatapointAction);
 
             //*crashes the app and screwes up graphs. Not clear why we should update them. in this frame. 
             //Messenger.Instance.TablesChanged.Subscribe(_loadCacheAction);
@@ -219,7 +219,7 @@
 
         public void Dispose()
         {
-            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_recieveDatapointAction);
+            BroadcasterService.Instance.NewSensorDataPoint.Unsubscribe(_recieveDatapointAction);
             _refresher?.Stop();
             _db?.Dispose();
         }
@@ -229,7 +229,7 @@
         public void LoadCache(string obj) { LoadCache(); }
 
 
-        public void ReceiveDatapoint(IEnumerable<Messenger.SensorReading> readings)
+        public void ReceiveDatapoint(IEnumerable<BroadcasterService.SensorReading> readings)
         {
             if (SensorsToGraph != null)
             {

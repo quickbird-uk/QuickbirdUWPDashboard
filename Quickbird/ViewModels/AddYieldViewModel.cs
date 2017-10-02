@@ -29,7 +29,7 @@
         {
             _cropCycleID = CropCycleID;
             _updateAction = UpdateData;
-            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            BroadcasterService.Instance.TablesChanged.Subscribe(_updateAction);
             UpdateData(string.Empty);
         }
 
@@ -125,7 +125,7 @@
             }
         }
 
-        public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateAction); }
+        public override void Kill() { BroadcasterService.Instance.TablesChanged.Unsubscribe(_updateAction); }
 
         /// <summary>Runs when the user licks the button</summary>
         public async Task SaveCropRun()
@@ -141,7 +141,7 @@
                 cropCycle.UpdatedAt = DateTimeOffset.Now;
                 await db.SaveChangesAsync();
                 _updateAction = null;
-                await Messenger.Instance.TablesChanged.Invoke(string.Empty);
+                await BroadcasterService.Instance.TablesChanged.Invoke(string.Empty);
                 IsLoading = false;
             }
         }

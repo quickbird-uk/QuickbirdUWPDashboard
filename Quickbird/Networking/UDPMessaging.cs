@@ -124,7 +124,7 @@
                     var message = Encoding.UTF8.GetString(buffer, 0, e.BytesTransferred);
                     if (message == "sekret")
                     {
-                        Task.Run(() => Messenger.Instance.LocalNetworkConflict.Invoke(e.RemoteEndPoint.ToString()));
+                        Task.Run(() => BroadcasterService.Instance.LocalNetworkConflict.Invoke(e.RemoteEndPoint.ToString()));
                         Debug.WriteLine(e.RemoteEndPoint.ToString());
                     }
                 }

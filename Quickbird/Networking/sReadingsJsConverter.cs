@@ -6,12 +6,12 @@
 
     public class SensorReadingsJsConverter : JsonConverter
     {
-        public override bool CanConvert(Type objectType) { return objectType == typeof(Messenger.SensorReading); }
+        public override bool CanConvert(Type objectType) { return objectType == typeof(BroadcasterService.SensorReading); }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
             JsonSerializer serializer)
         {
-            Messenger.SensorReading it;
+            BroadcasterService.SensorReading it;
             TimeSpan Duration;
             DateTimeOffset Timestamp;
             var Value = double.NegativeInfinity;
@@ -45,12 +45,12 @@
                 }
             }
 
-            return new Messenger.SensorReading(SensorId, Value, Timestamp, Duration);
+            return new BroadcasterService.SensorReading(SensorId, Value, Timestamp, Duration);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var reading = (Messenger.SensorReading) value;
+            var reading = (BroadcasterService.SensorReading) value;
 
             writer.WriteStartObject();
             writer.WritePropertyName(nameof(reading.SensorId));

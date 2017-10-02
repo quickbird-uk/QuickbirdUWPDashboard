@@ -17,6 +17,7 @@
     using Models;
     using Util;
     using Views;
+    using Quickbird.Services;
 
     /// <summary>Provides application-specific behavior to supplement the default Application class.</summary>
     public sealed partial class App : Application
@@ -25,7 +26,7 @@
 
         private readonly object _networkingLock = new object();
         private ExtendedExecutionSession _extendedExecutionSession;
-        private Manager _networking;
+        private LANManager _networking;
         private bool _notPrelaunchSuspend;
 
         /// <summary>Initializes the singleton application object.  This is the first line of authored code
@@ -42,6 +43,22 @@
         public CoreDispatcher Dispatcher { get; private set; }
 
         public Frame RootFrame { get; private set; }
+
+        /// <summary>
+        /// The most important method => starts the party! Initiates everything that needs to be intiates
+        /// </summary>
+        /// <returns>Task that indicated when it's done</returns>
+        public async Task StartSession()
+        {
+            using (var db = new MainDbContext())
+            {
+                db.Database.Migrate();
+            }
+
+            WebSocketConnection.Instance.TryStart();
+            await StartOrKillNetworkManagerBasedOnSettings();
+            VirtualDeviceService.UpdateBasedONSettings(); 
+        }
 
         public void AddSessionTask(Task newTask)
         {
@@ -71,8 +88,11 @@
         {
             await EndSession();
 
-            Settings.Instance.UnsetCreds();
-            Settings.Instance.ResetDatabaseAndPostSettings();
+            SettingsService.Instance.UnsetCreds();
+            SettingsService.Instance.ResetDatabaseAndPostSettings();
+
+            VirtualDeviceService.UpdateBasedONSettings();
+            await StartOrKillNetworkManagerBasedOnSettings();
 
             // Delete the database.
             var localFolder = ApplicationData.Current.LocalFolder;
@@ -82,7 +102,7 @@
         /// <summary>Starts or kills the local device network if the settings permit it.</summary>
         public async Task StartOrKillNetworkManagerBasedOnSettings()
         {
-            if (Settings.Instance.LocalDeviceManagementEnabled)
+            if (SettingsService.Instance.LocalDeviceManagementEnabled)
             {
                 await Task.Run(() =>
                 {
@@ -90,7 +110,7 @@
                     {
                         // If it has already started, leave it alone.
                         if (_networking == null)
-                            _networking = new Manager();
+                            _networking = new LANManager();
                     }
                 }).ConfigureAwait(false);
             }
@@ -98,17 +118,6 @@
             {
                 await KillNetworkManager().ConfigureAwait(false);
             }
-        }
-
-        public async Task StartSession()
-        {
-            using (var db = new MainDbContext())
-            {
-                db.Database.Migrate();
-            }
-
-            WebSocketConnection.Instance.TryStart();
-            await StartOrKillNetworkManagerBasedOnSettings();
         }
 
         /// <summary>This only gets called if the application is activated via some special means. We are not
@@ -120,16 +129,16 @@
             {
                 case ApplicationExecutionState.ClosedByUser:
                 case ApplicationExecutionState.NotRunning:
-                    Toast.Debug("OnActivated", "NotRunning or ClosedByUser");
+                    ToastService.Debug("OnActivated", "NotRunning or ClosedByUser");
                     break;
                 case ApplicationExecutionState.Running:
-                    Toast.Debug("OnActivated", "Running");
+                    ToastService.Debug("OnActivated", "Running");
                     break;
                 case ApplicationExecutionState.Suspended:
-                    Toast.Debug("OnActivated", "Suspended");
+                    ToastService.Debug("OnActivated", "Suspended");
                     break;
                 case ApplicationExecutionState.Terminated:
-                    Toast.Debug("OnActivated", "Terminated");
+                    ToastService.Debug("OnActivated", "Terminated");
                     break;
 
                 default:
@@ -160,7 +169,7 @@
             if (e.PrelaunchActivated)
             {
                 // We must not try starting an extended session in this situation.
-                Toast.Debug("OnLaunched", "Prelaunched");
+                ToastService.Debug("OnLaunched", "Prelaunched");
             }
             else
             {
@@ -250,15 +259,17 @@
 
         private async void OnResuming(object sender, object e)
         {
-            Toast.Debug("OnResuming", "");
+            ToastService.Debug("OnResuming", "");
 
             var completer = new TaskCompletionSource<object>();
             AddSessionTask(completer.Task);
-            await Messenger.Instance.Resuming.Invoke(completer, true, true);
+            await BroadcasterService.Instance.Resuming.Invoke(completer, true, true);
             await completer.Task;
 
             _networking?.Resume();
+            DatapointService.Instance.Resume();
             WebSocketConnection.Instance.Resume();
+            VirtualDeviceService.UpdateBasedONSettings(); 
         }
 
         /// <summary>Lifecycle suspend.</summary>
@@ -266,14 +277,14 @@
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            Toast.Debug("OnSuspending", e.SuspendingOperation.ToString());
+            ToastService.Debug("OnSuspending", e.SuspendingOperation.ToString());
 
             // This is the most accurate thing that we can tell the user.
             // There is no way to know if the app is being terminated or just suspended for fun.
             if (_notPrelaunchSuspend)
-                Toast.NotifyUserOfInformation("App is suspending.");
+                ToastService.NotifyUserOfInformation("App is suspending.");
             else
-                Toast.Debug("OnSuspending", "Prelaunch");
+                ToastService.Debug("OnSuspending", "Prelaunch");
 
             // If the deferral is not obtained the suspension proceeds at the end of this method.
             // With the deferral there is still a 5 second time limit to completing suspension code.
@@ -281,18 +292,21 @@
             var deferral = e.SuspendingOperation.GetDeferral();
             var completer = new TaskCompletionSource<object>();
             AddSessionTask(completer.Task);
-            await Messenger.Instance.Suspending.Invoke(completer, true, true);
+            await BroadcasterService.Instance.Suspending.Invoke(completer, true, true);
             await completer.Task;
 
             _networking?.Suspend();
+            DatapointService.Instance.Suspend(); 
+
             WebSocketConnection.Instance.Suspend();
+            VirtualDeviceService.Stop(); 
 
             deferral.Complete();
         }
 
         private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
-            Toast.Debug("OnVisibilityChanged", "");
+            ToastService.Debug("OnVisibilityChanged", "");
 
             // _rootFrame will only ever be null here once.
             // If there is no content the app was prelaunched and we must navigate and begin the session.
@@ -303,7 +317,7 @@
                 _notPrelaunchSuspend = true;
 
                 Type pageType;
-                var settings = Settings.Instance;
+                var settings = SettingsService.Instance;
                 if (settings.IsLoggedIn)
                 {
                     pageType = typeof(SyncingView);
@@ -337,13 +351,13 @@
 
             if (result == ExtendedExecutionResult.Allowed)
             {
-                Toast.Debug("EES", "Success");
+                ToastService.Debug("EES", "Success");
             }
             else
             {
                 // The request has failed, kill will null it, and then the app will try again when the visibility changes.
                 KillExtendedExecutionSession();
-                Toast.NotifyUserOfError("Windows error, program may fail to record, sync and alert when minimised.");
+                ToastService.NotifyUserOfError("Windows error, program may fail to record, sync and alert when minimised.");
             }
         }
     }

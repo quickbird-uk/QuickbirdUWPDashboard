@@ -8,6 +8,7 @@
     using DbStructure;
     using MoreLinq;
     using Util;
+    using Services; 
 
     public class LiveCardViewModel : ViewModelBase
     {
@@ -25,7 +26,7 @@
         private readonly DispatcherTimer _ageStatusUpdateTime;
 
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-        private readonly Action<IEnumerable<Messenger.SensorReading>> _dataUpdater;
+        private readonly Action<IEnumerable<BroadcasterService.SensorReading>> _dataUpdater;
         private readonly CoreDispatcher _dispatcher;
 
         private string _ageStatus;
@@ -60,7 +61,7 @@
 
             _dispatcher = ((App) Application.Current).Dispatcher;
             if (_dispatcher == null)
-                Log.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
+                LoggingService.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
 
             _dataUpdater = async readings =>
             {
@@ -81,10 +82,10 @@
 
             DispatcherTimers.Add(_ageStatusUpdateTime);
 
-            Messenger.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
+            BroadcasterService.Instance.NewSensorDataPoint.Subscribe(_dataUpdater);
             Update(poco);
 
-            var senVals = DatabaseHelper.QueryMostRecentSensorValue(poco);
+            var senVals = DataService.QueryMostRecentSensorValue(poco);
             if (null != senVals)
             {
                 UpdateValueAndAgeStatusIfNew(senVals.Item1, senVals.Item2);
@@ -261,7 +262,7 @@
         public override void Kill()
         {
             _ageStatusUpdateTime.Stop();
-            Messenger.Instance.NewSensorDataPoint.Unsubscribe(_dataUpdater);
+            BroadcasterService.Instance.NewSensorDataPoint.Unsubscribe(_dataUpdater);
         }
 
         public void SaveSettingsChanges()

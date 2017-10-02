@@ -2,14 +2,14 @@
 {
     using Windows.UI.Notifications;
 
-    public static class Toast
+    public static class ToastService
     {
         /// <summary>Toast used for debug messages.</summary>
         /// <param name="title"></param>
         /// <param name="text"></param>
         public static void Debug(string title, string text)
         {
-            if (Settings.Instance.DebugToastsEnabled == false)
+            if (SettingsService.Instance.DebugToastsEnabled == false)
                 return;
             System.Diagnostics.Debug.WriteLine($"{title} - {text}");
             FireToast(title, text);
@@ -23,7 +23,7 @@
         private static void FireToast(string title, string text)
         {
             //No toasts if the setting is toggled off
-            if (Settings.Instance.ToastsEnabled == false)
+            if (SettingsService.Instance.ToastsEnabled == false)
                 return; 
 
             // Get a toast XML template

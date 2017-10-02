@@ -66,7 +66,7 @@
                 return;
             }
 
-            var settings = Settings.Instance;
+            var settings = SettingsService.Instance;
             settings.SetNewCreds(creds.Token, creds.Userid, Guid.Parse(creds.StableSid.Remove(0, 4)));
 
             UpdateCredsAndTokens();
@@ -76,7 +76,7 @@
 
         private void UpdateCredsAndTokens()
         {
-            var settings = Settings.Instance;
+            var settings = SettingsService.Instance;
             Debug.WriteLine(settings.CredToken ?? "No saved auth.");
         }
     }

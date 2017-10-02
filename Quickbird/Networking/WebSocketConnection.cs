@@ -80,7 +80,7 @@
                     (long) ConnectionState.Stopped) == ConnectionState.Stopped)
             {
                 //Use is no signed in, return 
-                if (Settings.Instance.IsLoggedIn == false)
+                if (SettingsService.Instance.IsLoggedIn == false)
                     return false;
 
                 _ReconnectTimer = new Timer(TimerTick, null, 1000, Timeout.Infinite);
@@ -155,11 +155,11 @@
                     {
                         reader.UnicodeEncoding = UnicodeEncoding.Utf8;
                         var read = reader.ReadString(reader.UnconsumedBufferLength);
-                        var sensorReadings = JsonConvert.DeserializeObject<List<Messenger.SensorReading>>(read);
+                        var sensorReadings = JsonConvert.DeserializeObject<List<BroadcasterService.SensorReading>>(read);
                         if (sensorReadings != null)
                         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues
-                            Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings, true);
+                            BroadcasterService.Instance.NewSensorDataPoint.Invoke(sensorReadings, true);
 #pragma warning restore CS4014
                         }
                         //Debug.WriteLine(read);
@@ -284,7 +284,7 @@
 
         private async Task<bool> TryConnect()
         {
-            if (Settings.Instance.IsLoggedIn == false)
+            if (SettingsService.Instance.IsLoggedIn == false)
                 return false;
 
             _webSocket = new MessageWebSocket();
@@ -294,7 +294,7 @@
 
 
             var tokenHeader = "X-ZUMO-AUTH";
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            var creds = Creds.FromUserIdAndToken(SettingsService.Instance.CredUserId, SettingsService.Instance.CredToken);
             _webSocket.SetRequestHeader(tokenHeader, creds.Token);
 
 

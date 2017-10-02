@@ -16,11 +16,23 @@
     using Util;
 
     /// <summary>Non-threadsafe singleton manager of the saving of datapoints.</summary>
-    public class DatapointsSaver : IDisposable
+    public class DatapointService : IDisposable
     {
         private const int SaveIntervalSeconds = 60;
 
-        private static DatapointsSaver _instance;
+        private static DatapointService _Instance = null; 
+        public static DatapointService Instance
+        {
+            get
+            {
+                if (_Instance == null)
+                { _Instance = new DatapointService(); }
+
+                return _Instance; 
+            }
+        }
+
+
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         /// <summary>Action for BroadcastMessaged, cannot be inlined due to weak ref use.</summary>
         private readonly Action<string> _onHardwareChanged;
@@ -34,28 +46,19 @@
         private DispatcherTimer _saveTimer;
         private List<SensorType> _sensorTypes;
 
-        public DatapointsSaver()
+        private DatapointService()
         {
-            if (_instance == null)
+            Task.Run(() => ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                _instance = this;
+                _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(SaveIntervalSeconds)};
+                _saveTimer.Tick += SaveBufferedReadings;
+                _saveTimer.Start();
+            }));
 
-                Task.Run(() => ((App) Application.Current).Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    _saveTimer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(SaveIntervalSeconds)};
-                    _saveTimer.Tick += SaveBufferedReadings;
-                    _saveTimer.Start();
-                }));
+            _onHardwareChanged = HardwareChanged;
+            BroadcasterService.Instance.TablesChanged.Subscribe(_onHardwareChanged);
 
-                _onHardwareChanged = HardwareChanged;
-                Messenger.Instance.TablesChanged.Subscribe(_onHardwareChanged);
-
-                _localTask = Task.Run(() => { LoadData(); });
-            }
-            else
-            {
-                throw new Exception("You can't initialise more than one datapoint Saver");
-            }
+            _localTask = Task.Run(() => { LoadData(); });
         }
 
         /// <summary>The date with hours, minutes and seconds set to zero</summary>
@@ -68,14 +71,13 @@
         /// <summary>The date of yesturday with hours, minutes and seconds set to zero</summary>
         public static DateTimeOffset Yesturday => DateTimeOffset.Now.AddDays(-1).Subtract(DateTimeOffset.Now.TimeOfDay);
         
-
         public void Dispose()
         {
             BlockingDispatcher.Run(() => _saveTimer?.Stop());
-            _instance = null;
+            _Instance = null;
         }
 
-        public void BufferAndSendReadings(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        public void BufferAndSendReadings(KeyValuePair<Guid, SensorMessage[]> values, string deviceName)
         {
             //Purposefull fire and forget
             _localTask = _localTask.ContinueWith(previous =>
@@ -84,11 +86,11 @@
 
                 if (device == null)
                 {
-                    CreateDevice(values);
+                    CreateDevice(values, deviceName);
                 }
                 else
                 {
-                    var sensorReadings = new List<Messenger.SensorReading>();
+                    var sensorReadings = new List<BroadcasterService.SensorReading>();
 
                     foreach (var message in values.Value)
                     {
@@ -97,14 +99,14 @@
                             var sensorBuffer = _sensorBuffer.FirstOrDefault(sb => sb.Sensor.SensorTypeID == message.SensorTypeID);
                             if(sensorBuffer == null)
                             {
-                                Util.Toast.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
+                                Util.ToastService.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
                                 break; 
                             }
                             var duration = TimeSpan.FromMilliseconds((double) message.duration/1000);
                             var timeStamp = DateTimeOffset.Now;
                             var datapoint = new SensorDatapoint(message.value, timeStamp, duration);
                             sensorBuffer.FreshBuffer.Add(datapoint);
-                            var sensorReading = new Messenger.SensorReading(sensorBuffer.Sensor.ID, datapoint.Value,
+                            var sensorReading = new BroadcasterService.SensorReading(sensorBuffer.Sensor.ID, datapoint.Value,
                                 datapoint.TimeStamp, datapoint.Duration);
                             sensorReadings.Add(sensorReading);
                         }
@@ -119,7 +121,7 @@
                     //this is meant to be fire-forget, that's cool 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     WebSocketConnection.Instance.SendAsync(sensorReadings);
-                    Messenger.Instance.NewSensorDataPoint.Invoke(sensorReadings);
+                    BroadcasterService.Instance.NewSensorDataPoint.Invoke(sensorReadings);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
             });
@@ -140,13 +142,13 @@
 
         /// <summary>To be used internaly</summary>
         /// <param name="values"></param>
-        private bool CreateDevice(KeyValuePair<Guid, Manager.SensorMessage[]> values)
+        private bool CreateDevice(KeyValuePair<Guid, SensorMessage[]> values, string devicename)
         {
             var db = new MainDbContext();
 
             //Make sure that it is good and proper to create this device
-            if (Settings.Instance.IsLoggedIn == false
-                || Settings.Instance.LastSuccessfulGeneralDbGet == default(DateTimeOffset) 
+            if (SettingsService.Instance.IsLoggedIn == false
+                || SettingsService.Instance.LastSuccessfulGeneralDbGet == default(DateTimeOffset) 
                 || _dbDevices.Any(dev => dev.SerialNumber == values.Key))
             {
                 return false;
@@ -158,13 +160,13 @@
             {
                 if (sensorTypes.FirstOrDefault(st => st.ID == sensor.SensorTypeID) == null)
                 {
-                    Util.Toast.NotifyUserOfError($"Receieved message with sensor ID {sensor.SensorTypeID}, but it is invalid - there is no such ID");
+                    Util.ToastService.NotifyUserOfError($"Receieved message with sensor ID {sensor.SensorTypeID}, but it is invalid - there is no such ID");
                     return false; //If any of the sensors are invalid, then return;
                 }
             }
             
             Debug.WriteLine("addingDevice");
-            
+
             var device = new Device
             {
                 ID = Guid.NewGuid(),
@@ -172,7 +174,7 @@
                 Deleted = false,
                 CreatedAt = DateTimeOffset.Now,
                 UpdatedAt = DateTimeOffset.Now,
-                Name = string.Format("Box Number {0}", _dbDevices.Count),
+                Name = $"{devicename} {_dbDevices.Count}",
                 Relays = new List<Relay>(),
                 Sensors = new List<Sensor>(),
                 Version = new byte[32],
@@ -182,7 +184,7 @@
                         ID = Guid.NewGuid(),
                         Deleted = false,
                         Name = string.Format("Box Number {0}", _dbDevices.Count),
-                        PersonId = Settings.Instance.CredStableSid, //TODO use the thing from settings! 
+                        PersonId = SettingsService.Instance.CredStableSid, //TODO use the thing from settings! 
                         Version = new byte[32],
                         CropCycles = new List<CropCycle>(),
                         Devices = new List<Device>(),
@@ -276,7 +278,7 @@
         //Closes sensor Histories that are no longer usefull
         private void SaveBufferedReadings(object sender, object e)
         {
-            Toast.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
+            ToastService.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
             _localTask = _localTask.ContinueWith(previous =>
             {
                 //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))

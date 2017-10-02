@@ -9,7 +9,7 @@
 
     /// <summary>A singleton to create settings properties in. Local and roaming are hard coded into
     /// individual properties.</summary>
-    internal class Settings : INotifyPropertyChanged
+    internal class SettingsService : INotifyPropertyChanged
     {
         public delegate void ChangeHandler();
 
@@ -21,7 +21,7 @@
         private bool _isLoggedIn;
 
         /// <summary>Creata a new settings obbject that gives acces to local and roaming settings.</summary>
-        private Settings()
+        private SettingsService()
         {
             _localSettings = ApplicationData.Current.LocalSettings;
 
@@ -78,7 +78,7 @@
         }
 
         /// <summary>Singleton instance accessor.</summary>
-        public static Settings Instance { get; } = new Settings();
+        public static SettingsService Instance { get; } = new SettingsService();
 
         public bool IsLoggedIn
         {
@@ -171,6 +171,20 @@
             }
         }
 
+        public Guid MachineID
+        {
+            get { //If no guid exists, create. Can;t set externally. 
+                Guid id = Get(_localSettings, Guid.Empty);
+                if (id == Guid.Empty)
+                {
+                    id = Guid.NewGuid(); 
+                    Set(_localSettings, id);
+                }
+
+                return id; 
+            }
+        }
+
         private ApplicationDataCompositeValue CombinedCredentials
         {
             get { return Get(_localSettings, default(ApplicationDataCompositeValue)); }
@@ -199,6 +213,8 @@
         {
             LastSuccessfulGeneralDbGet = default(DateTimeOffset);
             LastSuccessfulGeneralDbPost = default(DateTimeOffset);
+            VirtualDeviceEnabled = false;
+            LocalDeviceManagementEnabled = false; 
         }
 
         public void SetNewCreds(string token, string userId, Guid stableSid)

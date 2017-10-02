@@ -1,4 +1,4 @@
-﻿namespace Quickbird.Util
+﻿namespace Quickbird.Services
 {
     using System;
     using System.Collections.Generic;
@@ -13,77 +13,27 @@
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Newtonsoft.Json;
+    using Quickbird.Util;
+
 
     /// <summary>Methods to access and update the database. Methods that modify the database are queued to
     /// make sure they do not interfere with one another. </summary>
-    public class DatabaseHelper
+    public partial class DataService
     {
         /// <summary>The Url of the web api that is used to fetch data.</summary>
         public const string ApiUrl = "https://greenhouseapi.azurewebsites.net/api";
 
         /// <summary>The maximum number of days to download at a time.</summary>
-        private const int MaxDaysDl = 5;
+        private const int MaxDaysDl = 15;
 
         /// <summary>An complete task that can be have ContinueWith() called on it. Used to queue database
         /// tasks to make sure one completes before another starts.</summary>
         private Task _lastTask = Task.CompletedTask;
 
-        private DatabaseHelper() { }
+        private DataService() { }
 
         /// <summary>Singleton instance accessor.</summary>
-        public static DatabaseHelper Instance { get; } = new DatabaseHelper();
-
-        /// <summary>Gets all of the non-reading data that the UI uses as a big tree starting from each crop
-        /// cycle.</summary>
-        /// <remarks>This does not modify data so it doen't neeed to be queued.</remarks>
-        /// <returns>CropCycle objects with all the non-reading data the UI uses included.</returns>
-        public async Task<List<CropCycle>> GetDataTreeAsyncQueued()
-        {
-            var stopwatchA = Stopwatch.StartNew();
-            // Swap out the continuation task before any awaits are called.
-            // We want to replace the _lastTask field before this method returns.
-            // We cannot do this after an await because the method may return on the await statement.
-            var treeQueryWrappedInAnContinuation =
-                AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetDataTree()));
-            stopwatchA.Stop();
-
-            var stopwatchB = Stopwatch.StartNew();
-            // await the continuation, then the treeQuery wrapped in (and executed by) the continuation.
-            // technically we could await once and then take the .Result, it is the same thing.
-            var userData = await await treeQueryWrappedInAnContinuation.ConfigureAwait(false);
-            stopwatchB.Stop();
-
-            Debug.WriteLine($"Querying data-tree took {stopwatchB.ElapsedMilliseconds} milliseconds, " +
-                            $"(setup: {stopwatchA.ElapsedMilliseconds}ms).");
-
-            return userData;
-        }
-
-        /// <summary>Gets the most recent sensor value and timestamp from the database. This method is not
-        /// queued, but it does not edit so is fine.</summary>
-        /// <param name="sensor">Sensor POCO object to get value for.</param>
-        /// <returns>Null if fails to find, othewise the most recent value and its timestamp.</returns>
-        public static Tuple<double, DateTimeOffset> QueryMostRecentSensorValue(Sensor sensor)
-        {
-            using (var db = new MainDbContext())
-            {
-                var newestHistoryForSensor =
-                    db.SensorsHistory.AsNoTracking()
-                        .Where(sh => sh.SensorID == sensor.ID)
-                        .OrderByDescending(sh => sh.TimeStamp)
-                        .FirstOrDefault();
-
-                if (null == newestHistoryForSensor) return null;
-
-                newestHistoryForSensor.DeserialiseData();
-
-                var newestDatapoint = newestHistoryForSensor.Data.OrderByDescending(d => d.TimeStamp).FirstOrDefault();
-
-                if (null == newestDatapoint) return null;
-
-                return Tuple.Create(newestDatapoint.Value, newestDatapoint.TimeStamp);
-            }
-        }
+        public static DataService Instance { get; } = new DataService();
 
         /// <summary>Requires UI thread. Syncs databse data with the server.</summary>
         /// <remarks>This method runs on the UI thread, the queued methods need it, they hand off work to the
@@ -121,6 +71,68 @@
                     Debug.WriteLine(postHistErrors);
                 }
             }
+        }
+
+        /// <summary>The method should be executed on the UI thread, which means it should be called before any
+        /// awaits, before the the method returns.</summary>
+        private Task<T> AttachContinuationsAndSwapLastTask<T>(Func<T> workForNextTask)
+        {
+            var contTask = _lastTask.ContinueWith(_ => workForNextTask());
+            _lastTask = contTask;
+            ((App)Application.Current).AddSessionTask(contTask);
+            return contTask;
+        }
+
+        /// <summary>Updates sensor history from server. Queued to run after existing database and server
+        /// operations.</summary>
+        /// <param name="db"></param>
+        /// <returns>Errors, null on succes.</returns>
+        private async Task<string> GetRequestSensorHistoryAsyncQueued(MainDbContext db)
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestSensorHistoryAsync(db)));
+            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
+            await BroadcasterService.Instance.TablesChanged.Invoke(null);
+            return updatesFromServerAsync;
+        }
+
+        /// <summary>Updates the database from the cloud server.</summary>
+        /// <returns>A compilation of errors.</returns>
+        private async Task<List<string>> GetRequestUpdateAsyncQueued(MainDbContext db)
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestUpdateAsync(db)));
+            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
+            await BroadcasterService.Instance.TablesChanged.Invoke(null);
+            return updatesFromServerAsync;
+        }
+
+        /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
+        /// <param name="table">The DBSet object for the table.</param>
+        /// <param name="tableName">The name of the table in the API .</param>
+        /// <param name="lastPost">The last time the table was synced.</param>
+        /// <param name="creds">Authentication credentials.</param>
+        /// <returns>Null on success otherwise an error message.</returns>
+        private static async Task<string> PostRequestTableWhereUpdatedAsync(IQueryable<BaseEntity> table,
+            string tableName, DateTimeOffset lastPost, Creds creds)
+        {
+            var edited = table.AsNoTracking().Where(t => t.UpdatedAt > lastPost).ToList();
+
+            if (!edited.Any()) return null;
+
+            var data = JsonConvert.SerializeObject(edited, Formatting.None);
+            var req = await Request.PostTable(ApiUrl, tableName, data, creds).ConfigureAwait(false);
+            return req;
+        }
+
+        private async Task<List<string>> PostRequestUpdatesAsyncQueued(MainDbContext db)
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestUpdateAsync(db)));
+            return await await cont.ConfigureAwait(false);
+        }
+
+        private async Task<string> PostRequestHistoryAsyncQueued(MainDbContext db)
+        {
+            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestHistoryAsync(db)));
+            return await await cont.ConfigureAwait(false);
         }
 
         /// <summary>Figures out the real type of the table entitiy, performs checks for existing items and
@@ -186,63 +198,9 @@
         }
 
 
-        /// <summary>The method should be executed on the UI thread, which means it should be called before any
-        /// awaits, before the the method returns.</summary>
-        private Task<T> AttachContinuationsAndSwapLastTask<T>(Func<T> workForNextTask)
-        {
-            var contTask = _lastTask.ContinueWith(_ => workForNextTask());
-            _lastTask = contTask;
-            ((App) Application.Current).AddSessionTask(contTask);
-            return contTask;
-        }
 
-        /// <summary>Deserialises a table from Json, throws excption on failure.</summary>
-        /// <typeparam name="TPoco">The type od the table.</typeparam>
-        /// <param name="tableName">The name of the table (used for errors).</param>
-        /// <param name="response">The json to be deserialized.</param>
-        /// <returns>Table entry objects.</returns>
-        private static async Task<List<TPoco>> DeserializeTableThrowOnErrrorAsync<TPoco>(string tableName,
-            string response) where TPoco : class
-        {
-            List<TPoco> updatesFromServer;
-            try
-            {
-                updatesFromServer =
-                    await Task.Run(() => JsonConvert.DeserializeObject<List<TPoco>>(response)).ConfigureAwait(false);
-            }
-            catch (JsonSerializationException e)
-            {
-                Debug.WriteLine($"Desserialise falied on response for {tableName}");
-                Debug.WriteLine(e);
-                throw new Exception($"Derserialize failed: {tableName}");
-            }
-            return updatesFromServer;
-        }
 
-        /// <summary>Gets a large tree of all of the data the UI uses except for live and historical readings.
-        /// Run on threadpool because SQLite doesn't do async IO.</summary>
-        /// <returns>Non-readings tree of data used bvy the UI.</returns>
-        private List<CropCycle> GetDataTree()
-        {
-            using (var db = new MainDbContext())
-            {
-                return
-                    db.CropCycles.AsNoTracking()
-                        .Include(cc => cc.Location)
-                        .Include(cc => cc.CropType)
-                        .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Param)
-                        .Include(cc => cc.Location)
-                        .ThenInclude(l => l.Devices)
-                        .ThenInclude(d => d.Sensors)
-                        .ThenInclude(s => s.SensorType)
-                        .ThenInclude(st => st.Place)
-                        .ToList();
-            }
-        }
+
 
         /// <summary>Downloads derserialzes and add/merges a table.</summary>
         /// <typeparam name="TPoco">The POCO type of the table.</typeparam>
@@ -275,6 +233,8 @@
 
             return null;
         }
+
+
 
         /// <summary>Updates sensor history from server.</summary>
         /// <returns>Errors, null on succes. Some data may have been successfully saved alongside errors.</returns>
@@ -316,7 +276,7 @@
                     }
                     else
                     {
-                        Log.ShouldNeverHappen(
+                        LoggingService.ShouldNeverHappen(
                             $"Found a history with no entries: {device.Name}, {latestDownloadedBlock.TimeStamp}");
 
                         // This is a broken situation, but it should be  fine if we continue from the start of the day.
@@ -331,7 +291,7 @@
                 var blocksToUpdate = new List<SensorHistory>();  
                 do
                 {
-                    var cred = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+                    var cred = Creds.FromUserIdAndToken(SettingsService.Instance.CredUserId, SettingsService.Instance.CredToken);
                     // Although any time far in the past should work, using 0 makes intent clear in debugging.
                     var unixTimeSeconds = mostRecentDownloadedTimestamp == default(DateTimeOffset)
                         ? 0
@@ -362,6 +322,9 @@
 
                     if (remoteBlocks.Any())
                     {
+                        var LocalSensors = db.Sensors.ToList();
+                        var LocalLocation = db.Locations.ToList(); 
+
                         var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
                         foreach (var remoteBlock in remoteBlocks)
                         {
@@ -373,8 +336,7 @@
                                 db.SensorsHistory
                                     .FirstOrDefault(
                                         sh => sh.SensorID == remoteBlock.SensorID &&
-                                        sh.TimeStamp.Date == remoteBlock.TimeStamp.Date 
-                                        && sh.LocationID == remoteBlock.LocationID);
+                                        sh.TimeStamp.Date == remoteBlock.TimeStamp.Date);
                             // Make sure that its not an object tracked from a previous loop.
                             // This can happen because the end of the previous day will always get sliced with no data.
                             // That end slice isn't perfect but is makes sure all the data was taken.
@@ -395,6 +357,19 @@
                             {
                                 // The json deserialiser deserialises json to the .Data property.
                                 // The data has to be serialised into raw-data-blobs before saving to the databse.
+                              /*  var linkedSensor = LocalSensors.FirstOrDefault(sen => sen.ID == remoteBlock.SensorID);
+                                var linkedLocation = LocalLocation.FirstOrDefault(loc => loc.ID == remoteBlock.LocationID);
+                                var allDevices = db.Devices.ToList(); 
+
+                                var conflictBlocks =
+                                db.SensorsHistory
+                                .Include(sh => sh.Location)
+                                    .Where(
+                                        sh => sh.SensorID == remoteBlock.SensorID &&
+                                        sh.TimeStamp.Date == remoteBlock.TimeStamp.Date).ToList(); 
+
+                                //var ConflictLocation = db.Locations.FirstOrDefault(loc => loc.ID == conflictBlock.LocationID); */
+
                                 remoteBlock.SerialiseData();
                                 blocksToUpdate.Add(db.Add(remoteBlock).Entity);
                             }
@@ -402,6 +377,8 @@
                             {
                                 // The data is pulled from the database as serialised raw data blobs.
                                 localBlock.DeserialiseData();
+                                localBlock.LocationID = remoteBlock.LocationID; 
+
                                 // The merged object merges using the deserialised Data property.
                                 var merged = SensorHistory.Merge(localBlock, remoteBlock);
                                 // Data has to be serialised again into raw data blobs for the database.
@@ -444,38 +421,9 @@
             return string.IsNullOrWhiteSpace(errors) ? null : errors;
         }
 
-        /// <summary>Updates sensor history from server. Queued to run after existing database and server
-        /// operations.</summary>
-        /// <param name="db"></param>
-        /// <returns>Errors, null on succes.</returns>
-        private async Task<string> GetRequestSensorHistoryAsyncQueued(MainDbContext db)
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestSensorHistoryAsync(db)));
-            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
-            await Messenger.Instance.TablesChanged.Invoke(null);
-            return updatesFromServerAsync;
-        }
-
-        private static async Task<string> GetRequestTableThrowOnErrorAsync(string tableName, Creds cred)
-        {
-            string response;
-            if (cred == null)
-                response = await Request.GetTable(ApiUrl, tableName).ConfigureAwait(false);
-            else
-                response = await Request.GetTable(ApiUrl, tableName, cred).ConfigureAwait(false);
-
-            if (response.StartsWith("Error:"))
-            {
-                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}, {response}");
-
-                throw new Exception($"Request failed: {tableName}, {response}");
-            }
-            return response;
-        }
-
         private async Task<List<string>> GetRequestUpdateAsync(MainDbContext db)
         {
-            var settings = Settings.Instance;
+            var settings = SettingsService.Instance;
             var creds = Creds.FromUserIdAndToken(settings.CredUserId, settings.CredToken);
             var now = DateTimeOffset.Now;
 
@@ -524,21 +472,11 @@
             return res;
         }
 
-        /// <summary>Updates the database from the cloud server.</summary>
-        /// <returns>A compilation of errors.</returns>
-        private async Task<List<string>> GetRequestUpdateAsyncQueued(MainDbContext db)
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => GetRequestUpdateAsync(db)));
-            var updatesFromServerAsync = await await cont.ConfigureAwait(false);
-            await Messenger.Instance.TablesChanged.Invoke(null);
-            return updatesFromServerAsync;
-        }
-
         /// <summary>Posts all new history items since the last time data was posted.</summary>
         /// <returns></returns>
         private static async Task<string> PostRequestHistoryAsync(MainDbContext db)
         {
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            var creds = Creds.FromUserIdAndToken(SettingsService.Instance.CredUserId, SettingsService.Instance.CredToken);
             var tableName = nameof(db.SensorsHistory);
 
             if (!db.SensorsHistory.Any()) return null;
@@ -638,37 +576,13 @@
             return null;
         }
 
-        private async Task<string> PostRequestHistoryAsyncQueued(MainDbContext db)
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestHistoryAsync(db)));
-            return await await cont.ConfigureAwait(false);
-        }
-
-        /// <summary>Only supports tables that derive from BaseEntity and Croptype.</summary>
-        /// <param name="table">The DBSet object for the table.</param>
-        /// <param name="tableName">The name of the table in the API .</param>
-        /// <param name="lastPost">The last time the table was synced.</param>
-        /// <param name="creds">Authentication credentials.</param>
-        /// <returns>Null on success otherwise an error message.</returns>
-        private static async Task<string> PostRequestTableWhereUpdatedAsync(IQueryable<BaseEntity> table,
-            string tableName, DateTimeOffset lastPost, Creds creds)
-        {
-            var edited = table.AsNoTracking().Where(t => t.UpdatedAt > lastPost).ToList();
-
-            if (!edited.Any()) return null;
-
-            var data = JsonConvert.SerializeObject(edited, Formatting.None);
-            var req = await Request.PostTable(ApiUrl, tableName, data, creds).ConfigureAwait(false);
-            return req;
-        }
-
         /// <summary>Posts changes saved in the local DB (excluding histories) to the server. Only Items with
         /// UpdatedAt or CreatedAt changed since the last post are posted.</summary>
         private static async Task<List<string>> PostRequestUpdateAsync(MainDbContext db)
         {
-            var creds = Creds.FromUserIdAndToken(Settings.Instance.CredUserId, Settings.Instance.CredToken);
+            var creds = Creds.FromUserIdAndToken(SettingsService.Instance.CredUserId, SettingsService.Instance.CredToken);
 
-            var lastDatabasePost = Settings.Instance.LastSuccessfulGeneralDbPost;
+            var lastDatabasePost = SettingsService.Instance.LastSuccessfulGeneralDbPost;
             var postTime = DateTimeOffset.Now;
 
             var responses = new List<string>();
@@ -710,14 +624,8 @@
 
 
             var errors = responses.Where(r => r != null).ToList();
-            if (!errors.Any()) Settings.Instance.LastSuccessfulGeneralDbPost = postTime;
+            if (!errors.Any()) SettingsService.Instance.LastSuccessfulGeneralDbPost = postTime;
             return errors;
-        }
-
-        private async Task<List<string>> PostRequestUpdatesAsyncQueued(MainDbContext db)
-        {
-            var cont = AttachContinuationsAndSwapLastTask(() => Task.Run(() => PostRequestUpdateAsync(db)));
-            return await await cont.ConfigureAwait(false);
         }
     }
 }

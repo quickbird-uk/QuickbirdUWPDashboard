@@ -35,7 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <Optimize>false</Optimize>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -108,14 +108,14 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Internet\Creds.cs" />
-    <Compile Include="Internet\Request.cs" />
-    <Compile Include="Internet\sReadingsJsConverter.cs" />
-    <Compile Include="Internet\UrlCombiner.cs" />
-    <Compile Include="Internet\WebSocketConnection.cs" />
-    <Compile Include="LocalNetworking\DatapointsSaver.cs" />
-    <Compile Include="LocalNetworking\Manager.cs" />
-    <Compile Include="LocalNetworking\UDPMessaging.cs" />
+    <Compile Include="Networking\Creds.cs" />
+    <Compile Include="Networking\Request.cs" />
+    <Compile Include="Networking\sReadingsJsConverter.cs" />
+    <Compile Include="Networking\UrlCombiner.cs" />
+    <Compile Include="Networking\WebSocketConnection.cs" />
+    <Compile Include="Services\DatapointsService.cs" />
+    <Compile Include="Networking\LANManager.cs" />
+    <Compile Include="Networking\UDPMessaging.cs" />
     <Compile Include="Migrations\20160713161741_initial.cs" />
     <Compile Include="Migrations\20160713161741_initial.designer.cs">
       <DependentUpon>20160713161741_initial.cs</DependentUpon>
@@ -123,13 +123,15 @@
     <Compile Include="Migrations\MainDbContextModelSnapshot.cs" />
     <Compile Include="Models\MainDbContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\BlockingDispatcher.cs" />
-    <Compile Include="Util\BroadcastMessage.cs" />
-    <Compile Include="Util\DatabaseHelper.cs" />
-    <Compile Include="Util\Log.cs" />
-    <Compile Include="Util\Messenger.cs" />
-    <Compile Include="Util\Settings.cs" />
-    <Compile Include="Util\Toast.cs" />
+    <Compile Include="Services\BlockingDispatcher.cs" />
+    <Compile Include="Services\BroadcastMessage.cs" />
+    <Compile Include="Services\DataSyncServRead.cs" />
+    <Compile Include="Services\DataSyncService.cs" />
+    <Compile Include="Services\LoggingService.cs" />
+    <Compile Include="Services\BroadcasterService.cs" />
+    <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Services\ToastService.cs" />
+    <Compile Include="Services\VirtualDeviceService.cs" />
     <Compile Include="ViewModels\AddCropCycleViewModel.cs" />
     <Compile Include="ViewModels\AddYieldViewModel.cs" />
     <Compile Include="ViewModels\AnalyticsViewModel.cs" />

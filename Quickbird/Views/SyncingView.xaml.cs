@@ -8,6 +8,7 @@
     using Microsoft.EntityFrameworkCore;
     using Models;
     using Util;
+    using Services; 
 
     /// <summary>Forces the user to wait while a sync is performed, then navigates to the shell.</summary>
     public sealed partial class SyncingView : Page
@@ -26,7 +27,7 @@
                 db.Database.Migrate();
             }
 
-            await DatabaseHelper.Instance.SyncWithServerAsync();
+            await DataService.Instance.SyncWithServerAsync();
             await x;
 
             Frame.Navigate(typeof(Shell));

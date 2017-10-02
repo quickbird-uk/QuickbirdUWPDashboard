@@ -17,7 +17,7 @@
         public ArchiveViewModel()
         {
             _updateAction = Update;
-            Messenger.Instance.TablesChanged.Subscribe(_updateAction);
+            BroadcasterService.Instance.TablesChanged.Subscribe(_updateAction);
             Update(string.Empty);
         }
 
@@ -87,7 +87,7 @@
             }
         }
 
-        public override void Kill() { Messenger.Instance.TablesChanged.Unsubscribe(_updateAction); }
+        public override void Kill() { BroadcasterService.Instance.TablesChanged.Unsubscribe(_updateAction); }
 
         public async void Update(string input)
         {

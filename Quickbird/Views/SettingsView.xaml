@@ -11,8 +11,10 @@
         <converters:TrueVisible x:Key="TrueVisible" />
         <converters:FalseVisible x:Key="FalseVisible" />
     </Page.Resources>
+    <ScrollViewer VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                      VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" >
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <!--  0 reserved for margins  -->
             <RowDefinition Height="15" />
@@ -39,64 +41,78 @@
             Style="{StaticResource HeaderTextBlockStyle}"
             Text="Settings" />
         <!--  Column 1 content  -->
-        <StackPanel Grid.Row="2"
-            Grid.Column="1"
-            Padding="5">
-            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Network" />
-            <StackPanel Padding="0, 15, 0, 0" Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
-                <TextBlock Text="No conflicts detected."
+
+            <StackPanel Grid.Row="2"  Grid.Column="1" Padding="5">
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Network" />
+                <StackPanel Padding="0, 15, 0, 0" Visibility="{x:Bind ViewModel.DeviceManagementEnabled, Converter={StaticResource TrueVisible}, Mode=OneWay}">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Conflict Detection" />
+                    <TextBlock Text="No conflicts detected."
                     TextWrapping="WrapWholeWords"
                     Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource FalseVisible}, Mode=OneWay}" />
-                <TextBlock Foreground="Red"
+                    <TextBlock Foreground="Red"
                     Text="Conflict detected. You must disable local device management on a computer."
                     TextWrapping="WrapWholeWords"
                     Visibility="{x:Bind ViewModel.IsNetworkConflict, Converter={StaticResource TrueVisible}, Mode=OneWay}" />
-            </StackPanel>
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Toast Notifications" />
-                <TextBlock Text="Disable / Enable toast Notification. They are used for alerts, etc." TextWrapping="WrapWholeWords" />
-                <ToggleSwitch IsOn="{x:Bind ViewModel.ToastsEnabled, Mode=TwoWay}"
+                </StackPanel>
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Toast Notifications" />
+                    <TextBlock Text="Disable / Enable toast Notification. They are used for alerts, etc." TextWrapping="WrapWholeWords" />
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.ToastsEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
-            </StackPanel>
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Debug Toast Notifications" />
-                <TextBlock Text="Disable / Enable toast Notification used spesifically for debugging. This app produces a lot of them, and they are good for diagnostics, but can be annoying" TextWrapping="WrapWholeWords" />
-                <ToggleSwitch IsOn="{x:Bind ViewModel.DebugToastsEnabled, Mode=TwoWay}"
+                </StackPanel>
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Debug Toast Notifications" />
+                    <TextBlock Text="Disable / Enable toast Notification used spesifically for debugging. This app produces a lot of them, and they are good for diagnostics, but can be annoying" TextWrapping="WrapWholeWords" />
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.DebugToastsEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
-            </StackPanel>
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
-                <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
-                <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
+                </StackPanel>
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Local Device Management" />
+                    <TextBlock Text="Activate to allow this computer to read and save data from devices on the network." TextWrapping="WrapWholeWords" />
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.DeviceManagementEnabled, Mode=TwoWay}"
                     OffContent="Disabled"
                     OnContent="Enabled" />
-            </StackPanel>
-          <!--  NOT IMPLEMENTED RIGHT NOW! 
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Virtual Device" />
-                <TextBlock Text="If you have no hardware devices, the app will create a virtual one for testing purposes. The device will have a few sensors and will produce random data. This data will get synced to the cloud. You will be able to see this data from other computers / clients." TextWrapping="WrapWholeWords" />
-                <ToggleSwitch IsOn="{x:Bind ViewModel.VirtualDeviceEnabled, Mode=TwoWay}"
-                    OffContent="Disabled"
-                    OnContent="Enabled" />
-            </StackPanel>  -->
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Sign Out" />
-                <TextBlock TextWrapping="WrapWholeWords">Sing out of your account and delete local data belonging to this app. You will required to login and sync the app with the cloud.</TextBlock>
-                <Button Margin="0,5,0,0"
+                </StackPanel>
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Virtual Device" />
+                    <TextBlock Text="If you have no hardware devices, the app will create a virtual one for testing purposes. The device will have a few sensors and will produce random data. This data will get synced to the cloud. You will be able to see this data from other computers / clients." TextWrapping="WrapWholeWords" />
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.VirtualDeviceEnabled, Mode=TwoWay}"
+                        OffContent="Disabled"
+                        OnContent="Enabled" />
+                </StackPanel>  
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Sign Out" />
+                    <TextBlock TextWrapping="WrapWholeWords">Sing out of your account and delete local data belonging to this app. You will required to login and sync the app with the cloud.</TextBlock>
+                    <Button Margin="0,5,0,0"
                     Click="{x:Bind ViewModel.SignOut}"
                     Content="Sign Out" />
+                </StackPanel>
+
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Technical Parameters" />
+                    <TextBlock Text="{x:Bind ViewModel.AppVersion}" />
+                    <TextBlock Text="{x:Bind ViewModel.MachineID}" />
+
+                </StackPanel>
+
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Twitter Authentication" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Copy Account ID" Click="{x:Bind ViewModel.CopyTwitterUserID}" Margin="2"/>
+                        <Button Content="Copy Auth Token" Click="{x:Bind ViewModel.CopyTwitterToken}" Margin="2"/>
+                    </StackPanel>
+                </StackPanel>
+
+
+                <StackPanel Padding="0, 15, 0, 0">
+                    <TextBlock Style="{StaticResource Subtitle}" Text="Credits" />
+                    <TextBlock TextWrapping="WrapWholeWords" LineHeight="5" Text="Good folks that worked on the app, in no particular order:
+                            &#x0a;   Vladimir Akopyan &#x0d;&#x0a;   Animesh Mishra &#x0a;   Manish Parekh." />
+                </StackPanel>
             </StackPanel>
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="{x:Bind ViewModel.AppVersion}" />
-            </StackPanel>
-            <StackPanel Padding="0, 15, 0, 0">
-                <TextBlock Style="{StaticResource Subtitle}" Text="Credits" />
-                <TextBlock TextWrapping="WrapWholeWords" LineHeight="5" Text="Good folks that worked on the app, in no particular order:
-                           &#x0a;   Vladimir Akopyan &#x0d;&#x0a;   Animesh Mishra &#x0a;   Manish Parekh." />
-            </StackPanel>
-        </StackPanel>
-    </Grid>
+
+        </Grid>
+    </ScrollViewer>
 </Page>

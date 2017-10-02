@@ -7,21 +7,30 @@
     using uPLibrary.Networking.M2Mqtt.Messages;
     using Newtonsoft;
 
+    public struct SensorMessage
+    {
+        public float value;
+        public int duration;
+        public byte SensorTypeID;
+
+        ///Binarry Message Length. 
+        public const int incomingLength = 9;
+    }
+
     /// <summary>This class is in charge of all the local communication. It initiates MQTT and UDP
     /// messaging. IF you try to instantiate this class twice, it will throw and exception!</summary>
-    public class Manager : IDisposable
+    public class LANManager : IDisposable
     {
         private static MqttBroker _mqttBroker;
 
         private static readonly object _lock = new object();
 
         private static UDPMessaging _udpMessaging;
-        private static DatapointsSaver _datapointsSaver;
         private DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private bool disposedValue; // To detect redundant calls
 
-        public Manager()
+        public LANManager()
         {
             lock (_lock)
             {
@@ -30,7 +39,6 @@
                     _mqttBroker = new MqttBroker();
                     _mqttBroker.Start();
                     _udpMessaging = new UDPMessaging();
-                    _datapointsSaver = new DatapointsSaver();
                     _mqttBroker.MessagePublished += MqttMessageRecieved;
                 }
                 else
@@ -55,7 +63,6 @@
             _mqttBroker?.Start();
             if (_udpMessaging == null || _udpMessaging.Disposed)
                 _udpMessaging = new UDPMessaging();
-            _datapointsSaver.Resume();
         }
 
 
@@ -65,9 +72,7 @@
             _mqttBroker?.Stop();
             _udpMessaging?.Dispose();
             _udpMessaging = null;
-            _datapointsSaver.Suspend();
         }
-
 
         protected virtual void Dispose(bool disposing)
         {
@@ -77,7 +82,6 @@
                 {
                     // TODO: dispose managed state (managed objects). 
                     _udpMessaging?.Dispose();
-                    _datapointsSaver?.Dispose();
                 }
                 if (_mqttBroker != null)
                 {
@@ -86,7 +90,6 @@
                 }
                 _mqttBroker = null;
                 _udpMessaging = null;
-                _datapointsSaver = null;
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
                 // TODO: set large fields to null.
@@ -102,7 +105,7 @@
 
             if (Guid.TryParse(rawClientID, out clientID) == false)
             {
-                Util.Toast.NotifyUserOfError($"recieved message with invalid ClientID, {clientID} is not a valid ID");
+                Util.ToastService.NotifyUserOfError($"recieved message with invalid ClientID, {clientID} is not a valid ID");
                 return;
             }
 
@@ -121,16 +124,16 @@
             var toWrite = new KeyValuePair<Guid, SensorMessage[]>(clientID, readings);
 
             if (readings != null)
-                _datapointsSaver.BufferAndSendReadings(toWrite);
+                DatapointService.Instance.BufferAndSendReadings(toWrite, "Box");
         }
 
-        private SensorMessage[] DecodeBinaryMessage(byte[] rawData)
+        private static SensorMessage[] DecodeBinaryMessage(byte[] rawData)
         {
             SensorMessage[] readings = null;
 
             if (rawData.Length % SensorMessage.incomingLength != 0)
             {
-                Util.Toast.NotifyUserOfError($"message recieved over MQTT is invalid. it must consist of sensor readings, " +
+                Util.ToastService.NotifyUserOfError($"message recieved over MQTT is invalid. it must consist of sensor readings, " +
                     $"{SensorMessage.incomingLength} bytes long each. It's length is {rawData.Length}, not divisble by {SensorMessage.incomingLength}");
             }
             else
@@ -149,7 +152,7 @@
             return readings; 
         }
 
-        private SensorMessage[] DecodeJSONMessage(byte[] rawData)
+        private static SensorMessage[] DecodeJSONMessage(byte[] rawData)
         {
             SensorMessage[] message = null; 
             try
@@ -159,26 +162,16 @@
             }
             catch
             {
-                Util.Toast.NotifyUserOfError($"message recieved over MQTT is not valid JSON. it must consist of sensor readings");
+                Util.ToastService.NotifyUserOfError($"message recieved over MQTT is not valid JSON. it must consist of sensor readings");
             }
             return message;
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        ~Manager()
+        ~LANManager()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(false);
-        }
-
-        public struct SensorMessage
-        {
-            public float value;
-            public int duration;
-            public byte SensorTypeID;
-
-            ///Binarry Message Length. 
-            public const int incomingLength = 9;
         }
     }
 }
