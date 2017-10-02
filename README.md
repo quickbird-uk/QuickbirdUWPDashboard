@@ -142,11 +142,7 @@ __Arduino Code__: https://github.com/quickbird-uk/QuickbirdSensorBox
 
 Alerts + core server complete.
 
-### 1.9.0 ()
-
-Alerts
-
-### 1.8.0 (planning)
+### 1.9.0 (planning)
 
 Port to .Net core
 
@@ -158,11 +154,17 @@ Port to .Net core
 * Fat Sync API
     * All dependant data should be downloaded in a single request (mult-table download). 
 * Billing ?
+* Alerts
+* Control
 
 ### 1.7.0 (WIP)
-
-_Maintenance:_ Bug fixes and local db perf (will run profiler make graph loading faster).
-
+_Maintenance:_ 
+* Public Release on store.
+* Bug fixes
+* Stable App
+* Welcome page
+* Documentation
+* Make the system testable and usable
 
 ## Change Log (Released Milestones)
 
