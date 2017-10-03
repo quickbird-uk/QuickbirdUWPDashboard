@@ -94,7 +94,8 @@
                     <TextBlock Style="{StaticResource Subtitle}" Text="Technical Parameters" />
                     <TextBlock Text="{x:Bind ViewModel.AppVersion}" />
                     <TextBlock Text="{x:Bind ViewModel.MachineID}" />
-
+                    <TextBlock Padding="0, 15, 0, 5" Text="If you are exoeriencing issues with syncing data, you can force the app to download and upload ALL the data agian."/>
+                    <Button Content="Reset LastSyncDate" Click="{x:Bind ViewModel.SyncTimeReset}" Margin="2"/>
                 </StackPanel>
 
                 <StackPanel Padding="0, 15, 0, 0">

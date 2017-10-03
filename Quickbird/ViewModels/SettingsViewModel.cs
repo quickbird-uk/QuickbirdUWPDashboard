@@ -112,6 +112,13 @@
  
         public string MachineID => $"Machine ID: {SettingsService.Instance.MachineID}";
 
+        public async void SyncTimeReset()
+        {
+            SettingsService.Instance.LastSuccessfulGeneralDbGet = DateTimeOffset.MinValue;
+            SettingsService.Instance.LastSuccessfulGeneralDbPost = DateTimeOffset.MinValue;
+            await Services.DataService.Instance.SyncWithServerAsync();
+        }
+
         /// <summary>
         /// Copies Twitter token to clipboard
         /// </summary>

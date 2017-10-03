@@ -120,7 +120,7 @@
                             BorderThickness="0,1,0,1"
                             Click="{x:Bind ViewModel.NavToAddNewView}"
                             Style="{ThemeResource NoBackgroundDarkTheme}">
-                        <Grid Height="72">
+                        <Grid Height="50">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
@@ -141,7 +141,7 @@
                             BorderThickness="0,1,0,1"
                             Click="{x:Bind ViewModel.NavToArchiveView}"
                             Style="{ThemeResource NoBackgroundDarkTheme}">
-                        <Grid Height="72">
+                        <Grid Height="50">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
@@ -162,7 +162,7 @@
                             BorderThickness="0,1,0,1"
                             Click="{x:Bind ViewModel.NavToGraphingView}"
                             Style="{ThemeResource NoBackgroundDarkTheme}">
-                        <Grid Height="72">
+                        <Grid Height="50">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
@@ -183,7 +183,7 @@
                             BorderThickness="0,1,0,1"
                             Click="{x:Bind ViewModel.NavToSettingsView}"
                             Style="{ThemeResource NoBackgroundDarkTheme}">
-                        <Grid Height="72">
+                        <Grid Height="50">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="96" />
                                 <ColumnDefinition />
