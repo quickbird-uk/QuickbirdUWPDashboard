@@ -117,6 +117,13 @@ The app will never contain the actual control loop, i.e. it will never respond t
 The server is currently written on ASP.net 4.6 and is due for replacement with ASP.net core. 
 The REST API is due to be replaced with a Websocket-based system
 
+## Authentication
+Uses Azure API APP in-built twitter authentication. 
+The Server grabs a token from twitter, and then creates it's own token. The token is avaliable in app in Settings tab under Twitter Authentication, click the button called "CopyAuthToken".
+
+You need to pass this token when making an API request using the header `X-ZUMO-AUTH`
+
+
 # Development 
 
 __DASHBOARD__: https://waffle.io/quickbird-uk/QuickbirdUWP
@@ -127,7 +134,7 @@ __StorePage__: https://www.microsoft.com/en-us/store/apps/quickbird/9nblggh6cclt
 
 __API Docs__: https://greenhouseapi.azurewebsites.net/swagger/ui/index
 
-__Arduino Code__: https://github.com/quickbird-uk/QuickbirdSensorBox 
+__Arduino Code__: Check Examples Folder
 
 ## Libraries and Dependecies
 * Syncfusion.SfChart
