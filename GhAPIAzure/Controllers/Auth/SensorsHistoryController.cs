@@ -79,22 +79,18 @@
             for (var i = 0; i < sensorHistories.Count; i++)
             {
                 var hist = sensorHistories[i];
+                hist.DeserialiseData();
+
                 if (hist.TimeStamp.Date == oldestDate)
-                {
-                    hist.DeserialiseData();
+                {  
                     sensorHistories[i] = hist.Slice(afterTime);
                 }
                 else
                 {
-                    // Items are sorted so there should be no more first day items
+                    // Items are sorted /ordered by date
+                    // so there should be no more first day items
                     break;
                 }
-            }
-
-            // The Json converter uses the deserialised data, ignores the raw blob stored in the DB.
-            foreach (var history in sensorHistories)
-            {
-                history.DeserialiseData();
             }
 
             //timer.Stop(); 
