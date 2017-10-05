@@ -36,6 +36,14 @@
             InitializeComponent();
             Suspending += OnSuspending;
             Resuming += OnResuming;
+
+            /* If there is an unhandled exception, restart the application */
+            this.UnhandledException += (sender, e) =>
+            {
+                // e.Handled = true;
+
+                System.Diagnostics.Debug.WriteLine(e.Exception);
+            };
         }
 
         /// <summary>The UI dispatcher for this app. This ensures that the correct dispatcher is acquired in

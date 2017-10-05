@@ -19,7 +19,7 @@
         <SplitView.Pane>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="112" />
+                    <RowDefinition Height="70" />
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -27,27 +27,30 @@
                 <!--  Pane Header  -->
                 <Grid BorderBrush="#66EBEBEB" BorderThickness="0,0,0,1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="96" />
+                        <ColumnDefinition Width="40"/>
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
 
                     <Button BorderBrush="{x:Null}"
                             Click="{x:Bind ViewModel.ToggleNav}"
-                            Style="{ThemeResource NoBackgroundDarkTheme}">
+                            Style="{ThemeResource NoBackgroundDarkTheme}"
+                            Width="50">
                         <Image Height="44"
-                               Margin="32,32,0,32"
-                               HorizontalAlignment="Left"
+                               HorizontalAlignment="Center"
                                Opacity="0.95"
                                Source="ms-appx:///Assets/logo-rocket-light.png"
                                Stretch="Uniform" />
                     </Button>
-                    <TextBlock Grid.Column="1"
-                               Margin="0,40"
-                               FontFamily="Segoe UI"
-                               FontSize="24"
-                               FontWeight="Normal"
-                               Foreground="#FFEBEBEB"
-                               Text="Quickbird" />
+                    <TextBlock 
+                        Grid.Column="1"
+                            Margin="0,10"
+                            FontFamily="Segoe UI"
+                            FontSize="18"
+                            FontWeight="Normal"
+                            Foreground="#FFEBEBEB"
+                            Text="Recordings In Progress" 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom"/>
                 </Grid>
 
                 <!--  Pane Body  -->
@@ -63,44 +66,44 @@
                         <DataTemplate>
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="96" />
+                                    <ColumnDefinition Width="50" />
                                     <ColumnDefinition />
                                     <ColumnDefinition Width="44" />
                                 </Grid.ColumnDefinitions>
-                                <Ellipse Margin="24,12,24,12" Fill="#FFEBEBEB" />
+                                <Ellipse Margin="6,6,6,6" Fill="#FFEBEBEB" />
                                 <Ellipse Grid.Column="0"
-                                         Margin="24,12,24,12"
+                                         Margin="6,6,6,6"
                                          Fill="Gold"
                                          Visibility="{Binding Path=IsAlerted,
                                                          Converter={StaticResource TrueVisible},
-                                                         Mode=OneWay}" />
+                                                         Mode=OneWay}"/>
                                 <TextBlock Grid.Column="0"
                                            Margin="0,2,2,0"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            FontFamily="Segoe UI Mono"
-                                           FontSize="30"
+                                           FontSize="28"
                                            Foreground="#FF515C6B"
                                            Text="{Binding IconLetter,
                                                    Mode=OneWay,
                                                    FallbackValue=C}"
                                            TextAlignment="Center" />
-                                <StackPanel Grid.Column="1" Margin="0,12,0,12">
+                                <StackPanel Grid.Column="1" Margin="0,4,0,6" >
                                     <TextBlock FontFamily="Segoe UI"
-                                               FontSize="18"
+                                               FontSize="16"
                                                FontWeight="Normal"
                                                Text="{Binding CropName,
                                                        Mode=OneWay,
                                                        FallbackValue=Crop}" />
-                                    <TextBlock Style="{ThemeResource Subtitle}"
+                                    <TextBlock Style="{ThemeResource Subtitle}" FontSize="12"
                                                Text="{Binding BoxName, Mode=OneWay, FallbackValue=Location}" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2"
-                                           Margin="0,0,12,4"
+                                           Margin="0,0,12,0"
                                            HorizontalAlignment="Right"
                                            VerticalAlignment="Center"
                                            FontFamily="Segoe UI Symbol"
-                                           FontSize="28"
+                                           FontSize="26"
                                            Foreground="Gold"
                                            Text="⚠"
                                            Visibility="{Binding Path=IsAlerted,
@@ -122,17 +125,17 @@
                             Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="50">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition Width="50" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Margin="24,0,24,0"
+                            <TextBlock Margin="6,0,6,0"
                                        FontSize="28"
                                        Foreground="#FFEBEBEB"
                                        Style="{ThemeResource Icon}"
                                        Text="" />
                             <TextBlock Grid.Column="1"
                                        Style="{StaticResource ShellButtonText}"
-                                       Text="Add Crop" />
+                                       Text="New Recording" />
                         </Grid>
                     </Button>
 
@@ -143,10 +146,10 @@
                             Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="50">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition Width="50" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Margin="24,0,24,0"
+                            <TextBlock Margin="6,0,6,0"
                                        FontSize="28"
                                        Foreground="#FFEBEBEB"
                                        Style="{ThemeResource Icon}"
@@ -164,14 +167,14 @@
                             Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="50">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition Width="50" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Margin="24,0,24,0"
+                            <TextBlock Margin="6,0,6,0"
                                        FontSize="28"
                                        Foreground="#FFEBEBEB"
                                        Style="{ThemeResource Icon}"
-                                       Text="" />
+                                       Text="" />
                             <TextBlock Grid.Column="1"
                                        Style="{StaticResource ShellButtonText}"
                                        Text="Graphs" />
@@ -185,10 +188,10 @@
                             Style="{ThemeResource NoBackgroundDarkTheme}">
                         <Grid Height="50">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition Width="50" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Margin="24,0,24,0"
+                            <TextBlock Margin="6,0,6,0"
                                        FontSize="28"
                                        Foreground="#FFEBEBEB"
                                        Style="{ThemeResource Icon}"

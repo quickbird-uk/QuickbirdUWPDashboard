@@ -94,8 +94,18 @@
                     <TextBlock Style="{StaticResource Subtitle}" Text="Technical Parameters" />
                     <TextBlock Text="{x:Bind ViewModel.AppVersion}" />
                     <TextBlock Text="{x:Bind ViewModel.MachineID}" />
-                    <TextBlock Padding="0, 15, 0, 5" Text="If you are exoeriencing issues with syncing data, you can force the app to download and upload ALL the data agian."/>
-                    <Button Content="Reset LastSyncDate" Click="{x:Bind ViewModel.SyncTimeReset}" Margin="2"/>
+                    <TextBlock Padding="0, 15, 0, 5" Text="The app updates data incrementally, which is more efficient, but can sometimes cause issues. Force the app to re-sync Everything if you xperience sync problems."/>
+
+                    <Button Click="{x:Bind ViewModel.SyncTimeReset}" Margin="2">
+                        <ContentControl>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Reset Last Sync Date" Padding="2" VerticalAlignment="Center"/>
+                                <ProgressRing x:Name="SyncIndicator" Height="27" Width="27" 
+                                              Visibility="{x:Bind ViewModel.SyncInProgress, Converter={StaticResource TrueVisible}, Mode=OneWay}" 
+                                              IsActive="{x:Bind ViewModel.SyncInProgress, Mode=OneWay}"/>
+                            </StackPanel>
+                        </ContentControl>
+                    </Button>
                 </StackPanel>
 
                 <StackPanel Padding="0, 15, 0, 0">

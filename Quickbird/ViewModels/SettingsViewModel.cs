@@ -17,6 +17,8 @@
 
         private bool _isNetworkConflict;
 
+        private bool _SyncInProgress = false; 
+
         public SettingsViewModel()
         {
             _localNetworkConflictAction = LocalNetworkConflictDetected;
@@ -61,7 +63,6 @@
                 OnPropertyChanged();
             }
         }
-
 
         public bool DebugToastsEnabled
         {
@@ -114,9 +115,21 @@
 
         public async void SyncTimeReset()
         {
+            SyncInProgress = true;
             SettingsService.Instance.LastSuccessfulGeneralDbGet = DateTimeOffset.MinValue;
             SettingsService.Instance.LastSuccessfulGeneralDbPost = DateTimeOffset.MinValue;
             await Services.DataService.Instance.SyncWithServerAsync();
+            SyncInProgress = false; 
+        }
+
+        public bool SyncInProgress
+        {
+            get { return _SyncInProgress; }
+            set { if (value == _SyncInProgress)
+                    return;
+                _SyncInProgress = value;
+                OnPropertyChanged(); 
+            }
         }
 
         /// <summary>

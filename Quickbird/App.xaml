@@ -7,7 +7,7 @@
         <!--  Navigation Panel | SplitView  -->
         <Style x:Key="NavigationPanel" TargetType="SplitView">
             <Setter Property="OpenPaneLength" Value="256" />
-            <Setter Property="CompactPaneLength" Value="96" />
+            <Setter Property="CompactPaneLength" Value="50" />
             <Setter Property="IsPaneOpen" Value="False" />
             <Setter Property="DisplayMode" Value="CompactInline" />
             <Setter Property="PaneBackground" Value="#FF515C6B" />
@@ -24,7 +24,7 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Foreground" Value="#FFEBEBEB" />
-            <Setter Property="Height" Value="72" />
+            <Setter Property="Height" Value="50" />
             <Setter Property="Width" Value="256" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="VerticalAlignment" Value="Stretch" />
