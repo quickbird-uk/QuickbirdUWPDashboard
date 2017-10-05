@@ -21,6 +21,7 @@
 bld/
 [Bb]in/
 [Oo]bj/
+roperties/PublishProfiles/
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -68,6 +69,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+*.pubxml
 
 # Chutzpah Test files
 _Chutzpah*

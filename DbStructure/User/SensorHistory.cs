@@ -106,6 +106,9 @@
         public void SerialiseData()
         {
             var dataSize = SensorDatapoint.BinarySize;
+            if (Data == null)
+                return; 
+
             var dataRaw = new byte[Data.Count*dataSize];
 
             for (var i = 0; i < Data.Count; i++)
