@@ -108,7 +108,7 @@
         {
             if (e.SocketError != SocketError.Success)
             {
-                Debug.WriteLine(e.SocketError);
+                Util.LoggingService.LogInfo($" UDP Socket recieve error {e.SocketError}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 return;
             }
 
@@ -125,12 +125,12 @@
                     if (message == "sekret")
                     {
                         Task.Run(() => BroadcasterService.Instance.LocalNetworkConflict.Invoke(e.RemoteEndPoint.ToString()));
-                        Debug.WriteLine(e.RemoteEndPoint.ToString());
+                        Util.LoggingService.LogInfo($"lan Conflict {e.RemoteEndPoint.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                     }
                 }
                 catch
                 {
-                    Debug.WriteLine("Got a weired broadcast from " + recievedFrom.Address);
+                    Util.LoggingService.LogInfo("Got a weired broadcast from " + recievedFrom.Address, Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 }
             }
 

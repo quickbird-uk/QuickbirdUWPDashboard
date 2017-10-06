@@ -11,7 +11,7 @@
         {
             if (SettingsService.Instance.DebugToastsEnabled == false)
                 return;
-            System.Diagnostics.Debug.WriteLine($"{title} - {text}");
+            //System.Diagnostics.Debug.WriteLine($"{title} - {text}");
             FireToast(title, text);
         }
 

@@ -47,28 +47,28 @@
                 var updateErrors = await GetRequestUpdateAsyncQueued(db);
                 if (updateErrors?.Any() ?? false)
                 {
-                    Debug.WriteLine(updateErrors);
+                    LoggingService.LogInfo(string.Join(",", updateErrors), Windows.Foundation.Diagnostics.LoggingLevel.Error );
                     return;
                 }
 
                 var updateHistErrors = await GetRequestSensorHistoryAsyncQueued(db);
                 if (updateHistErrors?.Any() ?? false)
                 {
-                    Debug.WriteLine(updateHistErrors);
+                    LoggingService.LogInfo(string.Join(",", updateHistErrors), Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     return;
                 }
 
                 var postErrors = await PostRequestUpdatesAsyncQueued(db);
                 if (postErrors?.Any() ?? false)
                 {
-                    Debug.WriteLine(string.Join(",", postErrors));
+                    LoggingService.LogInfo(string.Join(",", postErrors), Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     return;
                 }
 
                 var postHistErrors = await PostRequestHistoryAsyncQueued(db);
                 if (postHistErrors?.Any() ?? false)
                 {
-                    Debug.WriteLine(postHistErrors);
+                    LoggingService.LogInfo(string.Join(",", postHistErrors), Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 }
             }
         }
@@ -220,7 +220,7 @@
 
                 // Step 2: Deserialise
                 var updatesFromServer = await DeserializeTableThrowOnErrrorAsync<TPoco>(tableName, response);
-                Debug.WriteLineIf(updatesFromServer.Count > 0, $"Deserialised {updatesFromServer.Count} for {tableName}");
+                LoggingService.LogInfo($"Deserialised {updatesFromServer.Count} for {tableName}", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
                 // Step 3: Merge
                 // Get the DbSet that this request should be inserted into.
@@ -314,11 +314,11 @@
                         // Something went wrong, try moving onto next device.
                         var message = $"GetRequest or deserialise failed for {device.Name}: {ex}";
                         errors += message + Environment.NewLine;
-                        Debug.WriteLine(message);
+                        LoggingService.LogInfo(message, Windows.Foundation.Diagnostics.LoggingLevel.Error);
                         break;
                     }
 
-                    Debug.WriteLine($"{remoteBlocks.Count} dl for {device.Name}");
+                    LoggingService.LogInfo($"{remoteBlocks.Count} dl for {device.Name}", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
                     if (remoteBlocks.Any())
                     {
@@ -328,8 +328,9 @@
                         var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
                         foreach (var remoteBlock in remoteBlocks)
                         {
-                            Debug.WriteLine(
-                                $"[{mostRecentDownloadedTimestamp}]{remoteBlock.TimeStamp}#{remoteBlock.UploadedAt}#{device.Name}#{remoteBlock.SensorID}");
+                            LoggingService.LogInfo(
+                                $"[{mostRecentDownloadedTimestamp}]{remoteBlock.TimeStamp}#{remoteBlock.UploadedAt}#{device.Name}#{remoteBlock.SensorID}",
+                                Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
 
                             // See if this is a new object.
                             var localBlock =
@@ -554,7 +555,7 @@
 
 
             var jsonOfLocallyChanged = JsonConvert.SerializeObject(haveChanged);
-            Debug.WriteLine($"Uploading {haveChanged.Count} histories.");
+            LoggingService.LogInfo($"Uploading {haveChanged.Count} histories.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             var uploadLocallyChangedResult = await Request.PostTable(ApiUrl, tableName, jsonOfLocallyChanged, creds);
             if (uploadLocallyChangedResult != null)
             {

@@ -10,6 +10,7 @@
     using Windows.Web.Http.Filters;
     using Windows.Web.Http.Headers;
     using JetBrains.Annotations;
+    using Quickbird.Util;
 
     public static class Request
     {
@@ -52,12 +53,12 @@
             }
             catch (TaskCanceledException)
             {
-                Debug.WriteLine($"Req '{tableName}' cancelled ot timedout.");
+                Util.LoggingService.LogInfo($"Req '{tableName}' cancelled ot timedout.", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 return "Error: Cancelled or timed out.";
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Req '{tableName}' error: {ex}");
+                LoggingService.LogInfo($"Req '{tableName}' error: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 return $"Error: NetFail: {ex.Message}, {ex.InnerException}, END";
             }
         }
@@ -115,12 +116,12 @@
             }
             catch (TaskCanceledException)
             {
-                Debug.WriteLine($"Req '{tableName}' cancelled ot timedout.");
+                LoggingService.LogInfo($"Req '{tableName}' cancelled ot timedout.", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 return "Error: Cancelled or timed out.";
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Req '{tableName}' error: {ex}");
+                LoggingService.LogInfo($"Req '{tableName}' error: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 return $"Error: NetFail: {ex.Message}, {ex.InnerException}, END";
             }
         }

@@ -59,7 +59,7 @@
 
         public void Resume()
         {
-            Debug.WriteLine("resuming manager");
+            Util.LoggingService.LogInfo("resuming manager", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             _mqttBroker?.Start();
             if (_udpMessaging == null || _udpMessaging.Disposed)
                 _udpMessaging = new UDPMessaging();
@@ -68,7 +68,7 @@
 
         public void Suspend()
         {
-            Debug.WriteLine("suspending manager");
+            Util.LoggingService.LogInfo("suspending manager", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             _mqttBroker?.Stop();
             _udpMessaging?.Dispose();
             _udpMessaging = null;

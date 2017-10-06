@@ -58,9 +58,9 @@
             {
                 creds = await Creds.FromBroker(entryUrl, resultUrl);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Debug.WriteLine("Login failed or cancelled.");
+                Util.LoggingService.LogInfo($"Login failed or cancelled with error: {ex}", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 FriendlyText = "Login failed or cancelled.";
                 LoginEnabled = true;
                 return;
@@ -77,7 +77,7 @@
         private void UpdateCredsAndTokens()
         {
             var settings = SettingsService.Instance;
-            Debug.WriteLine(settings.CredToken ?? "No saved auth.");
+            Util.LoggingService.LogInfo(settings.CredToken ?? "No saved auth.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
         }
     }
 }

@@ -112,7 +112,7 @@
 
         public async void FirstUpdate()
         {
-            Debug.WriteLine("Running First Update");
+            LoggingService.LogInfo("Running First Update", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             try
             {
@@ -157,7 +157,7 @@
         public void ListItemClicked(object sender, ItemClickEventArgs e)
         {
             var item = e.ClickedItem as ShellListViewModel;
-            Debug.WriteLine($"ListItemClicked: {item?.BoxName ?? "null"}");
+            LoggingService.LogInfo($"ListItemClicked: {item?.BoxName ?? "null"}", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             if (item != null)
             {
                 _contentFrame.Navigate(typeof(CropView), item.CropViewModel);
@@ -191,15 +191,15 @@
 
         public void ToggleNav()
         {
-            Debug.WriteLine("Toggle Nav.");
+            LoggingService.LogInfo("Toggle Nav.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             if (IsNavOpen)
             {
-                Debug.WriteLine("Close.");
+                LoggingService.LogInfo("Close.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
                 IsNavOpen = false;
             }
             else
             {
-                Debug.WriteLine("Open.");
+                LoggingService.LogInfo("Open.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
                 IsNavOpen = true;
             }
         }
@@ -213,7 +213,7 @@
         private async void OnSyncTimerTick(object sender, object other)
         {
             _syncTimer.Stop();
-            Debug.WriteLine("Auto Sync started...");
+            LoggingService.LogInfo("Auto Sync started...", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             // Disables the sync button in every CropView (there is one for each crop).
             await SetSyncEnabled(false);
 
@@ -221,7 +221,7 @@
 
             await SetSyncEnabled(true);
 
-            Debug.WriteLine("...Auto Sync finished.");
+            LoggingService.LogInfo("...Auto Sync finished.", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             _syncTimer.Start();
         }
 
@@ -255,7 +255,7 @@
 
         private async Task Update()
         {
-            Debug.WriteLine("Shell update triggered");
+            LoggingService.LogInfo("Shell update triggered", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
 
             var cropCycles = await DataService.Instance.GetDataTreeAsyncQueued();
 

@@ -40,7 +40,7 @@
 
         private void BaseResume(TaskCompletionSource<object> completer)
         {
-            Debug.WriteLine("resumuing timers");
+            Util.LoggingService.LogInfo("resumuing timers", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             foreach (var dispatcherTimer in DispatcherTimers)
             {
                 dispatcherTimer.Start();
@@ -50,7 +50,7 @@
 
         private void BaseSuspend(TaskCompletionSource<object> completer)
         {
-            Debug.WriteLine("suspending timers");
+            Util.LoggingService.LogInfo("suspending timers", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             foreach (var dispatcherTimer in DispatcherTimers)
             {
                 dispatcherTimer.Stop();

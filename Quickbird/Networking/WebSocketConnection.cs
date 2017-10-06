@@ -48,7 +48,7 @@
 
         public WebSocketConnection()
         {
-            Debug.WriteLine("Websocket Starting");
+            LoggingService.LogInfo("Websocket Starting", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             JsonConvert.DefaultSettings = () =>
             {
@@ -137,7 +137,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.Message);
+                    LoggingService.LogInfo($"Error while sending websocket data, {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     CleanUp();
                     return false;
                 }
@@ -167,7 +167,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.Message);
+                    LoggingService.LogInfo($"error while reading websocket message: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     //If it's not inc connected state, then probably someone is already cleaning it up
                     if (
                         (ConnectionState)
@@ -304,12 +304,12 @@
                 await _webSocket.ConnectAsync(uri);
                 _messageWriter = new DataWriter(_webSocket.OutputStream);
                 _reconnectionAttempt = 0;
-                Debug.WriteLine("Websocket connected");
+                LoggingService.LogInfo("Websocket connected", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                 return true;
             }
             catch
             {
-                Debug.WriteLine("Websocket connection failed");
+                LoggingService.LogInfo("Websocket connection failed", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 _reconnectionAttempt++;
                 CleanUp();
                 return false;
@@ -359,7 +359,7 @@
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                LoggingService.LogInfo($"Closing Websocket Failed, {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
             }
 
             _messageWriter?.DetachStream();

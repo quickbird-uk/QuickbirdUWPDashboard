@@ -38,8 +38,8 @@ namespace Quickbird.Services
             var userData = await await treeQueryWrappedInAnContinuation.ConfigureAwait(false);
             stopwatchB.Stop();
 
-            Debug.WriteLine($"Querying data-tree took {stopwatchB.ElapsedMilliseconds} milliseconds, " +
-                            $"(setup: {stopwatchA.ElapsedMilliseconds}ms).");
+            Util.LoggingService.LogInfo($"Querying data-tree took {stopwatchB.ElapsedMilliseconds} milliseconds, " +
+                            $"(setup: {stopwatchA.ElapsedMilliseconds}ms).", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
 
             return userData;
         }
@@ -54,7 +54,7 @@ namespace Quickbird.Services
 
             if (response.StartsWith("Error:"))
             {
-                Debug.WriteLine($"Request failed: {tableName}, creds {null == cred}, {response}");
+                Util.LoggingService.LogInfo($"Request failed: {tableName}, creds {null == cred}, {response}", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
 
                 throw new Exception($"Request failed: {tableName}, {response}");
             }
@@ -77,8 +77,7 @@ namespace Quickbird.Services
             }
             catch (JsonSerializationException e)
             {
-                Debug.WriteLine($"Desserialise falied on response for {tableName}");
-                Debug.WriteLine(e);
+                Util.LoggingService.LogInfo($"Desserialise falied on response for {tableName} with error {e}", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 throw new Exception($"Derserialize failed: {tableName}");
             }
             return updatesFromServer;

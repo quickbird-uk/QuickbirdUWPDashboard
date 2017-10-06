@@ -1,5 +1,6 @@
 ﻿namespace Quickbird.Internet
 {
+    using Quickbird.Util;
     using System;
     using System.Diagnostics;
     using System.Text;
@@ -121,10 +122,8 @@
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Failed to make creds...");
-                Debug.WriteLine(userId);
-                Debug.WriteLine(token);
-                Debug.WriteLine(ex);
+                LoggingService.LogInfo($"Failed to make credentials...userID:{userId},Token: {token}, Exception: {ex}",
+                    Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 return null;
             }
         }

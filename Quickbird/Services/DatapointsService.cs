@@ -131,14 +131,14 @@
 
         public void Resume()
         {
-            Debug.WriteLine("resuming datasaver");
+            LoggingService.LogInfo("resuming datasaver", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             BlockingDispatcher.Run(() => _saveTimer?.Start());
         }
 
 
         public void Suspend()
         {
-            Debug.WriteLine("suspending datasaver");
+            LoggingService.LogInfo("suspending datasaver", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
             BlockingDispatcher.Run(() => _saveTimer?.Stop());
         }
 
@@ -245,7 +245,7 @@
         /// <returns>True if it loaded something, false otherwise.</returns>
         private void LoadData()
         {
-            Debug.WriteLine("DatapointsSaver refreshing cache");
+            LoggingService.LogInfo("DatapointsSaver refreshing cache", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             using (var db = new MainDbContext())
             {
                 _dbDevices = db.Devices.Include(dv => dv.Sensors).Include(dv => dv.Relays).AsNoTracking().ToList();
@@ -287,7 +287,7 @@
             {
                 //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))
                 //{
-                Debug.WriteLine("Datasaver started, did not bother detecting a recent update.");
+                LoggingService.LogInfo("Datasaver started, did not bother detecting a recent update.", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
 
                 using (var db = new MainDbContext())
                 {
@@ -361,7 +361,7 @@
                     } //for loop ends 
                     //Once we are done here, mark changes to the db
                     db.SaveChanges();
-                    Debug.WriteLine("Saved Sensor Data");
+                    LoggingService.LogInfo("Saved Sensor Data", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
                 }
                 //}
                 //else
