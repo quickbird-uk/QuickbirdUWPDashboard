@@ -42,7 +42,7 @@
             CoreDispatcher dispatcher = null;
             if (useCoreDispatcher) dispatcher = ((App) Application.Current).Dispatcher;
             if (dispatcher == null)
-                LoggingService.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}");
+                LoggingService.LogInfo($"Messenger.Instance.Dispatcher null at BroadcastMessage.Invoke() {typeof(T)}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
 
             // Special mode when the param is a TaskCompletionSource<object> and you want it to be set when all the actions complete.
             if (insertCompletionSource)

@@ -116,8 +116,8 @@
         public async void SyncTimeReset()
         {
             SyncInProgress = true;
-            SettingsService.Instance.LastSuccessfulGeneralDbGet = DateTimeOffset.MinValue;
-            SettingsService.Instance.LastSuccessfulGeneralDbPost = DateTimeOffset.MinValue;
+            SettingsService.Instance.LastSuccessfulGeneralDbGet = DateTimeOffset.FromUnixTimeSeconds(0);
+            SettingsService.Instance.LastSuccessfulGeneralDbPost = DateTimeOffset.FromUnixTimeSeconds(0);
             await Services.DataService.Instance.SyncWithServerAsync();
             SyncInProgress = false; 
         }

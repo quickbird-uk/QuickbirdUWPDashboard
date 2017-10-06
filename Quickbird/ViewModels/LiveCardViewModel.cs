@@ -61,7 +61,7 @@
 
             _dispatcher = ((App) Application.Current).Dispatcher;
             if (_dispatcher == null)
-                LoggingService.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.");
+                LoggingService.LogInfo($"Messenger.Instance.Dispatcher null at LiveCardViewModel ctor.", Windows.Foundation.Diagnostics.LoggingLevel.Error);
 
             _dataUpdater = async readings =>
             {

@@ -19,6 +19,7 @@
     using Views;
     using Quickbird.Services;
 
+
     /// <summary>Provides application-specific behavior to supplement the default Application class.</summary>
     public sealed partial class App : Application
     {
@@ -41,7 +42,9 @@
             this.UnhandledException += (sender, e) =>
             {
                 // e.Handled = true;
-
+                LoggingService.LogInfo($"Application Crashed due to exception {e.Exception.ToString()} \n The Exception came from {sender.ToString()}",
+                    Windows.Foundation.Diagnostics.LoggingLevel.Critical);
+                LoggingService.SaveLog(); 
                 System.Diagnostics.Debug.WriteLine(e.Exception);
             };
         }
@@ -137,16 +140,16 @@
             {
                 case ApplicationExecutionState.ClosedByUser:
                 case ApplicationExecutionState.NotRunning:
-                    ToastService.Debug("OnActivated", "NotRunning or ClosedByUser");
+                    LoggingService.LogInfo("OnActivated - NotRunning or ClosedByUser", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                     break;
                 case ApplicationExecutionState.Running:
-                    ToastService.Debug("OnActivated", "Running");
+                    LoggingService.LogInfo("OnActivated - Running", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                     break;
                 case ApplicationExecutionState.Suspended:
-                    ToastService.Debug("OnActivated", "Suspended");
+                    LoggingService.LogInfo("OnActivated - Suspended", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                     break;
                 case ApplicationExecutionState.Terminated:
-                    ToastService.Debug("OnActivated", "Terminated");
+                    LoggingService.LogInfo("OnActivated - Terminated", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                     break;
 
                 default:
@@ -177,7 +180,7 @@
             if (e.PrelaunchActivated)
             {
                 // We must not try starting an extended session in this situation.
-                ToastService.Debug("OnLaunched", "Prelaunched");
+                LoggingService.LogInfo("OnLaunched - Prelaunched", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             }
             else
             {
@@ -267,7 +270,7 @@
 
         private async void OnResuming(object sender, object e)
         {
-            ToastService.Debug("OnResuming", "");
+            LoggingService.LogInfo($"OnResuming ", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             var completer = new TaskCompletionSource<object>();
             AddSessionTask(completer.Task);
@@ -285,14 +288,14 @@
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            ToastService.Debug("OnSuspending", e.SuspendingOperation.ToString());
+            LoggingService.LogInfo($"OnSuspending {e.SuspendingOperation.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             // This is the most accurate thing that we can tell the user.
             // There is no way to know if the app is being terminated or just suspended for fun.
             if (_notPrelaunchSuspend)
-                ToastService.NotifyUserOfInformation("App is suspending.");
+                LoggingService.LogInfo("App is suspending.", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             else
-                ToastService.Debug("OnSuspending", "Prelaunch");
+                LoggingService.LogInfo("OnSuspending - Prelaunch", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             // If the deferral is not obtained the suspension proceeds at the end of this method.
             // With the deferral there is still a 5 second time limit to completing suspension code.
@@ -314,7 +317,7 @@
 
         private async void OnVisibilityChanged(object sender, VisibilityChangedEventArgs e)
         {
-            ToastService.Debug("OnVisibilityChanged", "");
+            LoggingService.LogInfo($"OnVisibilityChanged to {e.Visible}", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             // _rootFrame will only ever be null here once.
             // If there is no content the app was prelaunched and we must navigate and begin the session.
@@ -359,13 +362,13 @@
 
             if (result == ExtendedExecutionResult.Allowed)
             {
-                ToastService.Debug("EES", "Success");
+                LoggingService.LogInfo("Extendd Execution was allowed", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             }
             else
             {
                 // The request has failed, kill will null it, and then the app will try again when the visibility changes.
                 KillExtendedExecutionSession();
-                ToastService.NotifyUserOfError("Windows error, program may fail to record, sync and alert when minimised.");
+                LoggingService.LogInfo("Extended execution denied. Program will fail to record, sync and alert when minimised.", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
             }
         }
     }

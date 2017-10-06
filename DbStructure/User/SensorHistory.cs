@@ -107,7 +107,10 @@
         {
             var dataSize = SensorDatapoint.BinarySize;
             if (Data == null)
-                return; 
+            {
+                RawData = new byte[0]; 
+                return;
+            }
 
             var dataRaw = new byte[Data.Count*dataSize];
 

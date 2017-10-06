@@ -276,8 +276,8 @@
                     }
                     else
                     {
-                        LoggingService.ShouldNeverHappen(
-                            $"Found a history with no entries: {device.Name}, {latestDownloadedBlock.TimeStamp}");
+                        LoggingService.LogInfo(
+                            $"Found a history with no entries: {device.Name}, {latestDownloadedBlock.TimeStamp}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
 
                         // This is a broken situation, but it should be  fine if we continue from the start of the day.
                         mostRecentDownloadedTimestamp = latestDownloadedBlock.TimeStamp - TimeSpan.FromDays(1);

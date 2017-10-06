@@ -56,23 +56,23 @@
                 <RowDefinition Height="40" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="Select a CropRun to inspect"
+            <TextBlock Grid.Row="0" Text="Select a Recording to inspect"
                        HorizontalAlignment="Center" Margin="0, 10, 0, 0"
                        Style="{StaticResource SubheaderTextBlockStyle}" />
             <!--Start Data Headings! -->
             <Grid HorizontalAlignment="Stretch" Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="155" />
+                    <ColumnDefinition Width="250" />
                     <ColumnDefinition Width="135" />
-                    <ColumnDefinition Width="135" />
+                    <ColumnDefinition Width="250" />
                     <ColumnDefinition Width="130" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Box" Style="{StaticResource SubtitleTextBlockStyle}"
+                <TextBlock Grid.Column="0" Text="Device Name" Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="24, 0, 0, 0" />
-                <TextBlock Grid.Column="1" Text="Crop" Style="{StaticResource SubtitleTextBlockStyle}"
+                <TextBlock Grid.Column="1" Text="Subject" Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="10, 0, 0, 0" />
-                <TextBlock Grid.Column="2" Text="Variety" Style="{StaticResource SubtitleTextBlockStyle}"
+                <TextBlock Grid.Column="2" Text="Note" Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="10, 0, 0, 0" />
                 <TextBlock Grid.Column="3" Text="Start Date" Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="0, 0, 0, 0" />
@@ -90,9 +90,9 @@
                     <DataTemplate>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="155" />
+                                <ColumnDefinition Width="250" />
                                 <ColumnDefinition Width="135" />
-                                <ColumnDefinition Width="135" />
+                                <ColumnDefinition Width="250" />
                                 <ColumnDefinition Width="130" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>

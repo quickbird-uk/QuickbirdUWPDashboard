@@ -100,7 +100,7 @@
                             SensorBuffer sensorBuffer = _sensorBuffer.FirstOrDefault(sb => sb.Sensor.ID == SensorObject.ID);
                             if (SensorObject == null || sensorBuffer == null)
                             {
-                                Util.ToastService.NotifyUserOfError($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.");
+                                Util.LoggingService.LogInfo($"Device has a new sensor with typeID {message.SensorTypeID}, however adding sensors is not supported yet.", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                                 break; 
                             }
                             
@@ -162,12 +162,12 @@
             {
                 if (sensorTypes.FirstOrDefault(st => st.ID == sensor.SensorTypeID) == null)
                 {
-                    Util.ToastService.NotifyUserOfError($"Receieved message with sensor ID {sensor.SensorTypeID}, but it is invalid - there is no such ID");
+                    Util.LoggingService.LogInfo($"Receieved message with sensor ID {sensor.SensorTypeID}, but it is invalid - there is no such ID", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     return false; //If any of the sensors are invalid, then return;
                 }
             }
-            
-            Debug.WriteLine("addingDevice");
+
+            LoggingService.LogInfo("Adding a new Device", Windows.Foundation.Diagnostics.LoggingLevel.Information);
 
             var device = new Device
             {
@@ -228,6 +228,8 @@
             }
             db.Dispose();
 
+            ToastService.NotifyUserOfInformation($"A new Device has been Created - {device.Name}");
+
             return true;
         }
 
@@ -280,7 +282,7 @@
         //Closes sensor Histories that are no longer usefull
         private void SaveBufferedReadings(object sender, object e)
         {
-            ToastService.Debug("SaveBufferedReadings", $"{DateTimeOffset.Now.DateTime} Datapointsaver");
+            LoggingService.LogInfo($"Saved Buffered Readings: {DateTimeOffset.Now.DateTime} Datapointsaver", Windows.Foundation.Diagnostics.LoggingLevel.Information);
             _localTask = _localTask.ContinueWith(previous =>
             {
                 //if (Settings.Instance.LastSuccessfulGeneralDbGet > DateTimeOffset.Now - TimeSpan.FromMinutes(5))

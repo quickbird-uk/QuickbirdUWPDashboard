@@ -121,7 +121,7 @@
             catch (Exception e)
             {
                 Error = e.ToString();
-                LoggingService.ShouldNeverHappen($"ShellViewModel.FirstUpdate() {e}");
+                LoggingService.LogInfo($"ShellViewModel.FirstUpdate() {e}", Windows.Foundation.Diagnostics.LoggingLevel.Critical);
             }
 
 
@@ -234,7 +234,7 @@
             var dispatcher = ((App) Application.Current).Dispatcher;
             if (dispatcher == null)
             {
-                LoggingService.ShouldNeverHappen($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()");
+                LoggingService.LogInfo($"Messenger.Instance.Dispatcher null at ShellViewModel.SetSyncEnabled()", Windows.Foundation.Diagnostics.LoggingLevel.Critical);
                 throw new Exception("The app dispatcher is missing: ShellViewModel.SetSyncEnabled()");
             }
 

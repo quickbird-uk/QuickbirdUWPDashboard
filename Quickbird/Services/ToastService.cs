@@ -4,7 +4,7 @@
 
     public static class ToastService
     {
-        /// <summary>Toast used for debug messages.</summary>
+        /// <summary>Toast used for sharing debug messages. Only use from the Logging Service!</summary>
         /// <param name="title"></param>
         /// <param name="text"></param>
         public static void Debug(string title, string text)

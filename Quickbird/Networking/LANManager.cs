@@ -105,7 +105,7 @@
 
             if (Guid.TryParse(rawClientID, out clientID) == false)
             {
-                Util.ToastService.NotifyUserOfError($"recieved message with invalid ClientID, {clientID} is not a valid ID");
+                Util.LoggingService.LogInfo($"Recieved message with invalid ClientID, {clientID} is not a valid ID", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                 return;
             }
 
@@ -133,8 +133,9 @@
 
             if (rawData.Length % SensorMessage.incomingLength != 0)
             {
-                Util.ToastService.NotifyUserOfError($"message recieved over MQTT is invalid. it must consist of sensor readings, " +
-                    $"{SensorMessage.incomingLength} bytes long each. It's length is {rawData.Length}, not divisble by {SensorMessage.incomingLength}");
+                Util.LoggingService.LogInfo($"Binary message recieved over MQTT is invalid. it must consist of sensor readings, " +
+                    $"{SensorMessage.incomingLength} bytes long each. It's length is {rawData.Length}, not divisble by {SensorMessage.incomingLength}"
+                    , Windows.Foundation.Diagnostics.LoggingLevel.Error);
             }
             else
             {
@@ -162,7 +163,7 @@
             }
             catch
             {
-                Util.ToastService.NotifyUserOfError($"message recieved over MQTT is not valid JSON. it must consist of sensor readings");
+                Util.LoggingService.LogInfo($"Message recieved over MQTT is not valid JSON. it must consist of sensor readings", Windows.Foundation.Diagnostics.LoggingLevel.Error);
             }
             return message;
         }
