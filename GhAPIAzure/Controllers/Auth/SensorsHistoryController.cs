@@ -79,17 +79,12 @@
             for (var i = 0; i < sensorHistories.Count; i++)
             {
                 var hist = sensorHistories[i];
-                hist.DeserialiseData();
+
+                hist.DeserialiseData(); // We were not de-serialising all the data! 
 
                 if (hist.TimeStamp.Date == oldestDate)
                 {  
                     sensorHistories[i] = hist.Slice(afterTime);
-                }
-                else
-                {
-                    // Items are sorted /ordered by date
-                    // so there should be no more first day items
-                    break;
                 }
             }
 
