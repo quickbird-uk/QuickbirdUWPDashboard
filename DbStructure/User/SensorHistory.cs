@@ -7,6 +7,7 @@
 
     public class SensorHistory
     {
+
         //EDIT EF code to make this NOT mapped to a table! Otherwise we will have trouble! 
         //this is used for network communication and by the program at runtime! 
         [Required]
