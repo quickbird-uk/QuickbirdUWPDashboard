@@ -12,10 +12,6 @@ namespace Quickbird.Util
 
         static LoggingSession _Session; 
         private static LoggingChannel _LcDebug;
-        private static LoggingChannel _LcTrace; 
-
-        private static UInt64 tracingIndex = 0;
-        private static TraceEvent[] TracingData = new TraceEvent[200];
 
         /// <summary>
         /// LoggingSessionScenario moves generated logs files into the
@@ -25,18 +21,13 @@ namespace Quickbird.Util
 
         static LoggingService()
         {   
-            _LcDebug = new LoggingChannel("QuickbirdUWP_Log", 
-                new LoggingChannelOptions(
-                    new Guid("d3020f82-b5bd-4ead-b739-a2e043d075f3")
-                    ));
-            _LcTrace = new LoggingChannel("QuickbirdUWP_trace",
-                new LoggingChannelOptions(
-                    new Guid("e4fd6bbb-74de-456a-981e-85314c56c875")
-                    ));
+            _LcDebug = new LoggingChannel(
+                "QuickbirdUWP_Log", 
+                new LoggingChannelOptions(new Guid("d3020f82-b5bd-4ead-b739-a2e043d075f3"))
+                );
 
             _Session = new LoggingSession("AppWideSession");
             _Session.AddLoggingChannel(_LcDebug);
-            _Session.AddLoggingChannel(_LcTrace);
         }
 
         /// <summary>
@@ -45,7 +36,8 @@ namespace Quickbird.Util
         /// <param name="description"></param>
         /// <param name="level"></param>
         public static void LogInfo(string description, LoggingLevel level, [CallerMemberName]string caller = "Unknown") {
-            string title = Enum.GetName(typeof(LoggingLevel), level);
+
+            string logLevel = Enum.GetName(typeof(LoggingLevel), level);
 
             if (level >= LoggingLevel.Error)
             { 
@@ -59,31 +51,32 @@ namespace Quickbird.Util
             LoggingFields fields = new LoggingFields();
             fields.AddString("description", description);
             fields.AddString("Callermember", caller);
-            fields.AddDateTime("Timestamp", DateTime.Now);
+           
 
-            _LcDebug.LogEvent("Event", fields, level); 
+            _LcDebug.LogEvent(logLevel, fields, level); 
         }
 
-        //Save trace data, will only store last 200 if the app crashes.
-        public static void Trace(string what, [CallerMemberName]string caller = "Unknown")
+        //Save trace data, will only store last 200 if the app crashes. 
+        /*public static void Trace(string what, [CallerMemberName]string caller = "Unknown")
         {
-            TraceEvent.AddTrace(what, caller, DateTimeOffset.Now); 
-        }
+            TraceEvent.AddTrace(what, caller, DateTimeOffset.Now);
+        }*/
+
 
         /// <summary>
         /// Meant to be called when the app is crashing, will save the log. 
         /// </summary>
         public static void SaveLog()
-        {
+        { /*
             var traces = TraceEvent.TraceBuffer;
             foreach (var trace in traces)
             {
                 LoggingFields fields = new LoggingFields();
-                fields.AddString("description", trace.Description);
                 fields.AddString("Callermember", trace.CallerMember);
+                fields.AddString("description", trace.Description);
                 fields.AddDateTime("Timestamp", trace.Timestamp.LocalDateTime);
                 _LcTrace.LogEvent("TraceEvent", fields);
-            }
+            }*/
 
             var saving = Task.Run(SaveLogInMemoryToFileAsync);
             saving.Wait(); 
@@ -121,11 +114,13 @@ namespace Quickbird.Util
         }
 
 
+
         /// <summary>
         /// Trace is for unimportant events, which will only be recorded in the event 
         /// of a crash or something equally dramatic happening. Otherwise they are usually discarded.
         /// They jsut register flow of the program. 
         /// </summary>
+        /*
         private struct TraceEvent
         {
             private const int _TraceBufferSize = 200; 
@@ -154,6 +149,6 @@ namespace Quickbird.Util
             public string Description;
             public DateTimeOffset Timestamp;
             public string CallerMember;            
-        }
+        }*/
     }
 }
