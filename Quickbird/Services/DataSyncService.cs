@@ -244,6 +244,10 @@
             var table = nameof(db.SensorsHistory);
             var errors = "";
 
+            //Query local sensors and locations. Mostly used for debug. 
+            var LocalSensors = db.Sensors.ToList();
+            var LocalLocation = db.Locations.ToList();
+
             // Download all the data for each device in turn.
             foreach (var device in devices)
             {
@@ -322,8 +326,6 @@
 
                     if (remoteBlocks.Any())
                     {
-                        var LocalSensors = db.Sensors.ToList();
-                        var LocalLocation = db.Locations.ToList(); 
 
                         var lastDayOfThisDownloadSet = DateTimeOffset.MinValue;
                         foreach (var remoteBlock in remoteBlocks)
@@ -378,7 +380,8 @@
                             {
                                 // The data is pulled from the database as serialised raw data blobs.
                                 localBlock.DeserialiseData();
-                                localBlock.LocationID = remoteBlock.LocationID; 
+                                localBlock.LocationID = remoteBlock.LocationID;
+                                var linkedLocation = LocalLocation.FirstOrDefault(loc => loc.ID == remoteBlock.LocationID);
 
                                 // The merged object merges using the deserialised Data property.
                                 var merged = SensorHistory.Merge(localBlock, remoteBlock);
