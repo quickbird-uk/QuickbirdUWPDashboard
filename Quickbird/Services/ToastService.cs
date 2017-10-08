@@ -38,7 +38,14 @@
             var toast = new ToastNotification(toastXml);
 
             // Show the toast. Be sure to specify the AppUserModelId on your application's shortcut!
-            ToastNotificationManager.CreateToastNotifier().Show(toast);
+            try
+            {//Turns out this crap throws an exception if the text is too long
+                ToastNotificationManager.CreateToastNotifier().Show(toast);
+            }
+            catch (System.Exception ex)
+            {
+                LoggingService.LogInfo("There was an error in creating a toast notification, probably because text is too large", Windows.Foundation.Diagnostics.LoggingLevel.Verbose);
+            }
         }
     }
 }
