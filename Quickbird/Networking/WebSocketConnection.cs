@@ -126,23 +126,25 @@
         {
             var jsonData = JsonConvert.SerializeObject(toSend);
 
-            if ((ConnectionState) Interlocked.Read(ref _connectionState) == ConnectionState.Connected)
+            if ((ConnectionState)Interlocked.Read(ref _connectionState) != ConnectionState.Connected)
+                return false;
+            else if (_messageWriter == null)
+                return false; 
+
+            try
             {
-                try
-                {
-                    // Send the data as one complete message.
-                    _messageWriter.WriteString(jsonData);
-                    await _messageWriter.StoreAsync();
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LoggingService.LogInfo($"Error while sending websocket data, {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
-                    CleanUp();
-                    return false;
-                }
+                // Send the data as one complete message.
+                _messageWriter.WriteString(jsonData);
+                await _messageWriter.StoreAsync();
+                return true;
             }
-            return false;
+            catch (Exception ex)
+            {
+                var error = WebSocketError.GetStatus(ex.HResult);
+                LoggingService.LogInfo($"Error while sending websocket data, {error}, full exception:{ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
+                CleanUp();
+                return false;
+            } 
         }
 
         private void MessageRecieved(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
@@ -167,7 +169,13 @@
                 }
                 catch (Exception ex)
                 {
-                    LoggingService.LogInfo($"error while reading websocket message: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
+                    var error = WebSocketError.GetStatus(ex.HResult); 
+                    if(error == Windows.Web.WebErrorStatus.ConnectionAborted)
+                    {
+                        LoggingService.LogInfo($"{Enum.GetName(typeof(Windows.Web.WebErrorStatus), error)} while recieving websocketData. Full exception: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Information);
+                        return;
+                    }
+                    LoggingService.LogInfo($"error while reading websocket message {error}, full exception: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
                     //If it's not inc connected state, then probably someone is already cleaning it up
                     if (
                         (ConnectionState)
@@ -307,9 +315,13 @@
                 LoggingService.LogInfo("Websocket connected", Windows.Foundation.Diagnostics.LoggingLevel.Information);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                LoggingService.LogInfo("Websocket connection failed", Windows.Foundation.Diagnostics.LoggingLevel.Warning);
+                var error = WebSocketError.GetStatus(ex.HResult);
+                if (error == Windows.Web.WebErrorStatus.CannotConnect)
+                { LoggingService.LogInfo($"Websocket cannot connect", Windows.Foundation.Diagnostics.LoggingLevel.Information); }
+                else
+                { LoggingService.LogInfo($"Websocket connection failed due to {error}, full exception: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Warning); }
                 _reconnectionAttempt++;
                 CleanUp();
                 return false;
@@ -359,10 +371,11 @@
             }
             catch (Exception ex)
             {
-                LoggingService.LogInfo($"Closing Websocket Failed, {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
+                var error = WebSocketError.GetStatus(ex.HResult);
+                LoggingService.LogInfo($"Closing Websocket Failed, {error}, full exception: {ex.ToString()}", Windows.Foundation.Diagnostics.LoggingLevel.Error);
             }
 
-            _messageWriter?.DetachStream();
+            /// _messageWriter?.DetachStream(); TODO: Causes crashes occationally, see issue #83 https://github.com/quickbird-uk/QuickbirdUWPDashboard/issues/83
             _messageWriter?.Dispose();
             _messageWriter = null;
 
