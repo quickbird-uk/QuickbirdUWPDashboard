@@ -11,8 +11,8 @@
     <AssemblyName>Quickbird</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -327,29 +327,28 @@
       <Project>{3fe9490b-d60e-4103-823d-8d37b8e5ac91}</Project>
       <Name>DbStructure</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GnatMQ\GnatMQ.csproj">
-      <Project>{53ef8541-bf62-46c4-8d2a-fb305b77f1a1}</Project>
-      <Name>GnatMQ</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GnatMQ_Broker">
+      <Version>1.3.0.1-beta</Version>
+    </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
-      <Version>11.0.0</Version>
+      <Version>11.1.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore">
-      <Version>1.0.5</Version>
+      <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational">
-      <Version>1.0.5</Version>
+      <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite">
-      <Version>1.0.5</Version>
+      <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-      <Version>1.0.0</Version>
+      <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>5.4.0</Version>
+      <Version>6.0.4</Version>
     </PackageReference>
     <PackageReference Include="MoreLinq.Portable">
       <Version>2.0.0-beta03</Version>

@@ -39,7 +39,7 @@
                     _mqttBroker = new MqttBroker();
                     _mqttBroker.Start();
                     _udpMessaging = new UDPMessaging();
-                    _mqttBroker.MessagePublished += MqttMessageRecieved;
+                    _mqttBroker.MsgPublishReceived += MqttMessageRecieved;
                 }
                 else
                 {
@@ -85,7 +85,7 @@
                 }
                 if (_mqttBroker != null)
                 {
-                    _mqttBroker.MessagePublished -= MqttMessageRecieved;
+                    _mqttBroker.MsgPublishReceived -= MqttMessageRecieved;
                     _mqttBroker.Stop();
                 }
                 _mqttBroker = null;
