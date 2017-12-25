@@ -323,12 +323,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DbStructure\DbStructure.csproj">
-      <Project>{3fe9490b-d60e-4103-823d-8d37b8e5ac91}</Project>
-      <Name>DbStructure</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="GnatMQ_Broker">
       <Version>1.3.0.1-beta</Version>
     </PackageReference>
@@ -348,11 +342,17 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.0.4</Version>
+      <Version>6.0.5</Version>
     </PackageReference>
     <PackageReference Include="MoreLinq.Portable">
       <Version>2.0.0-beta03</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DbStructure\DbStructure.csproj">
+      <Project>{d5ca4d98-972e-4dab-91ef-6f1ade41ebff}</Project>
+      <Name>DbStructure</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
