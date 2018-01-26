@@ -9,9 +9,13 @@ It may not sound like much, but that actually covers a huge amount of custom ind
 
 
 
-To Integrate your arduino device with the 
+## To Integrate your arduino device
 
-Over the network they must send the following **binary** datatype (Json support coming soon): 
+Open a UDP port at 44000. If you recieve a UDp packet equivalent to 'sekret' in unicode, that's a UDP beacon form the application. 
+You should connect to the source IP of that packet with MQTT client, just like illustrated in the [examples section](https://github.com/quickbird-uk/QuickbirdUWPDashboard/tree/master/Examples). MQTT server is started at port 1883. 
+
+Currently the app only accepts readings in a single message on topic `readings/v1/binary` or `readings/v1/json`
+All the readings are expected as a single array, in **binary** or **Json** accordingly. 
 ```C
 	struct Reading
 	{
@@ -22,11 +26,10 @@ Over the network they must send the following **binary** datatype (Json support 
 		byte SensorTypeID;
 	};
 ```
-
 What do I mean by binary? Well, this is a 9 byte, in size, struct. Shove it into an array: 
 
 Be carefull, on a 32bit MCU this code might not work out of the box, 32 bit MCU migh actually use 4 bytes for the 
-boolean data type in this struct. Mbed framework does that. 
+boolean data type in this struct. Mbed framework does that. So does ESP8266. Check [examples section](https://github.com/quickbird-uk/QuickbirdUWPDashboard/tree/master/Examples), they should work out of the box. 
 
 ## MQTT API - planned
 Note that at this point permissions are not yet implemented. 
